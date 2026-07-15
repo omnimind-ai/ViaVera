@@ -1,0 +1,42 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Xcode user state and local build products
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+DerivedData/
+build/
+*.xcarchive
+*.dSYM
+*.dSYM.zip
+*.ipa
+
+# Apple signing and App Store Connect credentials
+*.mobileprovision
+*.provisionprofile
+*.p12
+*.pfx
+*.cer
+*.der
+*.p8
+*.pem
+*.key
+AuthKey_*.p8
+ExportOptions.plist
+Signing.xcconfig
+*.local.xcconfig
+
+# Local SwiftPM/Xcode state
+.swiftpm/xcode/package.xcworkspace/xcuserdata/
+
+# Local design exploration
+Design/
+
+# Local Codex workspace state
+/.codex/

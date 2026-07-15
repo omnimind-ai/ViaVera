@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSAlarmKitUsageDescription</key>
+	<string>Via Vera 需要创建和管理你授权的闹钟。</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Via Vera 仅在你明确要求时读取、创建和管理日历事件。</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Via Vera 仅在你明确要求时查找、创建和管理联系人。</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Via Vera 仅在你明确要求时读取你授权的健康与健身数据，以回答相关问题。</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Via Vera 不会写入或修改你的健康数据；HealthKit 仅用于读取你明确授权的健康与健身数据。</string>
+</dict>
+</plist>

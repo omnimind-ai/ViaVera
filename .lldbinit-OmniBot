@@ -1,0 +1,4 @@
+# iSH uses SIGUSR1 internally to interrupt host waits when delivering guest
+# signals. Passing it through without stopping keeps Xcode from pausing on a
+# normal guest wake-up while preserving delivery to the runtime.
+process handle SIGUSR1 --stop false --notify false --pass true

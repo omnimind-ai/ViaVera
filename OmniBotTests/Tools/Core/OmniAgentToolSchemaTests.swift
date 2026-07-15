@@ -1,0 +1,66 @@
+import Foundation
+import Testing
+@testable import Via_Vera
+
+@Suite("Agent tool schemas")
+struct OmniAgentToolSchemaTests {
+    @Test("Every advertised tool requires a visible tool title")
+    func everySchemaRequiresToolTitle() async throws {
+        let temporary = try makeTemporaryWorkspace()
+        defer { try? FileManager.default.removeItem(at: temporary.root) }
+        let executor = makeToolExecutor(paths: temporary.paths)
+
+        let definitions = await executor.availableTools()
+        #expect(definitions.count == 37)
+        #expect(Set(definitions.map(\AgentToolDefinition.name)).count == definitions.count)
+
+        for definition in definitions {
+            let parameters = try #require(definition.parameters.objectValue)
+            let properties = try #require(parameters["properties"]?.objectValue)
+            let requiredValue = try #require(parameters["required"])
+            guard case let .array(required) = requiredValue else {
+                Issue.record("\(definition.name) has no required array")
+                continue
+            }
+
+            #expect(properties["tool_title"] != nil, "\(definition.name) must define tool_title")
+            #expect(required.contains(.string("tool_title")), "\(definition.name) must require tool_title")
+            #expect(parameters["additionalProperties"] == .bool(false))
+        }
+    }
+
+    @Test("Execution rejects a missing tool title")
+    func missingToolTitleIsRejected() async throws {
+        let temporary = try makeTemporaryWorkspace()
+        defer { try? FileManager.default.removeItem(at: temporary.root) }
+        let executor = makeToolExecutor(paths: temporary.paths)
+
+        let result = try await executeTool(
+            "file_list",
+            arguments: [:],
+            using: executor,
+            paths: temporary.paths
+        )
+
+        #expect(result.isError)
+        #expect(result.content.contains("tool_title"))
+    }
+
+    @Test("Execution rejects rather than truncates a long tool title")
+    func longToolTitleIsRejected() async throws {
+        let temporary = try makeTemporaryWorkspace()
+        defer { try? FileManager.default.removeItem(at: temporary.root) }
+        let executor = makeToolExecutor(paths: temporary.paths)
+
+        let result = try await executeTool(
+            "file_list",
+            arguments: titledArguments(String(repeating: "T", count: 161)),
+            using: executor,
+            paths: temporary.paths
+        )
+
+        #expect(result.isError)
+        #expect(result.content.contains("160-character limit"))
+        #expect(result.metadata["toolTitle"] == nil)
+    }
+}

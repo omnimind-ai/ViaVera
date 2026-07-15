@@ -1,0 +1,20 @@
+{
+  "images" : [
+    {
+      "filename" : "lucide-cpu.svg",
+      "idiom" : "universal"
+    },
+    {
+      "filename" : "lucide-cpu-macos.svg",
+      "idiom" : "mac"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  },
+  "properties" : {
+    "preserves-vector-representation" : true,
+    "template-rendering-intent" : "template"
+  }
+}

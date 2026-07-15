@@ -1,0 +1,4 @@
+[submodule "Vendor/ish-arm64"]
+	path = Vendor/ish-arm64
+	url = https://github.com/XuYouo/ish-arm64.git
+	shallow = true

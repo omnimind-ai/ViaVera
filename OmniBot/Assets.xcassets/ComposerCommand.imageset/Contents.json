@@ -1,0 +1,20 @@
+{
+  "images" : [
+    {
+      "filename" : "lucide-command.svg",
+      "idiom" : "universal"
+    },
+    {
+      "filename" : "lucide-command-macos.svg",
+      "idiom" : "mac"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  },
+  "properties" : {
+    "preserves-vector-representation" : true,
+    "template-rendering-intent" : "template"
+  }
+}
