@@ -39,7 +39,7 @@ struct ChatComposerView: View {
                         measuredHeight: $macTextHeight,
                         isFocused: isFocused,
                         hasVisibleContent: $macTextHasVisibleContent,
-                        isEnabled: !isTextEntryDisabled,
+                        isEnabled: availability.isTextEntryEnabled,
                         maximumLines: AppDesign.composerMaximumLines,
                         onSubmit: submit
                     )
@@ -71,7 +71,7 @@ struct ChatComposerView: View {
                         minHeight: AppDesign.composerTextLineHeight,
                         alignment: .topLeading
                     )
-                    .disabled(isTextEntryDisabled)
+                    .disabled(!availability.isTextEntryEnabled)
                     .accessibilityLabel(isEditingUserMessage ? "编辑上一条消息" : "消息")
                     .accessibilityHint(textFieldAccessibilityHint)
 #endif
@@ -181,13 +181,16 @@ struct ChatComposerView: View {
     }
 
     private var canSend: Bool {
-        !trimmedText.isEmpty
-            && !isPreparingResend
-            && (!isBusy || isEditingUserMessage)
+        availability.canSend
     }
 
-    private var isTextEntryDisabled: Bool {
-        isPreparingResend || (isBusy && !isEditingUserMessage)
+    private var availability: ChatComposerAvailability {
+        ChatComposerAvailability(
+            hasText: !trimmedText.isEmpty,
+            isBusy: isBusy,
+            isPreparingResend: isPreparingResend,
+            isEditingUserMessage: isEditingUserMessage
+        )
     }
 
     private var busyMessage: String {
@@ -198,6 +201,9 @@ struct ChatComposerView: View {
     }
 
     private var textFieldAccessibilityHint: String {
+        if isBusy, !isEditingUserMessage {
+            return "可继续输入下一条消息，当前回复结束后即可发送"
+        }
 #if os(macOS)
         if isEditingUserMessage {
             return "修改后按 Enter 重新运行，按 Shift-Enter 换行"

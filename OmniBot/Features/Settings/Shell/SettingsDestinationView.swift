@@ -25,10 +25,8 @@ struct SettingsDestinationView: View {
             MemorySettingsView()
         case .skills:
             SkillSettingsView()
-#if os(iOS)
         case .permissions:
             IOSPermissionSettingsView()
-#endif
         case .appearance:
             AppearanceSettingsView()
         case .workspace:

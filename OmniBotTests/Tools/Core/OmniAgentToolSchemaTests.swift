@@ -11,7 +11,16 @@ struct OmniAgentToolSchemaTests {
         let executor = makeToolExecutor(paths: temporary.paths)
 
         let definitions = await executor.availableTools()
+#if os(macOS)
+        let names = Set(definitions.map(\.name))
+        #expect(definitions.count == 34)
+        #expect(names.contains("healthkit_data_types"))
+        #expect(names.contains("calendar_list"))
+        #expect(names.contains("contacts_search"))
+        #expect(!names.contains(where: { $0.hasPrefix("alarm_reminder_") }))
+#else
         #expect(definitions.count == 37)
+#endif
         #expect(Set(definitions.map(\AgentToolDefinition.name)).count == definitions.count)
 
         for definition in definitions {

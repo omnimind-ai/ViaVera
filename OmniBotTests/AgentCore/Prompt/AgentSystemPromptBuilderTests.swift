@@ -6,7 +6,7 @@ import Testing
 struct AgentSystemPromptBuilderTests {
     @Test("Injects SOUL, memory, workspace and deterministic time")
     func promptSections() throws {
-        let date = try #require(ISO8601DateFormatter().date(from: "2026-07-10T08:00:00Z"))
+        let date = try #require(ISO8601DateFormatter().date(from: "2026-07-10T08:00:47Z"))
         let utc = try #require(TimeZone(identifier: "UTC"))
         let context = AgentSystemPromptContext(
             soul: "Finish the task.",
@@ -33,7 +33,8 @@ struct AgentSystemPromptBuilderTests {
         #expect(prompt.contains("User likes Alpine"))
         #expect(prompt.contains("Rootfs is ready"))
         #expect(prompt.contains("/workspace"))
-        #expect(prompt.contains("2026-07-10T08:00:00Z"))
+        #expect(prompt.contains("2026-07-10T08:00Z"))
+        #expect(!prompt.contains("2026-07-10T08:00:47Z"))
         #expect(prompt.contains("rootfs-1"))
     }
 
@@ -168,6 +169,24 @@ struct AgentSystemPromptBuilderTests {
         #expect(prompt.contains("stop the tool loop"))
         #expect(prompt.contains("only after a later user message"))
         #expect(prompt.contains("empty result may mean no data or no read permission"))
+    }
+
+    @Test("Personal tool guidance does not mention unadvertised alarm tools")
+    func personalToolGuidanceMatchesAdvertisedTools() {
+        let context = AgentSystemPromptContext(
+            soul: "Agent soul",
+            memory: MemoryPromptContext(longTermMemory: "", todayMemory: ""),
+            availableToolNames: ["calendar_list", "contacts_search"],
+            platformName: "macOS",
+            localeIdentifier: "en_US"
+        )
+
+        let prompt = AgentSystemPromptBuilder().build(context)
+
+        #expect(prompt.contains("use `calendar_*` for system calendars"))
+        #expect(prompt.contains("use `contacts_*` for the address book"))
+        #expect(!prompt.contains("`alarm_reminder_*`"))
+        #expect(!prompt.contains("`clock_app`"))
     }
 
     private func skillEntry(id: String, enabled: Bool) -> AgentSkillIndexEntry {

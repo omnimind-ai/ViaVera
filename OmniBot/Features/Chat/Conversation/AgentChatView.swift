@@ -32,6 +32,8 @@ struct AgentChatView: View {
 #if os(iOS)
     @State private var isPresentingPhotoPicker = false
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
+    @State private var composerAutoFocusTask: Task<Void, Never>?
+    @State private var composerAutoFocusGeneration = 0
 #endif
 #if os(macOS)
     @State private var isComposerFocused = false
@@ -39,6 +41,7 @@ struct AgentChatView: View {
     @FocusState private var isComposerFocused: Bool
 #endif
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         if let conversation = appModel.conversations.conversation(id: conversationID) {
@@ -104,7 +107,7 @@ struct AgentChatView: View {
                                         .id(Self.transcriptBottomAnchor)
                                 }
                                 .padding(.top, AppDesign.contentPadding)
-                                .padding(.bottom, 8)
+                                .padding(.bottom, AppDesign.compactSpacing)
                                 .frame(maxWidth: AppDesign.chatContentMaximumWidth)
                                 .frame(maxWidth: .infinity)
                             }
@@ -156,6 +159,13 @@ struct AgentChatView: View {
                 .simultaneousGesture(
                     TapGesture().onEnded(dismissChatInterface)
                 )
+#if os(iOS)
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 2).onChanged { _ in
+                        cancelPendingComposerAutoFocus()
+                    }
+                )
+#endif
 
                 VStack(spacing: 0) {
                     if !isCommandToolbarPresented,
@@ -223,7 +233,7 @@ struct AgentChatView: View {
                             == conversation.id
                             ? appModel.chatCoordinator.statusMessage
                             : nil,
-                        onInteraction: collapseToolActivity,
+                        onInteraction: handleComposerInteraction,
                         onToggleCommandToolbar: toggleCommandToolbar,
                         onSend: {
                             submitDraft(in: conversation)
@@ -267,6 +277,26 @@ struct AgentChatView: View {
                     turnExpansion.collapse(newTurnID)
                 }
             }
+#if os(iOS)
+            .onChange(of: isRunning) { wasRunning, isRunning in
+                if isRunning {
+                    cancelPendingComposerAutoFocus()
+                } else if wasRunning {
+                    scheduleComposerAutoFocusAfterResponse()
+                }
+            }
+            .onChange(of: draft) { _, _ in
+                cancelPendingComposerAutoFocus()
+            }
+            .onChange(of: isComposerFocused) { _, isFocused in
+                guard isFocused else { return }
+                cancelPendingComposerAutoFocus()
+            }
+            .onChange(of: scenePhase) { _, scenePhase in
+                guard scenePhase != .active else { return }
+                cancelPendingComposerAutoFocus()
+            }
+#endif
             .onChange(of: toolActivityTurn?.id) { _, _ in
                 isToolActivityExpanded = false
             }
@@ -280,6 +310,9 @@ struct AgentChatView: View {
                 }
             }
             .onChange(of: conversationID) { _, _ in
+#if os(iOS)
+                cancelPendingComposerAutoFocus()
+#endif
                 turnExpansion.reset()
                 isToolActivityExpanded = false
                 isCommandToolbarPresented = false
@@ -312,6 +345,9 @@ struct AgentChatView: View {
                 }
             }
             .onDisappear {
+#if os(iOS)
+                cancelPendingComposerAutoFocus()
+#endif
                 cancelResourcePreview()
             }
             .fileImporter(
@@ -590,6 +626,7 @@ struct AgentChatView: View {
 
     private func updateUserMessageContextMenuInteraction(_ isActive: Bool) {
 #if os(iOS)
+        cancelPendingComposerAutoFocus()
         userMessageContextMenuUnlockGeneration &+= 1
         let generation = userMessageContextMenuUnlockGeneration
 
@@ -628,6 +665,13 @@ struct AgentChatView: View {
         isToolActivityExpanded = false
     }
 
+    private func handleComposerInteraction() {
+#if os(iOS)
+        cancelPendingComposerAutoFocus()
+#endif
+        collapseToolActivity()
+    }
+
     private func collapseChatPanels() {
         isToolActivityExpanded = false
         isCommandToolbarPresented = false
@@ -639,8 +683,52 @@ struct AgentChatView: View {
     }
 
     private func dismissComposerFocus() {
+#if os(iOS)
+        cancelPendingComposerAutoFocus()
+#endif
         isComposerFocused = false
     }
+
+#if os(iOS)
+    private func scheduleComposerAutoFocusAfterResponse() {
+        cancelPendingComposerAutoFocus()
+        guard !isComposerFocused else { return }
+
+        composerAutoFocusGeneration &+= 1
+        let generation = composerAutoFocusGeneration
+        composerAutoFocusTask = Task { @MainActor in
+            do {
+                try await Task.sleep(for: Self.responseCompletionAutoFocusDelay)
+            } catch {
+                return
+            }
+
+            guard generation == composerAutoFocusGeneration else { return }
+            defer { composerAutoFocusTask = nil }
+            guard canAutoFocusComposer else { return }
+            composerFocusRequestID &+= 1
+        }
+    }
+
+    private func cancelPendingComposerAutoFocus() {
+        guard let composerAutoFocusTask else { return }
+        composerAutoFocusGeneration &+= 1
+        composerAutoFocusTask.cancel()
+        self.composerAutoFocusTask = nil
+    }
+
+    private var canAutoFocusComposer: Bool {
+        appModel.chatCoordinator.busyConversationID == nil
+            && scenePhase == .active
+            && !isComposerFocused
+            && !isPresentingBrowser
+            && settingsSheetPresentation == nil
+            && previewedResourceURL == nil
+            && !isImportingAttachments
+            && !isPresentingPhotoPicker
+            && !isUserMessageContextMenuLayoutLocked
+    }
+#endif
 
     private func toggleCommandToolbar() {
         collapseToolActivity()
@@ -734,5 +822,8 @@ struct AgentChatView: View {
     }
 
     private static let transcriptBottomAnchor = "chat-transcript-bottom"
+#if os(iOS)
+    private static let responseCompletionAutoFocusDelay: Duration = .milliseconds(700)
+#endif
 
 }

@@ -22,11 +22,9 @@ struct SettingsNavigationListView: View {
             }
 
             Section("系统") {
-#if os(iOS)
                 NavigationLink(value: SettingsCardDestination.permissions) {
                     SettingsCardRow(destination: .permissions)
                 }
-#endif
                 NavigationLink(value: SettingsCardDestination.appearance) {
                     SettingsCardRow(destination: .appearance)
                 }

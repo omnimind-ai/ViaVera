@@ -27,14 +27,14 @@ enum AppDesign {
     static let mobileSidebarRowVerticalInset: CGFloat = 10
     static let composerMinimumHeight: Double = 92
     static let composerCornerRadius: Double = 24
-    static let composerHorizontalInset: Double = 12
+    static let composerHorizontalInset: Double = 16
     static let composerTextLineHeight: Double = 24
     static let composerMaximumLines = 5
     static let composerControlSize: Double = 44
     static let composerControlSpacing: Double = 6
-    static let composerContentTopPadding: Double = 14
-    static let composerContentHorizontalPadding: Double = 12
     static let composerContentBottomPadding: Double = 10
+    static let composerContentTopPadding: Double = composerContentBottomPadding + 2
+    static let composerContentHorizontalPadding: Double = composerContentTopPadding + 2
     static let composerControlFont = Font.body
     static let composerIconSize: Double = 20
     static let composerTerminalIconSize: Double = 22
@@ -46,9 +46,9 @@ enum AppDesign {
     static let composerMaximumLines = 10
     static let composerControlSize: Double = 28
     static let composerControlSpacing: Double = 4
-    static let composerContentTopPadding: Double = 10
-    static let composerContentHorizontalPadding: Double = 12
     static let composerContentBottomPadding: Double = 8
+    static let composerContentTopPadding: Double = composerContentBottomPadding + 2
+    static let composerContentHorizontalPadding: Double = composerContentTopPadding + 2
     static let composerControlFont = Font.callout
     static let composerIconSize: Double = 12
     static let composerTerminalIconSize: Double = 13
@@ -67,17 +67,17 @@ enum AppDesign {
     static let toolCapsuleVisualHeight: Double = 34
 #if os(iOS)
     static let transcriptStatusMinimumHeight: CGFloat? = minimumTouchTarget
+    static let transcriptStatusInlineSpacing: Double = 6
     static let transcriptStatusVerticalPadding: CGFloat = -(
         minimumTouchTarget - toolCapsuleVisualHeight
     ) / 2
-    static let transcriptReasoningTopPadding: Double = 0
-    static let transcriptReasoningBottomPadding: Double = compactSpacing
 #else
     static let transcriptStatusMinimumHeight: CGFloat? = nil
+    static let transcriptStatusInlineSpacing: Double = 4
     static let transcriptStatusVerticalPadding: CGFloat = 0
-    static let transcriptReasoningTopPadding: Double = compactSpacing / 2
-    static let transcriptReasoningBottomPadding: Double = compactSpacing / 2
 #endif
+    static let transcriptReasoningHeaderSpacing: Double = compactSpacing
+    static let transcriptReasoningLineOverhang: Double = 2
     static let toolActivityVisualRowHeight: Double = 32
     static let toolActivityPreviewWidth: Double = 94
     static let toolActivityPreviewHeight: Double = 54

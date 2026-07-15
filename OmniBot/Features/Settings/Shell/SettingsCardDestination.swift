@@ -5,9 +5,7 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
     case soul
     case memory
     case skills
-#if os(iOS)
     case permissions
-#endif
     case appearance
     case workspace
     case runtime
@@ -24,10 +22,8 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
             "Memory"
         case .skills:
             "Skills"
-#if os(iOS)
         case .permissions:
             "权限"
-#endif
         case .appearance:
             "外观"
         case .workspace:
@@ -47,10 +43,8 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
             "长期记忆、每日记忆与检索"
         case .skills:
             "导入、启用与管理 Agent 技能"
-#if os(iOS)
         case .permissions:
-            "管理健康、日历、通讯录与闹钟授权"
-#endif
+            permissionSubtitle
         case .appearance:
             "聊天背景与显示效果"
         case .workspace:
@@ -70,10 +64,8 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
             "brain.head.profile"
         case .skills:
             "puzzlepiece.extension"
-#if os(iOS)
         case .permissions:
             "hand.raised"
-#endif
         case .appearance:
             "paintbrush"
         case .workspace:
@@ -81,5 +73,13 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
         case .runtime:
             "shippingbox"
         }
+    }
+
+    private var permissionSubtitle: String {
+#if os(macOS)
+        "管理健康、日历与通讯录授权"
+#else
+        "管理健康、日历、通讯录与闹钟授权"
+#endif
     }
 }

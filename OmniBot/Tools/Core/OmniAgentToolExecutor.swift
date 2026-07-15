@@ -90,7 +90,9 @@ public actor OmniAgentToolExecutor: AgentToolExecuting {
     }
 
     public nonisolated func availableTools() async -> [AgentToolDefinition] {
-        OmniAgentToolDefinitions.all
+        OmniAgentToolDefinitions.all.filter {
+            IOSPermissionKind.isAgentToolAvailableOnCurrentPlatform($0.name)
+        }
     }
 
     public func execute(
@@ -108,6 +110,7 @@ public actor OmniAgentToolExecutor: AgentToolExecuting {
         do {
             try Task.checkCancellation()
             try validate(context: context)
+            try validateToolAvailability(for: call.name)
             try await validateAgentPermission(for: call.name)
             try paths.prepare(fileManager: fileManager)
             let arguments = try OmniToolArguments(call: call)
@@ -287,6 +290,20 @@ public actor OmniAgentToolExecutor: AgentToolExecuting {
                 guidance: "请先在 Via Vera 的“设置 > 系统 > 权限”中打开\(permission.title)开关。"
             )
         }
+    }
+
+    private func validateToolAvailability(for toolName: String) throws {
+        guard !IOSPermissionKind.isAgentToolAvailableOnCurrentPlatform(toolName) else { return }
+        guard let permission = IOSPermissionKind.requiredPermission(
+            forAgentToolName: toolName
+        ) else { return }
+        throw ApplePersonalToolError(
+            "此平台不支持\(permission.title)工具。",
+            code: "unsupported_platform",
+            permission: permission.rawValue,
+            backend: "platform_capabilities",
+            guidance: "请改用当前平台已公开的工具。"
+        )
     }
 
     private func addingToolContext(

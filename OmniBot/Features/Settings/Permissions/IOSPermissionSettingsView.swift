@@ -1,11 +1,10 @@
-#if os(iOS)
 import SwiftUI
 
 struct IOSPermissionSettingsView: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
     @State private var model = IOSPermissionSettingsModel(
-        authorizationClient: AppleIOSPermissionAuthorizationClient(),
+        authorizationClient: ApplePermissionAuthorizationClient(),
         permissionStore: AgentPermissionStore()
     )
 
@@ -35,7 +34,7 @@ struct IOSPermissionSettingsView: View {
             } header: {
                 Text("Agent 权限")
             } footer: {
-                Text("开关控制 Agent 能否调用对应工具。关闭不会撤销 iOS 系统权限；再次打开时，如有需要会显示系统授权页面。")
+                Text("开关控制 Agent 能否调用对应工具。关闭不会撤销系统权限；再次打开时，如有需要会显示系统授权页面。")
             }
         }
         .task {
@@ -75,7 +74,14 @@ struct IOSPermissionSettingsView: View {
     }
 
     private func openSystemSettings() {
-        guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else { return }
+#if os(iOS)
+        let settingsURL = URL(string: UIApplication.openSettingsURLString)
+#else
+        let settingsURL = URL(
+            string: "x-apple.systempreferences:com.apple.preference.security"
+        )
+#endif
+        guard let settingsURL else { return }
         openURL(settingsURL)
     }
 
@@ -88,4 +94,3 @@ struct IOSPermissionSettingsView: View {
         refresh()
     }
 }
-#endif

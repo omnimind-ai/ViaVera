@@ -16,12 +16,15 @@ struct AgentPermissionGateTests {
             paths: temporary.paths,
             agentPermissionStore: store
         )
-        let cases: [(toolName: String, permission: IOSPermissionKind)] = [
-            ("healthkit_data_types", .healthKit),
-            ("calendar_list", .calendars),
-            ("contacts_search", .contacts),
-            ("alarm_reminder_list", .alarms),
+        let representativeTools: [IOSPermissionKind: String] = [
+            .healthKit: "healthkit_data_types",
+            .calendars: "calendar_list",
+            .contacts: "contacts_search",
+            .alarms: "alarm_reminder_list",
         ]
+        let cases = IOSPermissionKind.availableOnCurrentPlatform.compactMap { permission in
+            representativeTools[permission].map { (toolName: $0, permission: permission) }
+        }
 
         for testCase in cases {
             let result = try await executeTool(
@@ -83,4 +86,24 @@ struct AgentPermissionGateTests {
             forAgentToolName: "file_read"
         ) == nil)
     }
+
+#if os(macOS)
+    @Test("Unadvertised AlarmKit tools are rejected on macOS")
+    func alarmToolsAreUnavailableOnMacOS() async throws {
+        let temporary = try makeTemporaryWorkspace()
+        defer { try? FileManager.default.removeItem(at: temporary.root) }
+        let executor = makeToolExecutor(paths: temporary.paths)
+
+        let result = try await executeTool(
+            "alarm_reminder_list",
+            arguments: titledArguments("Unsupported alarm tool"),
+            using: executor,
+            paths: temporary.paths
+        )
+
+        #expect(result.isError)
+        #expect(result.metadata["code"] == .string("unsupported_platform"))
+        #expect(result.metadata["permission"] == .string("alarms"))
+    }
+#endif
 }

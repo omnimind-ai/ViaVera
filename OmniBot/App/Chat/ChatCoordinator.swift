@@ -24,6 +24,7 @@ final class ChatCoordinator {
     private let workspacePaths: WorkspacePaths
     private let promptBuilder = AgentSystemPromptBuilder()
 
+    @ObservationIgnored private var timeContextCache = AgentTimeContextCache()
     private var runTask: Task<Void, Never>?
     private var currentRunner: AgentRunner?
     private var currentRunID: UUID?
@@ -357,6 +358,7 @@ final class ChatCoordinator {
             let inputBudget = max(0, contextWindow - outputReserve)
             let memoryByteBudget = min(24_000, max(0, inputBudget - 2_048)) * 2
             let soulByteBudget = min(4_096, max(256, inputBudget - 1_024)) * 2
+            let timeContext = timeContextCache.value()
             let prompt = promptBuilder.build(
                 AgentSystemPromptContext(
                     soul: soulValue,
@@ -368,7 +370,8 @@ final class ChatCoordinator {
                     resolvedSkills: resolvedSkillValues,
                     availableToolNames: configuration.model.supportsTools
                         ? toolDefinitions.map(\.name)
-                        : []
+                        : [],
+                    now: timeContext
                 ),
                 maximumMemoryUTF8Bytes: memoryByteBudget,
                 maximumSoulUTF8Bytes: soulByteBudget,

@@ -11,13 +11,13 @@ struct IOSPermissionSettingsModelTests {
         defer { storage.defaults.removePersistentDomain(forName: storage.suiteName) }
         await storage.store.setEnabled(true, for: .healthKit)
         await storage.store.setEnabled(true, for: .contacts)
-        await storage.store.setEnabled(true, for: .alarms)
-        let client = TestIOSPermissionAuthorizationClient(statuses: [
+        let statuses: [IOSPermissionKind: IOSPermissionAuthorization] = [
             .healthKit: .requested,
             .calendars: .authorized,
             .contacts: .limited,
-            .alarms: .denied,
-        ])
+            .alarms: .authorized,
+        ]
+        let client = TestIOSPermissionAuthorizationClient(statuses: statuses)
         let model = IOSPermissionSettingsModel(
             authorizationClient: client,
             permissionStore: storage.store
@@ -25,16 +25,13 @@ struct IOSPermissionSettingsModelTests {
 
         await model.refresh()
 
-        #expect(model.permissions.map(\.kind) == IOSPermissionKind.allCases)
-        #expect(model.permissions.map(\.authorization) == [
-            .requested,
-            .authorized,
-            .limited,
-            .denied,
-        ])
-        #expect(model.permissions.map(\.isEnabled) == [true, false, true, false])
-        let alarmsEnabled = await storage.store.isEnabled(.alarms)
-        #expect(!alarmsEnabled)
+        #expect(model.permissions.map(\.kind) == IOSPermissionKind.availableOnCurrentPlatform)
+        #expect(model.permissions.map(\.authorization) == IOSPermissionKind
+            .availableOnCurrentPlatform
+            .map { statuses[$0] ?? .unknown })
+        #expect(model.permissions.map(\.isEnabled) == IOSPermissionKind
+            .availableOnCurrentPlatform
+            .map { $0 == .healthKit || $0 == .contacts })
     }
 
     @Test("First switch-on requests system authorization and enables Agent access")
@@ -175,6 +172,19 @@ struct IOSPermissionSettingsModelTests {
         #expect(!IOSPermissionAuthorization.restricted.allowsAgentAccess)
         #expect(!IOSPermissionAuthorization.unavailable.allowsAgentAccess)
         #expect(!IOSPermissionAuthorization.unknown.allowsAgentAccess)
+    }
+
+    @Test("Current platform exposes only permissions backed by native APIs")
+    func currentPlatformPermissionCatalog() {
+#if os(macOS)
+        #expect(IOSPermissionKind.availableOnCurrentPlatform == [
+            .healthKit,
+            .calendars,
+            .contacts,
+        ])
+#else
+        #expect(IOSPermissionKind.availableOnCurrentPlatform == IOSPermissionKind.allCases)
+#endif
     }
 
     @Test("Agent permission store persists values across instances")
