@@ -17,27 +17,33 @@ struct SettingsPageLayout<Content: View, Actions: View>: View {
 
     var body: some View {
 #if os(macOS)
-        VStack(spacing: 0) {
-            HStack(spacing: AppDesign.standardSpacing) {
-                Text(title)
-                    .font(.headline)
+        Group {
+            if Actions.self == EmptyView.self {
+                Form {
+                    content
+                }
+                .settingsFormStyle()
+                .scrollContentBackground(.hidden)
+                .frame(maxWidth: AppDesign.settingsContentMaximumWidth)
+                .frame(maxWidth: .infinity)
+            } else {
+                VStack(spacing: 0) {
+                    Form {
+                        content
+                    }
+                    .settingsFormStyle()
+                    .scrollContentBackground(.hidden)
+                    .frame(maxWidth: AppDesign.settingsContentMaximumWidth)
+                    .frame(maxWidth: .infinity)
 
-                Spacer(minLength: AppDesign.compactSpacing)
-
-                actions
+                    HStack {
+                        Spacer(minLength: AppDesign.compactSpacing)
+                        actions
+                    }
+                    .padding(.horizontal, AppDesign.contentPadding)
+                    .frame(minHeight: AppDesign.settingsHeaderMinimumHeight)
+                }
             }
-            .padding(.horizontal, AppDesign.contentPadding)
-            .frame(minHeight: AppDesign.settingsHeaderMinimumHeight)
-
-            Divider()
-
-            Form {
-                content
-            }
-            .settingsFormStyle()
-            .scrollContentBackground(.hidden)
-            .frame(maxWidth: AppDesign.settingsContentMaximumWidth)
-            .frame(maxWidth: .infinity)
         }
         .background(.background)
 #else

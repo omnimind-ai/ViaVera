@@ -15,12 +15,10 @@ struct SkillSettingsView: View {
                         Spacer()
                     }
                 } else if settings.skills.isEmpty {
-                    ContentUnavailableView(
-                        "尚未安装 Skills",
-                        systemImage: "puzzlepiece.extension",
-                        description: Text("从包含 SKILL.md 的目录或文件导入。")
-                    )
-                    .listRowBackground(Color.clear)
+                    Color.clear
+                        .frame(minHeight: 96)
+                        .listRowBackground(Color.clear)
+                        .accessibilityHidden(true)
                 } else {
                     ForEach(settings.skills) { skill in
                         SkillSettingsRow(

@@ -12,12 +12,9 @@ struct ProviderModelListSection: View {
     var body: some View {
         Section {
             if models.isEmpty {
-                ContentUnavailableView {
-                    Label("还没有模型", systemImage: "cpu")
-                } description: {
-                    Text("自动获取服务商模型，或添加一个自定义模型。")
-                }
-                .frame(minHeight: 120)
+                Color.clear
+                    .frame(minHeight: 120)
+                    .accessibilityHidden(true)
             } else {
                 ForEach(models) { model in
                     ProviderModelRow(
