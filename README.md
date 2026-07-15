@@ -13,6 +13,8 @@
 </div>
 
 <p align="center">
+  <a href="#product-preview"><b>Preview</b></a>
+  ·
   <a href="#core-capabilities"><b>Capabilities</b></a>
   ·
   <a href="#quick-start"><b>Quick Start</b></a>
@@ -27,6 +29,26 @@
 > Via Vera is a native AI agent for iPhone, iPad, and Mac. Its agent runtime, tools, workspace, memory, and credentials remain under the control of the Apple device while it connects to the model provider chosen by the user.
 
 Built with SwiftUI, Via Vera goes beyond chat by completing the full loop of **understand → decide → execute → reflect**. It combines a tool-calling agent with an embedded Alpine Linux environment, persistent memory, browser and workspace access, and native Apple integrations.
+
+Join *Via Vera* TestFlight to help us improve the agent:
+https://testflight.apple.com/join/YMwpPFRP
+
+<h2 id="product-preview">Product Preview</h2>
+
+<p align="center">
+  <img src="Docs/pic/via-vera-macos.png" alt="Via Vera agent running natively on macOS" width="960"><br>
+  <sub>A native macOS workspace with conversations, tool activity, and agent results in one window.</sub>
+</p>
+
+<p align="center">
+  <img src="Docs/pic/via-vera-agent.png" alt="Via Vera agent, terminal, and conversation interfaces" width="880"><br>
+  <sub>Agent conversations, health insights, the local terminal, and conversation history.</sub>
+</p>
+
+<p align="center">
+  <img src="Docs/pic/via-vera-environment.png" alt="Via Vera settings, Alpine environment, and workspace interfaces" width="880"><br>
+  <sub>Native settings, Alpine environment management, and the workspace browser.</sub>
+</p>
 
 <h2 id="core-capabilities">Core Capabilities</h2>
 
