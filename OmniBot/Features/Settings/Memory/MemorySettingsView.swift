@@ -23,12 +23,9 @@ struct MemorySettingsView: View {
 
             Section("今日记忆") {
                 if trimmedTodayMemory.isEmpty {
-                    ContentUnavailableView {
-                        Label("今天还没有记忆", systemImage: "calendar")
-                    } description: {
-                        Text("Agent 产生的每日记忆会显示在这里。")
-                    }
-                    .frame(minHeight: 96)
+                    Color.clear
+                        .frame(minHeight: 96)
+                        .accessibilityHidden(true)
                 } else {
                     SettingsCodeBlockView(
                         text: settings.todayMemory,

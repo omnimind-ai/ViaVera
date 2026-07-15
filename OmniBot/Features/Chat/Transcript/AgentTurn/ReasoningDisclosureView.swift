@@ -34,20 +34,16 @@ struct ReasoningDisclosureView: View {
             Button {
                 isExpanded.toggle()
             } label: {
-                HStack(spacing: 6) {
+                HStack(spacing: AppDesign.transcriptStatusInlineSpacing) {
                     if isThinking {
-                        Image(systemName: "sparkles")
-                            .symbolEffect(
-                                .pulse,
-                                options: .repeating,
-                                isActive: !reduceMotion
-                            )
-                            .accessibilityHidden(true)
+                        ShimmeringText(text: "思考中")
+                            .font(.caption)
+                            .bold()
+                    } else {
+                        Text("已完成思考")
+                            .font(.caption)
+                            .bold()
                     }
-
-                    Text(isThinking ? "正在思考" : "已完成思考")
-                        .font(.caption)
-                        .bold()
 
                     elapsedLabel
 
@@ -75,13 +71,18 @@ struct ReasoningDisclosureView: View {
             AgentTurnRevealLayout(progress: isExpanded ? 1 : 0) {
                 PacedReasoningText(text: text, isStreaming: isStreaming)
                     .padding(.leading, AppDesign.standardSpacing)
-                    .padding(.bottom, AppDesign.compactSpacing)
                     .overlay(alignment: .leading) {
                         Rectangle()
                             .fill(.tertiary)
                             .frame(width: 2)
+                            .padding(
+                                .vertical,
+                                -AppDesign.transcriptReasoningLineOverhang
+                            )
                             .accessibilityHidden(true)
                     }
+                    .padding(.top, AppDesign.transcriptReasoningHeaderSpacing)
+                    .padding(.bottom, AppDesign.transcriptReasoningLineOverhang)
             }
             .clipped()
             .opacity(isExpanded ? 1 : 0)

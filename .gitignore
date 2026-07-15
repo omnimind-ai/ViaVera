@@ -36,7 +36,7 @@ Signing.xcconfig
 .swiftpm/xcode/package.xcworkspace/xcuserdata/
 
 # Local design exploration
-Design/
+/Design/
 
 # Local Codex workspace state
 /.codex/

@@ -1,4 +1,3 @@
-#if os(iOS)
 import SwiftUI
 
 struct IOSPermissionSettingsRow: View {
@@ -32,4 +31,3 @@ struct IOSPermissionSettingsRow: View {
         )
     }
 }
-#endif

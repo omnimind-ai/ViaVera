@@ -8,6 +8,18 @@ nonisolated enum IOSPermissionKind: String, CaseIterable, Identifiable, Sendable
 
     var id: Self { self }
 
+    static var availableOnCurrentPlatform: [Self] {
+        allCases.filter(\.isAvailableOnCurrentPlatform)
+    }
+
+    var isAvailableOnCurrentPlatform: Bool {
+#if os(macOS)
+        self != .alarms
+#else
+        true
+#endif
+    }
+
     var title: String {
         switch self {
         case .healthKit:
@@ -53,5 +65,9 @@ nonisolated enum IOSPermissionKind: String, CaseIterable, Identifiable, Sendable
         if name.hasPrefix("contacts_") { return .contacts }
         if name.hasPrefix("alarm_reminder_") { return .alarms }
         return nil
+    }
+
+    static func isAgentToolAvailableOnCurrentPlatform(_ name: String) -> Bool {
+        requiredPermission(forAgentToolName: name)?.isAvailableOnCurrentPlatform ?? true
     }
 }

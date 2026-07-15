@@ -53,13 +53,23 @@ struct ProviderEditorView: View {
                 }
             } else if isReady {
                 SettingsInputField("服务商名称") {
-                    TextField("请输入服务商名称", text: $settings.editor.name)
+                    TextField(
+                        "服务商名称",
+                        text: $settings.editor.name,
+                        prompt: Text("请输入服务商名称")
+                            .foregroundStyle(.tertiary)
+                    )
                         .settingsInputStyle()
                         .accessibilityLabel("服务商名称")
                 }
 
                 SettingsInputField("Base URL") {
-                    TextField("https://api.example.com/v1", text: $settings.editor.baseURL)
+                    TextField(
+                        "Base URL",
+                        text: $settings.editor.baseURL,
+                        prompt: Text("请输出 Base URL")
+                            .foregroundStyle(.tertiary)
+                    )
                         .autocorrectionDisabled()
                         .settingsInputStyle()
                         .accessibilityLabel("Base URL")

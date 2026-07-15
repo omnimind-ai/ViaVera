@@ -1,11 +1,12 @@
-#if os(iOS)
-import AlarmKit
 import Contacts
 import EventKit
 import HealthKit
+#if os(iOS)
+import AlarmKit
+#endif
 
 @MainActor
-final class AppleIOSPermissionAuthorizationClient: IOSPermissionAuthorizationClient {
+final class ApplePermissionAuthorizationClient: IOSPermissionAuthorizationClient {
     private let contactStore: CNContactStore
     private let eventStore: EKEventStore
     private let healthStore: HKHealthStore
@@ -24,9 +25,11 @@ final class AppleIOSPermissionAuthorizationClient: IOSPermissionAuthorizationCli
         var statuses: [IOSPermissionKind: IOSPermissionAuthorization] = [
             .calendars: calendarAuthorization,
             .contacts: contactsAuthorization,
-            .alarms: alarmAuthorization,
         ]
         statuses[.healthKit] = await healthKitAuthorization()
+#if os(iOS)
+        statuses[.alarms] = alarmAuthorization
+#endif
         return statuses
     }
 
@@ -45,7 +48,11 @@ final class AppleIOSPermissionAuthorizationClient: IOSPermissionAuthorizationCli
         case .contacts:
             _ = try await contactStore.requestAccess(for: .contacts)
         case .alarms:
+#if os(iOS)
             _ = try await AlarmManager.shared.requestAuthorization()
+#else
+            throw IOSPermissionRequestError.unsupportedOnCurrentPlatform(permission.title)
+#endif
         }
     }
 
@@ -76,13 +83,16 @@ final class AppleIOSPermissionAuthorizationClient: IOSPermissionAuthorizationCli
             .denied
         case .authorized:
             .authorized
+#if os(iOS)
         case .limited:
             .limited
+#endif
         @unknown default:
             .unknown
         }
     }
 
+#if os(iOS)
     private var alarmAuthorization: IOSPermissionAuthorization {
         switch AlarmManager.shared.authorizationState {
         case .notDetermined:
@@ -95,6 +105,7 @@ final class AppleIOSPermissionAuthorizationClient: IOSPermissionAuthorizationCli
             .unknown
         }
     }
+#endif
 
     private func healthKitAuthorization() async -> IOSPermissionAuthorization {
         guard HKHealthStore.isHealthDataAvailable() else { return .unavailable }
@@ -127,4 +138,3 @@ final class AppleIOSPermissionAuthorizationClient: IOSPermissionAuthorizationCli
         return types
     }
 }
-#endif

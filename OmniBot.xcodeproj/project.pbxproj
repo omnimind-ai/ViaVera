@@ -24,6 +24,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B20000000000000000000001 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		8E94B6EA3000BF1400A6FA2F /* Via Vera.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Via Vera.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E94B6FB3000BF1400A6FA2F /* OmniBotTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OmniBotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E94B7053000BF1400A6FA2F /* OmniBotUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OmniBotUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -88,6 +89,7 @@
 		8E94B6E13000BF1400A6FA2F = {
 			isa = PBXGroup;
 			children = (
+				B20000000000000000000001 /* Base.xcconfig */,
 				8E94B6EC3000BF1400A6FA2F /* OmniBot */,
 				8E94B6FE3000BF1400A6FA2F /* OmniBotTests */,
 				8E94B7083000BF1400A6FA2F /* OmniBotUITests */,
@@ -472,6 +474,7 @@
 		};
 		8E94B7113000BF1400A6FA2F /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B20000000000000000000001 /* Base.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -533,6 +536,7 @@
 		};
 		8E94B7123000BF1400A6FA2F /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B20000000000000000000001 /* Base.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;

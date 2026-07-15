@@ -20,6 +20,8 @@ struct SettingsSidebarView: View {
             }
 
             Section("系统") {
+                SettingsCardRow(destination: .permissions)
+                    .tag(SettingsCardDestination.permissions)
                 SettingsCardRow(destination: .appearance)
                     .tag(SettingsCardDestination.appearance)
                 SettingsCardRow(destination: .workspace)

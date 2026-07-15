@@ -76,18 +76,18 @@ struct AppDependencies {
         )
         let toolActivity = ChatToolActivityModel()
         let fileManager = FileManager.default
-        let appleAlarmService = AppleAlarmService(
+        let appleAlarmService: AppleAlarmService?
+#if os(iOS)
+        appleAlarmService = AppleAlarmService(
             recordFileURL: workspacePaths.agentDirectory.appending(
                 path: "alarms.json",
                 directoryHint: .notDirectory
             )
         )
-        let agentPermissionStore: AgentPermissionStore?
-        #if os(iOS)
-        agentPermissionStore = AgentPermissionStore()
-        #else
-        agentPermissionStore = nil
-        #endif
+#else
+        appleAlarmService = nil
+#endif
+        let agentPermissionStore = AgentPermissionStore()
         let browserSession = AppleBrowserSession(
             paths: workspacePaths,
             fileManager: fileManager,

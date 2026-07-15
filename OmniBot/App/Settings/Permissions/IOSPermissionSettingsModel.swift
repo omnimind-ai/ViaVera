@@ -6,7 +6,7 @@ final class IOSPermissionSettingsModel {
     private let authorizationClient: any IOSPermissionAuthorizationClient
     private let permissionStore: AgentPermissionStore
 
-    private(set) var permissions = IOSPermissionKind.allCases.map {
+    private(set) var permissions = IOSPermissionKind.availableOnCurrentPlatform.map {
         IOSPermissionToggleState(kind: $0)
     }
     private(set) var hasLoaded = false

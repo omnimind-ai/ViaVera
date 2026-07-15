@@ -291,12 +291,8 @@ nonisolated public struct AgentSystemPromptBuilder: Sendable {
                 ? "- 网页浏览、提取与交互优先使用 `browser_use`。它与聊天页面可见的浏览器卡片共享同一个 WebKit 会话，使用 Safari 同源引擎，但不是 Safari App，也不会读取 Safari 的私有标签页或 Cookie；网站数据不持久化，并在切换对话时重置。先 `navigate`，再按需提取、查找、点击、输入或截图；一次调用只做一个 action。浏览器结果含 `riskChallengeDetected=true` 时停止自动交互，请用户在同一会话的浏览器卡片内手动完成验证后再继续。"
                 : "- Prefer `browser_use` for web navigation, extraction, and interaction. It shares the same WebKit session shown in the chat's visible browser card, uses Safari's engine, is not the Safari app, and cannot read Safari's private tabs or cookies; website data is non-persistent and resets when the conversation changes. Perform one action per call. When `riskChallengeDetected=true`, stop automated interaction and ask the user to complete verification manually in that same session's browser card before continuing.")
         }
-        let hasApplePersonalDataTools = names.contains { name in
-            name.hasPrefix("alarm_reminder_")
-                || name.hasPrefix("calendar_")
-                || name.hasPrefix("contacts_")
-        }
-        if hasApplePersonalDataTools {
+        var personalToolSemantics: [String] = []
+        if names.contains(where: { $0.hasPrefix("alarm_reminder_") }) {
             let alarmSemantics: String
             if platformName.localizedCaseInsensitiveContains("iOS") {
                 alarmSemantics = isChinese
@@ -311,9 +307,30 @@ nonisolated public struct AgentSystemPromptBuilder: Sendable {
                     ? "`alarm_reminder_*` 使用当前 Apple 平台可用的提醒后端"
                     : "`alarm_reminder_*` uses the reminder backend available on the current Apple platform"
             }
-            lines.append(isChinese
-                ? "- \(alarmSemantics)；`calendar_*` 用于系统日历，`contacts_*` 用于通讯录。`clock_app` 不受支持。权限拒绝后不要循环重试，应说明需要用户在系统设置中授权。"
-                : "- \(alarmSemantics); use `calendar_*` for system calendars and `contacts_*` for the address book. `clock_app` is unsupported. Do not loop on denied permissions; explain that authorization must be changed in System Settings.")
+            personalToolSemantics.append(alarmSemantics)
+            personalToolSemantics.append(isChinese
+                ? "`clock_app` 不受支持"
+                : "`clock_app` is unsupported")
+        }
+        if names.contains(where: { $0.hasPrefix("calendar_") }) {
+            personalToolSemantics.append(isChinese
+                ? "`calendar_*` 用于系统日历"
+                : "use `calendar_*` for system calendars")
+        }
+        if names.contains(where: { $0.hasPrefix("contacts_") }) {
+            personalToolSemantics.append(isChinese
+                ? "`contacts_*` 用于通讯录"
+                : "use `contacts_*` for the address book")
+        }
+        if !personalToolSemantics.isEmpty {
+            let separator = isChinese ? "；" : "; "
+            let sentenceSeparator = isChinese ? "。" : ". "
+            let permissionGuidance = isChinese
+                ? "权限拒绝后不要循环重试，应说明需要用户在系统设置中授权。"
+                : "Do not loop on denied permissions; explain that authorization must be changed in System Settings."
+            lines.append(
+                "- \(personalToolSemantics.joined(separator: separator))\(sentenceSeparator)\(permissionGuidance)"
+            )
         }
         if names.contains(where: { $0.hasPrefix("healthkit_") }) {
             lines.append(isChinese
@@ -497,9 +514,11 @@ nonisolated public struct AgentSystemPromptBuilder: Sendable {
     }
 
     private func timeString(_ date: Date, timeZone: TimeZone) -> String {
-        let formatter = ISO8601DateFormatter()
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = Calendar(identifier: .gregorian)
         formatter.timeZone = timeZone
-        formatter.formatOptions = [.withInternetDateTime]
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mmXXX"
         return formatter.string(from: date)
     }
 

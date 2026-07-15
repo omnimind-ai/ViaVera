@@ -14,7 +14,7 @@ struct AgentTurnView: View {
             } else {
                 VStack(alignment: .leading, spacing: 0) {
                     Button(action: onToggleExpanded) {
-                        HStack(spacing: 4) {
+                        HStack(spacing: AppDesign.transcriptStatusInlineSpacing) {
                             Text(summaryTitle)
                                 .lineLimit(1)
 
