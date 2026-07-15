@@ -75,7 +75,8 @@ struct ReasoningDisclosureView: View {
             AgentTurnRevealLayout(progress: isExpanded ? 1 : 0) {
                 PacedReasoningText(text: text, isStreaming: isStreaming)
                     .padding(.leading, AppDesign.standardSpacing)
-                    .padding(.bottom, AppDesign.compactSpacing)
+                    .padding(.top, AppDesign.transcriptReasoningTopPadding)
+                    .padding(.bottom, AppDesign.transcriptReasoningBottomPadding)
                     .overlay(alignment: .leading) {
                         Rectangle()
                             .fill(.tertiary)

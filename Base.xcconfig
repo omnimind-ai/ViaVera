@@ -1,0 +1,2 @@
+// Shared configuration may optionally load machine-local signing values.
+#include? "Signing.xcconfig"
