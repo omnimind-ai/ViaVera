@@ -32,6 +32,8 @@ struct SettingsSidebarView: View {
         }
         .listStyle(.sidebar)
 #if os(macOS)
+        .scrollContentBackground(.hidden)
+        .background(.background)
         .frame(width: AppDesign.settingsSidebarMaximumWidth)
 #endif
     }
