@@ -40,3 +40,5 @@ Signing.xcconfig
 
 # Local Codex workspace state
 /.codex/
+/.agents/
+/.claude/
