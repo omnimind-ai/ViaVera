@@ -2,8 +2,10 @@ import Foundation
 
 nonisolated final class ModelDiscoveryService: ModelDiscovering, @unchecked Sendable {
     static let defaultCatalogURL: URL = {
-        guard let url = URL(string: "https://models.dev/api.json") else {
-            fatalError("The models.dev catalog URL literal is invalid.")
+        guard let url = URL(
+            string: "https://omni.1775885.xyz/catalog/models-dev/api.json"
+        ) else {
+            fatalError("The models.dev catalog mirror URL literal is invalid.")
         }
         return url
     }()

@@ -17,6 +17,16 @@ struct AgentChatView: View {
     @State private var isToolActivityExpanded = false
     @State private var isCommandToolbarPresented = false
     @State private var autoScrollSuppressedUntil: Date?
+    /// Whether the transcript should follow the latest output. Driven by
+    /// `onScrollGeometry`/`onScrollPhaseChange`: while the user is manually
+    /// scrolled away from the bottom this is `false` and token-driven
+    /// `scrollTo` calls are skipped, so reading earlier output during
+    /// streaming stays put. Re-pinned to `true` when the user scrolls back to
+    /// the bottom, submits a new message, retries, or switches conversation.
+    @State private var isPinnedToBottom = true
+    /// Most recent scroll phase. Used to distinguish user-driven drags from
+    /// the programmatic `.animating` phase our own `scrollTo` produces.
+    @State private var scrollPhase: ScrollPhase = .idle
     @State private var isUserMessageContextMenuLayoutLocked = false
     @State private var userMessageContextMenuUnlockGeneration = 0
 #if os(macOS)
@@ -134,15 +144,37 @@ struct AgentChatView: View {
                             )
 #endif
                             .scrollDismissesKeyboard(.interactively)
+                            .onScrollPhaseChange { _, phase in
+                                scrollPhase = phase
+                            }
+                            .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                                // Distance from the bottom edge of the content
+                                // to the bottom edge of the viewport.
+                                geometry.contentSize.height
+                                    - geometry.contentOffset.y
+                                    - geometry.containerSize.height
+                            } action: { _, distanceToBottom in
+                                // Skip the programmatic, animated scroll our own
+                                // follow-the-latest logic issues; otherwise its
+                                // offset changes would never un-pin the view.
+                                guard scrollPhase != .animating else { return }
+                                isPinnedToBottom =
+                                    distanceToBottom
+                                    <= Self.bottomPinTolerance
+                            }
                             .onChange(
                                 of: transcript.timelineEntries.map(\.id)
                             ) { _, identifiers in
-                                guard !isAutoScrollSuppressed else { return }
                                 guard !identifiers.isEmpty else { return }
+                                guard isPinnedToBottom,
+                                    !isAutoScrollSuppressed
+                                else { return }
                                 scrollToLatest(using: scrollProxy)
                             }
                             .onChange(of: messages.last?.updatedAt) { _, _ in
-                                guard !isAutoScrollSuppressed else { return }
+                                guard isPinnedToBottom,
+                                    !isAutoScrollSuppressed
+                                else { return }
                                 if reduceMotion {
                                     scrollToLatest(using: scrollProxy)
                                 } else {
@@ -317,6 +349,8 @@ struct AgentChatView: View {
                 isToolActivityExpanded = false
                 isCommandToolbarPresented = false
                 autoScrollSuppressedUntil = nil
+                isPinnedToBottom = true
+                scrollPhase = .idle
                 resetUserMessageContextMenuLayoutLock()
                 editingUserMessageID = nil
                 draft = ""
@@ -475,6 +509,9 @@ struct AgentChatView: View {
             let message = draft
             draft = ""
             isCommandToolbarPresented = false
+            // The user just submitted; follow the new turn as it streams in
+            // even if they had been scrolled up reading earlier output.
+            isPinnedToBottom = true
             appModel.chatCoordinator.send(message, in: conversation)
             return
         }
@@ -598,6 +635,9 @@ struct AgentChatView: View {
         conversation: ConversationRecord
     ) {
         Task {
+            // A retry starts a fresh streaming turn; resume auto-follow so the
+            // regenerated output is visible without manual scrolling back down.
+            isPinnedToBottom = true
             try? await resend(
                 message,
                 replacementText: replacementText,
@@ -822,6 +862,11 @@ struct AgentChatView: View {
     }
 
     private static let transcriptBottomAnchor = "chat-transcript-bottom"
+    /// Distance from the bottom edge (in points) within which the transcript
+    /// is still considered "pinned to bottom" and may auto-follow streaming
+    /// output. Larger than zero so a fractional drag or inset rounding does
+    /// not immediately unpin.
+    private static let bottomPinTolerance: CGFloat = 40
 #if os(iOS)
     private static let responseCompletionAutoFocusDelay: Duration = .milliseconds(700)
 #endif

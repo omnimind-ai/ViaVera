@@ -4,6 +4,13 @@ import Testing
 @testable import Via_Vera
 
 struct ModelDiscoveryServiceTests {
+    @Test func usesOmniModelsDevMirrorByDefault() {
+        #expect(
+            ModelDiscoveryService.defaultCatalogURL.absoluteString
+                == "https://omni.1775885.xyz/catalog/models-dev/api.json"
+        )
+    }
+
     @Test func buildsModelsURLFromCommonOpenAICompatibleBaseURLs() throws {
         let versioned = try #require(URL(string: "https://api.example.com/v1"))
         let root = try #require(URL(string: "https://api.example.com"))
