@@ -54,7 +54,9 @@ struct AssistantMessageView: View {
                     contextTokens: turnUsage.contextTokens,
                     inputTokens: turnUsage.inputTokens,
                     outputTokens: turnUsage.outputTokens,
-                    cachedTokens: turnUsage.cachedTokens
+                    cachedTokens: turnUsage.cachedTokens,
+                    cacheCreationTokens: turnUsage.cacheCreationTokens,
+                    cacheHitPercentage: turnUsage.cacheHitPercentage
                 )
             }
         }

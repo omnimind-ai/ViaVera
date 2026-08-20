@@ -93,11 +93,18 @@ nonisolated public final class OpenAICompatibleClient: AgentChatStreaming, @unch
             throw OpenAICompatibleClientError.invalidHTTPResponse
         }
         guard (200..<300).contains(httpResponse.statusCode) else {
-            throw Self.parseHTTPError(
+            let error = Self.parseHTTPError(
                 statusCode: httpResponse.statusCode,
                 data: data,
                 apiKey: apiKey
             )
+            if request.promptCacheKey != nil, error.rejectsPromptCacheKey {
+                return try await complete(
+                    request.replacingPromptCacheKey(nil),
+                    apiKey: apiKey
+                )
+            }
+            throw error
         }
 
         let wireResponse: OpenAIChatCompletionResponseBody
@@ -155,17 +162,27 @@ nonisolated public final class OpenAICompatibleClient: AgentChatStreaming, @unch
             guard wireUsage.promptTokens >= 0,
                   wireUsage.completionTokens >= 0,
                   wireUsage.promptTokensDetails?.cachedTokens.map({ $0 >= 0 }) ?? true,
+                  wireUsage.promptTokensDetails?.cacheWriteTokens.map({ $0 >= 0 }) ?? true,
                   wireUsage.totalTokens.map({ $0 >= 0 }) ?? true else {
                 throw OpenAICompatibleClientError.invalidUsage
             }
+            let cachedTokens = wireUsage.promptTokensDetails?.cachedTokens ?? 0
+            let cacheCreationTokens = wireUsage.promptTokensDetails?.cacheWriteTokens ?? 0
+            guard cachedTokens <= wireUsage.promptTokens,
+                  cacheCreationTokens <= wireUsage.promptTokens - cachedTokens else {
+                throw OpenAICompatibleClientError.invalidUsage
+            }
             usage = AgentUsage(
-                promptTokens: wireUsage.promptTokens,
+                promptTokens: wireUsage.promptTokens - cachedTokens,
                 completionTokens: wireUsage.completionTokens,
                 totalTokens: wireUsage.totalTokens ?? AgentUsage.saturatingSum(
                     wireUsage.promptTokens,
                     wireUsage.completionTokens
                 ),
-                cachedTokens: wireUsage.promptTokensDetails?.cachedTokens ?? 0
+                cachedTokens: cachedTokens,
+                cacheCreationTokens: cacheCreationTokens,
+                reportsCacheUsage: wireUsage.promptTokensDetails?.cachedTokens != nil
+                    || wireUsage.promptTokensDetails?.cacheWriteTokens != nil
             )
         } else {
             usage = .zero
@@ -253,7 +270,7 @@ nonisolated public final class OpenAICompatibleClient: AgentChatStreaming, @unch
 
         do {
             let encoder = JSONEncoder()
-            encoder.outputFormatting = [.withoutEscapingSlashes]
+            encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
             urlRequest.httpBody = try encoder.encode(
                 OpenAIChatCompletionRequestBody(
                     request,

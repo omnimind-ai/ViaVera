@@ -47,11 +47,18 @@ nonisolated final class AnthropicMessagesClient: AgentChatStreaming, @unchecked 
             throw OpenAICompatibleClientError.invalidHTTPResponse
         }
         guard (200..<300).contains(httpResponse.statusCode) else {
-            throw OpenAICompatibleClient.parseHTTPError(
+            let error = OpenAICompatibleClient.parseHTTPError(
                 statusCode: httpResponse.statusCode,
                 data: data,
                 apiKey: apiKey
             )
+            if request.promptCacheKey != nil, error.rejectsAnthropicCacheControl {
+                return try await complete(
+                    request.replacingPromptCacheKey(nil),
+                    apiKey: apiKey
+                )
+            }
+            throw error
         }
 
         let value: AgentValue
@@ -118,11 +125,19 @@ nonisolated final class AnthropicMessagesClient: AgentChatStreaming, @unchecked 
             case let .responseTooLarge(maximumBytes):
                 throw OpenAICompatibleClientError.responseTooLarge(maximumBytes: maximumBytes)
             case let .httpError(statusCode, data):
-                throw OpenAICompatibleClient.parseHTTPError(
+                let parsed = OpenAICompatibleClient.parseHTTPError(
                     statusCode: statusCode,
                     data: data,
                     apiKey: apiKey
                 )
+                if request.promptCacheKey != nil, parsed.rejectsAnthropicCacheControl {
+                    return try await stream(
+                        request.replacingPromptCacheKey(nil),
+                        apiKey: apiKey,
+                        onSnapshot: onSnapshot
+                    )
+                }
+                throw parsed
             }
         } catch let error as OpenAICompatibleClientError {
             throw error
@@ -173,7 +188,7 @@ nonisolated final class AnthropicMessagesClient: AgentChatStreaming, @unchecked 
 
         do {
             let encoder = JSONEncoder()
-            encoder.outputFormatting = [.withoutEscapingSlashes]
+            encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
             urlRequest.httpBody = try encoder.encode(AnthropicMessagesRequestBody(request))
         } catch {
             throw OpenAICompatibleClientError.requestEncodingFailed(

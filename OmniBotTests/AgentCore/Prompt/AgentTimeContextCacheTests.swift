@@ -4,28 +4,28 @@ import Testing
 
 @Suite("Agent time context cache")
 struct AgentTimeContextCacheTests {
-    @Test("Keeps minute-level time stable for five minutes")
+    @Test("Keeps coarse date context stable for one hour")
     func reusesCachedMinute() throws {
         let firstRequest = try date("2026-07-10T08:00:47Z")
         let expectedMinute = try date("2026-07-10T08:00:00Z")
         var cache = AgentTimeContextCache()
 
         let first = cache.value(at: firstRequest)
-        let nearExpiry = cache.value(at: firstRequest.addingTimeInterval(299.999))
+        let nearExpiry = cache.value(at: firstRequest.addingTimeInterval(3_599.999))
 
         #expect(first == expectedMinute)
         #expect(nearExpiry == first)
     }
 
-    @Test("Refreshes on the first request after five minutes")
+    @Test("Refreshes on the first request after one hour")
     func refreshesAfterLifetime() throws {
         let firstRequest = try date("2026-07-10T08:00:47Z")
-        let expectedRefreshedMinute = try date("2026-07-10T08:05:00Z")
+        let expectedRefreshedMinute = try date("2026-07-10T09:00:00Z")
         var cache = AgentTimeContextCache()
         let first = cache.value(at: firstRequest)
 
-        let refreshed = cache.value(at: firstRequest.addingTimeInterval(300))
-        let reused = cache.value(at: firstRequest.addingTimeInterval(599))
+        let refreshed = cache.value(at: firstRequest.addingTimeInterval(3_600))
+        let reused = cache.value(at: firstRequest.addingTimeInterval(7_199))
 
         #expect(refreshed == expectedRefreshedMinute)
         #expect(refreshed != first)

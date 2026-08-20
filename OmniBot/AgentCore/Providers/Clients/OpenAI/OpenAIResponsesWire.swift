@@ -17,6 +17,9 @@ nonisolated struct OpenAIResponsesRequestBody: Encodable, Sendable {
         if !instructions.isEmpty {
             payload["instructions"] = .string(instructions)
         }
+        if let promptCacheKey = request.promptCacheKey {
+            payload["prompt_cache_key"] = .string(promptCacheKey)
+        }
         if let maxTokens = request.maxTokens {
             payload["max_output_tokens"] = .number(Double(maxTokens))
         }
@@ -300,14 +303,28 @@ actor OpenAIResponsesAccumulator {
             let cachedTokens = Self.integer(
                 usage["input_tokens_details"]?.objectValue?["cached_tokens"]
             ) ?? 0
-            guard inputTokens >= 0, outputTokens >= 0, totalTokens >= 0, cachedTokens >= 0 else {
+            let cacheCreationTokens = Self.integer(
+                usage["input_tokens_details"]?.objectValue?["cache_write_tokens"]
+            ) ?? 0
+            let reportsCacheUsage = usage["input_tokens_details"]?
+                .objectValue?["cached_tokens"] != nil
+                || usage["input_tokens_details"]?.objectValue?["cache_write_tokens"] != nil
+            guard inputTokens >= 0,
+                  outputTokens >= 0,
+                  totalTokens >= 0,
+                  cachedTokens >= 0,
+                  cacheCreationTokens >= 0,
+                  cachedTokens <= inputTokens,
+                  cacheCreationTokens <= inputTokens - cachedTokens else {
                 throw OpenAICompatibleClientError.invalidUsage
             }
             self.usage = AgentUsage(
-                promptTokens: inputTokens,
+                promptTokens: inputTokens - cachedTokens,
                 completionTokens: outputTokens,
                 totalTokens: totalTokens,
-                cachedTokens: cachedTokens
+                cachedTokens: cachedTokens,
+                cacheCreationTokens: cacheCreationTokens,
+                reportsCacheUsage: reportsCacheUsage
             )
         }
     }

@@ -79,10 +79,17 @@ struct ChatTranscriptPresentation {
                         promptTokens: message.promptTokens,
                         completionTokens: message.completionTokens,
                         totalTokens: AgentUsage.saturatingSum(
-                            message.promptTokens,
+                            AgentUsage.saturatingSum(
+                                message.promptTokens,
+                                message.cachedTokens
+                            ),
                             message.completionTokens
                         ),
-                        cachedTokens: message.cachedTokens
+                        cachedTokens: message.cachedTokens,
+                        cacheCreationTokens: message.cacheCreationTokens,
+                        reportsCacheUsage: message.reportsCacheUsage
+                            || message.cachedTokens > 0
+                            || message.cacheCreationTokens > 0
                     )
                 )
                 usage = candidate.isEmpty ? nil : candidate

@@ -37,10 +37,14 @@ struct ChatTranscriptPresentationTests {
                 promptTokens: 240,
                 completionTokens: 30,
                 totalTokens: 270,
-                cachedTokens: 50
+                cachedTokens: 50,
+                cacheCreationTokens: 25,
+                reportsCacheUsage: true
             ),
             contextWindow: 1_000_000
         )
+        // Simulate a record created before reportsCacheUsage was persisted.
+        finalAssistant.reportsCacheUsage = false
 
         let presentation = ChatTranscriptPresentation(
             messages: conversation.orderedMessages,
@@ -71,6 +75,8 @@ struct ChatTranscriptPresentationTests {
         #expect(usage.inputTokens == 240)
         #expect(usage.outputTokens == 30)
         #expect(usage.cachedTokens == 50)
+        #expect(usage.cacheCreationTokens == 25)
+        #expect(usage.cacheHitPercentage == 17)
     }
 
     @Test("Browser tool calls expose browser thumbnail metadata")

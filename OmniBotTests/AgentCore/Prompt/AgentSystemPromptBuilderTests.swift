@@ -23,6 +23,7 @@ struct AgentSystemPromptBuilderTests {
                 ),
             ],
             workspacePath: "/workspace",
+            availableToolNames: ["context_time_now"],
             now: date,
             timeZone: utc,
             localeIdentifier: "zh_CN"
@@ -33,7 +34,9 @@ struct AgentSystemPromptBuilderTests {
         #expect(prompt.contains("User likes Alpine"))
         #expect(prompt.contains("Rootfs is ready"))
         #expect(prompt.contains("/workspace"))
-        #expect(prompt.contains("2026-07-10T08:00Z"))
+        #expect(prompt.contains("2026-07-10"))
+        #expect(prompt.contains("context_time_now"))
+        #expect(!prompt.contains("Current local time:"))
         #expect(!prompt.contains("2026-07-10T08:00:47Z"))
         #expect(prompt.contains("rootfs-1"))
     }

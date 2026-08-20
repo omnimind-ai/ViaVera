@@ -62,7 +62,9 @@ struct AgentTurnView: View {
                     contextTokens: usage.contextTokens,
                     inputTokens: usage.inputTokens,
                     outputTokens: usage.outputTokens,
-                    cachedTokens: usage.cachedTokens
+                    cachedTokens: usage.cachedTokens,
+                    cacheCreationTokens: usage.cacheCreationTokens,
+                    cacheHitPercentage: usage.cacheHitPercentage
                 )
             }
         }

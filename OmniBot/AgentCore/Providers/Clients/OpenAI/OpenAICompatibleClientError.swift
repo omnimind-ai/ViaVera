@@ -81,4 +81,36 @@ nonisolated public enum OpenAICompatibleClientError: Error, Equatable, Localized
             false
         }
     }
+
+    var rejectsPromptCacheKey: Bool {
+        guard case let .httpError(statusCode, message, type, code, body) = self,
+              statusCode == 400 || statusCode == 422 else {
+            return false
+        }
+        let detail = [message, type, code, body]
+            .compactMap { $0 }
+            .joined(separator: " ")
+            .lowercased()
+        guard detail.contains("prompt_cache_key") else { return false }
+        return [
+            "unknown", "unrecognized", "unsupported", "unexpected",
+            "extra", "not permitted", "not allowed", "invalid parameter",
+        ].contains { detail.contains($0) }
+    }
+
+    var rejectsAnthropicCacheControl: Bool {
+        guard case let .httpError(statusCode, message, type, code, body) = self,
+              statusCode == 400 || statusCode == 422 else {
+            return false
+        }
+        let detail = [message, type, code, body]
+            .compactMap { $0 }
+            .joined(separator: " ")
+            .lowercased()
+        guard detail.contains("cache_control") else { return false }
+        return [
+            "unknown", "unrecognized", "unsupported", "unexpected",
+            "extra", "not permitted", "not allowed", "invalid parameter",
+        ].contains { detail.contains($0) }
+    }
 }

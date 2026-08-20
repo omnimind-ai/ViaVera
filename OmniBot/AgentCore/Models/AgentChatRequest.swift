@@ -8,6 +8,7 @@ nonisolated public struct AgentChatRequest: Codable, Hashable, Sendable {
     public let temperature: Double?
     public let maxTokens: Int?
     public let reasoningEffort: AgentReasoningEffort?
+    public let promptCacheKey: String?
     public let stream: Bool
 
     public init(
@@ -18,6 +19,7 @@ nonisolated public struct AgentChatRequest: Codable, Hashable, Sendable {
         temperature: Double? = nil,
         maxTokens: Int? = nil,
         reasoningEffort: AgentReasoningEffort? = nil,
+        promptCacheKey: String? = nil,
         stream: Bool = false
     ) {
         self.runID = runID
@@ -27,6 +29,27 @@ nonisolated public struct AgentChatRequest: Codable, Hashable, Sendable {
         self.temperature = temperature
         self.maxTokens = maxTokens
         self.reasoningEffort = reasoningEffort
+        self.promptCacheKey = promptCacheKey
         self.stream = stream
+    }
+
+    /// A stable, anonymous routing key shared by all model rounds in one
+    /// conversation. It intentionally contains no account or device identity.
+    public static func promptCacheKey(conversationID: UUID) -> String {
+        "omnibot:v1:conversation:\(conversationID.uuidString.lowercased())"
+    }
+
+    func replacingPromptCacheKey(_ value: String?) -> AgentChatRequest {
+        AgentChatRequest(
+            runID: runID,
+            model: model,
+            messages: messages,
+            tools: tools,
+            temperature: temperature,
+            maxTokens: maxTokens,
+            reasoningEffort: reasoningEffort,
+            promptCacheKey: value,
+            stream: stream
+        )
     }
 }

@@ -29,9 +29,9 @@ extension OmniAgentToolExecutor {
         _ arguments: OmniToolArguments
     ) async throws -> AgentToolExecutionResult {
         let scope = try arguments.optionalString("scope", default: "all") ?? "all"
-        guard ["all", "longterm", "daily"].contains(scope) else {
+        guard ["all", "longterm", "daily", "failures"].contains(scope) else {
             throw OmniAgentToolError(
-                "Invalid parameter 'scope': expected 'all', 'longterm', or 'daily'."
+                "Invalid parameter 'scope': expected 'all', 'longterm', 'daily', or 'failures'."
             )
         }
         let date = try memoryDate(arguments)
@@ -43,6 +43,10 @@ extension OmniAgentToolExecutor {
         if scope == "all" || scope == "daily" {
             let daily = try await memoryStore.loadDailyMemory(at: date)
             sections.append("# Daily memory\n\n\(daily)")
+        }
+        if scope == "all" || scope == "failures" {
+            let failures = try await memoryStore.loadHarnessFailures()
+            sections.append("# Harness failures\n\n\(failures)")
         }
         let content = sections.joined(separator: "\n\n")
         let bounded = boundedText(
@@ -125,6 +129,8 @@ extension OmniAgentToolExecutor {
             return "longterm"
         case let .daily(date):
             return "daily:\(date)"
+        case .harnessFailure:
+            return "harness-failure"
         }
     }
 

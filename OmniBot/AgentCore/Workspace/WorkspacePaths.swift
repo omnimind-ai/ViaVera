@@ -63,6 +63,9 @@ nonisolated public struct WorkspacePaths: Hashable, Sendable {
     public var providerConfigFile: URL { agentDirectory.appending(path: "providers.json") }
     public var agentConfigFile: URL { agentDirectory.appending(path: "config.json") }
     public var longTermMemoryFile: URL { memoryDirectory.appending(path: "MEMORY.md") }
+    public var harnessFailuresFile: URL {
+        memoryDirectory.appending(path: "HARNESS_ERRORS.md")
+    }
     public var memoryIndexFile: URL { memoryDirectory.appending(path: "index.json") }
 
     public init(root: URL, controlRoot: URL) {

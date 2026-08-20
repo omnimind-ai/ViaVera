@@ -28,6 +28,7 @@ final class ChatCoordinator {
     private var runTask: Task<Void, Never>?
     private var currentRunner: AgentRunner?
     private var currentRunID: UUID?
+    private var toolCheckpointMessageIDs: [String: UUID] = [:]
     private var isResendInProgress = false
 
     init(
@@ -224,9 +225,7 @@ final class ChatCoordinator {
         }
 
         do {
-            guard let candidate = try conversations.contextCompactionCandidate(
-                for: conversation
-            ) else {
+            guard try conversations.contextCompactionCandidate(for: conversation) != nil else {
                 statusMessage = "当前暂无可压缩的上下文"
                 lastCompactionMessage = statusMessage
                 return
@@ -235,27 +234,14 @@ final class ChatCoordinator {
                 providerID: conversation.providerID,
                 modelID: conversation.modelID
             )
-            try Task.checkCancellation()
-            let client = ProviderChatClientFactory.make(profile: configuration.profile)
-            let request = AgentChatRequest(
-                runID: UUID(),
-                model: configuration.model.id,
-                messages: ConversationContextCompaction.requestMessages(
-                    existingSummary: conversation.contextSummary,
-                    messagesToCompact: candidate.messages
-                ),
-                maxTokens: min(configuration.model.maxOutputTokens ?? 8_192, 8_192),
-                reasoningEffort: conversation.reasoningEffort
-            )
-            let response = try await client.complete(request, apiKey: configuration.apiKey)
-            try Task.checkCancellation()
-            let summary = response.message.content?
-                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            try conversations.updateContextSummary(
-                summary,
-                cutoffSequence: candidate.cutoffSequence,
-                for: conversation
-            )
+            guard try await performContextCompaction(
+                conversationID: conversationID,
+                configuration: configuration
+            ) else {
+                statusMessage = "当前暂无可压缩的上下文"
+                lastCompactionMessage = statusMessage
+                return
+            }
             statusMessage = "上下文已压缩"
             lastCompactionMessage = statusMessage
         } catch is CancellationError {
@@ -268,6 +254,43 @@ final class ChatCoordinator {
             lastCompactionFailed = true
             errorMessage = description
         }
+    }
+
+    @discardableResult
+    private func performContextCompaction(
+        conversationID: UUID,
+        configuration: ProviderRuntimeConfiguration
+    ) async throws -> Bool {
+        guard let conversation = conversations.conversation(id: conversationID) else {
+            throw ChatCoordinatorError.conversationNotFound(conversationID)
+        }
+        guard let candidate = try conversations.contextCompactionCandidate(
+            for: conversation
+        ) else {
+            return false
+        }
+        try Task.checkCancellation()
+        let client = ProviderChatClientFactory.make(profile: configuration.profile)
+        let request = AgentChatRequest(
+            runID: UUID(),
+            model: configuration.model.id,
+            messages: ConversationContextCompaction.requestMessages(
+                existingSummary: conversation.contextSummary,
+                messagesToCompact: candidate.messages
+            ),
+            maxTokens: min(configuration.model.maxOutputTokens ?? 8_192, 8_192),
+            reasoningEffort: conversation.reasoningEffort
+        )
+        let response = try await client.complete(request, apiKey: configuration.apiKey)
+        try Task.checkCancellation()
+        let summary = response.message.content?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        try conversations.updateContextSummary(
+            summary,
+            cutoffSequence: candidate.cutoffSequence,
+            for: conversation
+        )
+        return true
     }
 
     func cancelCurrentTool(callID: String) async -> Bool {
@@ -293,6 +316,7 @@ final class ChatCoordinator {
         statusMessage = "正在准备上下文…"
         errorMessage = nil
         latestUsage = .zero
+        toolCheckpointMessageIDs.removeAll(keepingCapacity: true)
 
         defer {
             if let currentRunID {
@@ -300,6 +324,7 @@ final class ChatCoordinator {
             }
             currentRunner = nil
             currentRunID = nil
+            toolCheckpointMessageIDs.removeAll(keepingCapacity: true)
             runTask = nil
             runningConversationID = nil
         }
@@ -325,32 +350,30 @@ final class ChatCoordinator {
                     modelID: conversation.modelID
                 )
             }
-            let history = try conversations.promptHistory(for: conversation)
-            async let soul = soulStore.load()
-            async let memory = memoryStore.promptContext()
-            async let relevant = memoryStore.search(currentUserMessage.content ?? "", limit: 6)
-            async let installedSkills = skillStore.list()
-            async let resolvedSkills = skillStore.resolveMatches(
-                userMessage: currentUserMessage.content ?? ""
-            )
-            async let availableTools = toolExecutor.availableTools()
-            let (
-                soulValue,
-                memoryValue,
-                relevantValue,
-                installedSkillValues,
-                resolvedSkillValues,
-                toolDefinitions
-            ) = try await (
-                soul,
-                memory,
-                relevant,
-                installedSkills,
-                resolvedSkills,
-                availableTools
-            )
-            try Task.checkCancellation()
             let contextWindow = configuration.model.contextWindow ?? 128_000
+            if let currentConversation = conversations.conversation(id: conversation.id),
+               shouldAutoCompact(
+                   conversation: currentConversation,
+                   configuredContextWindow: contextWindow
+               ) {
+                statusMessage = "上下文接近上限，正在自动压缩…"
+                _ = try await performContextCompaction(
+                    conversationID: conversation.id,
+                    configuration: configuration
+                )
+            }
+            guard let promptConversation = conversations.conversation(id: conversation.id) else {
+                throw ChatCoordinatorError.conversationNotFound(conversation.id)
+            }
+            var history = try conversations.promptHistory(for: promptConversation)
+            async let soul = soulStore.load()
+            async let installedSkills = skillStore.list()
+            async let availableTools = toolExecutor.availableTools()
+            let (soulValue, installedSkillValues, unsortedToolDefinitions) = try await (
+                soul, installedSkills, availableTools
+            )
+            let toolDefinitions = unsortedToolDefinitions.sorted { $0.name < $1.name }
+            try Task.checkCancellation()
             let outputReserve = min(
                 configuration.model.maxOutputTokens ?? max(512, contextWindow / 4),
                 contextWindow
@@ -362,12 +385,12 @@ final class ChatCoordinator {
             let prompt = promptBuilder.build(
                 AgentSystemPromptContext(
                     soul: soulValue,
-                    memory: memoryValue,
-                    relevantMemories: relevantValue,
+                    memory: MemoryPromptContext(longTermMemory: "", todayMemory: ""),
+                    relevantMemories: [],
                     workspacePath: "/workspace",
                     workspace: AgentWorkspaceDescriptor(id: conversation.id.uuidString),
-                    installedSkills: installedSkillValues,
-                    resolvedSkills: resolvedSkillValues,
+                    installedSkills: installedSkillValues.sorted { $0.id < $1.id },
+                    resolvedSkills: [],
                     availableToolNames: configuration.model.supportsTools
                         ? toolDefinitions.map(\.name)
                         : [],
@@ -379,38 +402,68 @@ final class ChatCoordinator {
             )
             let systemMessages = [AgentMessage.system(prompt)]
 
-            let runID = UUID()
-            let runner = AgentRunner(
-                client: ProviderChatClientFactory.make(profile: configuration.profile),
-                toolExecutor: toolExecutor,
-                maxRounds: 16
-            )
-            currentRunID = runID
-            currentRunner = runner
-
-            let input = AgentRunInput(
-                runID: runID,
-                conversationID: conversation.id,
-                model: configuration.model.id,
-                apiKey: configuration.apiKey,
-                systemMessages: systemMessages,
-                history: history,
-                currentUserMessage: currentUserMessage,
-                workspaceURL: workspacePaths.root,
-                continueMode: continueMode,
-                temperature: nil,
-                maxTokens: configuration.model.maxOutputTokens,
-                contextWindow: contextWindow,
-                reasoningEffort: conversation.reasoningEffort,
-                allowsToolCalls: configuration.model.supportsTools
-            )
-
             let conversationID = conversation.id
-            let result = try await runner.run(input) { [weak self] event in
-                guard let self else { throw CancellationError() }
-                try await self.handle(event, conversationID: conversationID)
+            var didRecoverFromOverflow = false
+            while true {
+                let runID = UUID()
+                let runner = AgentRunner(
+                    client: ProviderChatClientFactory.make(profile: configuration.profile),
+                    toolExecutor: toolExecutor,
+                    maxRounds: 16
+                )
+                currentRunID = runID
+                currentRunner = runner
+
+                let input = AgentRunInput(
+                    runID: runID,
+                    conversationID: conversationID,
+                    model: configuration.model.id,
+                    apiKey: configuration.apiKey,
+                    systemMessages: systemMessages,
+                    history: history,
+                    currentUserMessage: currentUserMessage,
+                    workspaceURL: workspacePaths.root,
+                    continueMode: continueMode || didRecoverFromOverflow,
+                    temperature: nil,
+                    maxTokens: configuration.model.maxOutputTokens,
+                    contextWindow: contextWindow,
+                    reasoningEffort: conversation.reasoningEffort,
+                    allowsToolCalls: configuration.model.supportsTools
+                )
+
+                do {
+                    let result = try await runner.run(input) { [weak self] event in
+                        guard let self else { throw CancellationError() }
+                        try await self.handle(event, conversationID: conversationID)
+                    }
+                    latestUsage = result.usage
+                    break
+                } catch {
+                    guard !didRecoverFromOverflow,
+                          AgentContextOverflowDetector.isContextOverflow(error) else {
+                        throw error
+                    }
+                    toolActivity.endRun(runID: runID)
+                    currentRunner = nil
+                    currentRunID = nil
+                    toolCheckpointMessageIDs.removeAll(keepingCapacity: true)
+                    statusMessage = "上下文超出模型上限，正在压缩后重试…"
+                    guard try await performContextCompaction(
+                        conversationID: conversationID,
+                        configuration: configuration
+                    ) else {
+                        throw error
+                    }
+                    guard let refreshedConversation = conversations.conversation(
+                        id: conversationID
+                    ) else {
+                        throw ChatCoordinatorError.conversationNotFound(conversationID)
+                    }
+                    history = try conversations.promptHistory(for: refreshedConversation)
+                    didRecoverFromOverflow = true
+                    statusMessage = "上下文已压缩，正在重试…"
+                }
             }
-            latestUsage = result.usage
         } catch is CancellationError {
             statusMessage = "已取消"
             do {
@@ -449,6 +502,23 @@ final class ChatCoordinator {
         }
     }
 
+    private func shouldAutoCompact(
+        conversation: ConversationRecord,
+        configuredContextWindow: Int
+    ) -> Bool {
+        guard let latestAssistant = conversation.orderedMessages.reversed().first(where: {
+            $0.role == .assistant && ($0.promptTokens > 0 || $0.completionTokens > 0)
+        }) else {
+            return false
+        }
+        return AgentAutoCompactionPolicy.shouldCompact(
+            promptTokens: latestAssistant.promptTokens,
+            completionTokens: latestAssistant.completionTokens,
+            configuredContextWindow: configuredContextWindow,
+            observedContextWindow: latestAssistant.contextWindow
+        )
+    }
+
     private func persistInterruptedActiveTool(
         in conversation: ConversationRecord
     ) throws {
@@ -462,18 +532,21 @@ final class ChatCoordinator {
               let call = assistant.toolCalls.first(where: { $0.id == callID }) else {
             return
         }
-        let alreadyPersisted = conversation.messages.contains {
+        let persisted = conversation.messages.first {
             $0.role == .tool
                 && $0.toolCallID == callID
                 && $0.sequence > assistantRecord.sequence
         }
-        guard !alreadyPersisted else { return }
+        if let persisted, persisted.status != .pending, persisted.status != .streaming {
+            return
+        }
 
         let interruptedResult = AgentToolExecutionResult(
-            content: "Agent 运行已取消，当前工具调用被中断。",
+            content: ConversationRepository.interruptedToolResultMessage,
             isError: true,
             metadata: [
                 "interrupted": .bool(true),
+                "outcomeUnknown": .bool(true),
                 "tool": .string(call.name),
             ]
         )
@@ -481,11 +554,13 @@ final class ChatCoordinator {
             .tool(
                 callID: call.id,
                 name: call.name,
-                content: try interruptedResult.modelContent()
+                content: try interruptedResult.modelContent(),
+                id: persisted?.id ?? toolCheckpointMessageIDs[callID] ?? UUID()
             ),
             to: conversation,
-            status: .failed
+            status: .interrupted
         )
+        toolCheckpointMessageIDs[callID] = nil
         toolActivity.completeTool(callID: call.id, runID: snapshot.runID)
     }
 
@@ -495,6 +570,7 @@ final class ChatCoordinator {
         }
         switch event {
         case let .started(runID):
+            toolCheckpointMessageIDs.removeAll(keepingCapacity: true)
             toolActivity.beginRun(runID: runID, conversationID: conversationID)
             statusMessage = "Agent 正在思考…"
         case let .requestStarted(round, attempt):
@@ -526,6 +602,26 @@ final class ChatCoordinator {
                 toolActivity.registerAssistantMessage(id: message.id, runID: currentRunID)
             }
         case let .toolStarted(call, _):
+            let checkpointID = UUID()
+            let intent = AgentToolExecutionResult(
+                content: "Tool execution intent persisted; external outcome is pending.",
+                metadata: [
+                    "intentPersisted": .bool(true),
+                    "outcomePending": .bool(true),
+                    "tool": .string(call.name),
+                ]
+            )
+            try conversations.append(
+                .tool(
+                    callID: call.id,
+                    name: call.name,
+                    content: try intent.modelContent(),
+                    id: checkpointID
+                ),
+                to: conversation,
+                status: .pending
+            )
+            toolCheckpointMessageIDs[call.id] = checkpointID
             if let currentRunID {
                 toolActivity.beginTool(call, runID: currentRunID)
             }
@@ -535,13 +631,22 @@ final class ChatCoordinator {
             let toolMessage = AgentMessage.tool(
                 callID: call.id,
                 name: call.name,
-                content: content
+                content: content,
+                id: toolCheckpointMessageIDs[call.id] ?? UUID()
             )
             try conversations.append(
                 toolMessage,
                 to: conversation,
                 status: result.isError ? .failed : .completed
             )
+            toolCheckpointMessageIDs[call.id] = nil
+            if result.isError, let currentRunID {
+                _ = try? await memoryStore.recordHarnessFailure(
+                    toolName: call.name,
+                    summary: result.content,
+                    runID: currentRunID
+                )
+            }
             if let currentRunID {
                 toolActivity.completeTool(callID: call.id, runID: currentRunID)
             }
@@ -552,6 +657,7 @@ final class ChatCoordinator {
         case let .completed(result):
             latestUsage = result.usage
             statusMessage = "完成"
+            errorMessage = nil
             try conversations.updateRunOutcome(
                 status: .completed,
                 errorMessage: nil,

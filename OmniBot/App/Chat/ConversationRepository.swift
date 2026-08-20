@@ -12,6 +12,8 @@ final class ConversationRepository {
 
     static let interruptedRunMessage =
         "上次 Agent 运行因应用退出或系统中断而未完成。工具结果可能未知，请检查当前状态后再重试。"
+    static let interruptedToolResultMessage =
+        "工具调用已开始，但应用在结果持久化前退出或被系统中断；外部副作用是否发生未知。检查当前状态后再决定是否重试。"
 
     private(set) var conversations: [ConversationRecord] = []
 
@@ -42,6 +44,30 @@ final class ConversationRepository {
         guard !interrupted.isEmpty else { return 0 }
         for conversation in interrupted {
             finalizeStreamingAssistants(in: conversation, status: .interrupted)
+            for message in conversation.messages where
+                message.role == .tool
+                    && (message.status == .pending || message.status == .streaming) {
+                let result = AgentToolExecutionResult(
+                    content: Self.interruptedToolResultMessage,
+                    isError: true,
+                    metadata: [
+                        "interrupted": .bool(true),
+                        "outcomeUnknown": .bool(true),
+                        "tool": .string(message.toolName ?? "unknown"),
+                    ]
+                )
+                let content = (try? result.modelContent()) ?? Self.interruptedToolResultMessage
+                try message.replacePayload(
+                    with: .tool(
+                        callID: message.toolCallID ?? "unknown",
+                        name: message.toolName,
+                        content: content,
+                        id: message.id
+                    ),
+                    status: .interrupted,
+                    updatedAt: date
+                )
+            }
             conversation.status = .failed
             conversation.lastErrorMessage = Self.interruptedRunMessage
             conversation.updatedAt = date

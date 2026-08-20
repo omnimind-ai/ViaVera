@@ -13,14 +13,15 @@ struct OmniAgentToolSchemaTests {
         let definitions = await executor.availableTools()
 #if os(macOS)
         let names = Set(definitions.map(\.name))
-        #expect(definitions.count == 34)
+        #expect(definitions.count == 35)
         #expect(names.contains("healthkit_data_types"))
         #expect(names.contains("calendar_list"))
         #expect(names.contains("contacts_search"))
         #expect(!names.contains(where: { $0.hasPrefix("alarm_reminder_") }))
 #else
-        #expect(definitions.count == 37)
+        #expect(definitions.count == 38)
 #endif
+        #expect(definitions.contains(where: { $0.name == "context_time_now" }))
         #expect(Set(definitions.map(\AgentToolDefinition.name)).count == definitions.count)
 
         for definition in definitions {
@@ -36,6 +37,25 @@ struct OmniAgentToolSchemaTests {
             #expect(required.contains(.string("tool_title")), "\(definition.name) must require tool_title")
             #expect(parameters["additionalProperties"] == .bool(false))
         }
+    }
+
+    @Test("Exact-time tool returns local and UTC timestamps")
+    func exactTimeTool() async throws {
+        let temporary = try makeTemporaryWorkspace()
+        defer { try? FileManager.default.removeItem(at: temporary.root) }
+        let executor = makeToolExecutor(paths: temporary.paths)
+
+        let result = try await executeTool(
+            "context_time_now",
+            arguments: titledArguments("Check exact time"),
+            using: executor,
+            paths: temporary.paths
+        )
+
+        #expect(!result.isError)
+        #expect(result.content.contains("Local:"))
+        #expect(result.content.contains("UTC:"))
+        #expect(result.metadata["timeZone"] != nil)
     }
 
     @Test("Execution rejects a missing tool title")

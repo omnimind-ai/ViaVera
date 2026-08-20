@@ -14,6 +14,7 @@ nonisolated enum OmniAgentToolDefinitions {
         fileSearch,
         fileStat,
         fileMove,
+        contextTimeNow,
         memorySearch,
         memoryLoad,
         memoryWriteDaily,
@@ -265,7 +266,7 @@ nonisolated enum OmniAgentToolDefinitions {
 
     private static let memorySearch = definition(
         name: "memory_search",
-        description: "Lexically search long-term and daily Markdown memories.",
+        description: "Lexically search long-term, daily, and harness-failure Markdown memories.",
         properties: [
             "tool_title": toolTitle,
             "query": .object(["type": .string("string")]),
@@ -280,18 +281,27 @@ nonisolated enum OmniAgentToolDefinitions {
 
     private static let memoryLoad = definition(
         name: "memory_load",
-        description: "Load long-term memory, daily memory, or both from the Markdown memory store.",
+        description: "Load long-term, daily, and harness-failure entries from the Markdown memory store.",
         properties: [
             "tool_title": toolTitle,
             "scope": .object([
                 "type": .string("string"),
-                "enum": .array([.string("all"), .string("longterm"), .string("daily")]),
+                "enum": .array([
+                    .string("all"), .string("longterm"), .string("daily"), .string("failures")
+                ]),
             ]),
             "date": .object([
                 "type": .string("string"),
                 "description": .string("Optional ISO-8601 timestamp or yyyy-MM-dd date for daily memory."),
             ]),
         ],
+        required: ["tool_title"]
+    )
+
+    private static let contextTimeNow = definition(
+        name: "context_time_now",
+        description: "Return the exact current local and UTC time. Use this instead of cached prompt context for time-sensitive tasks.",
+        properties: ["tool_title": toolTitle],
         required: ["tool_title"]
     )
 

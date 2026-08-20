@@ -65,6 +65,10 @@ struct AgentRunnerTests {
 
         let requests = await client.requests()
         #expect(requests.count == 2)
+        let expectedCacheKey = AgentChatRequest.promptCacheKey(
+            conversationID: input.conversationID
+        )
+        #expect(requests.allSatisfy { $0.promptCacheKey == expectedCacheKey })
         #expect(requests[1].messages.map(\.role) == [.system, .user, .assistant, .tool])
         #expect(requests[1].messages.last?.toolCallID == call.id)
         #expect(requests[1].messages.last?.content?.contains("/workspace") == true)
@@ -450,9 +454,45 @@ struct AgentRunnerTests {
         let requests = await client.requests()
         let toolMessage = try #require(requests.last?.messages.last(where: { $0.role == .tool }))
         let modelContent = try #require(toolMessage.content)
-        #expect(modelContent.utf8.count <= 32 * 1_024)
+        #expect(modelContent.utf8.count <= 12 * 1_024)
         #expect(modelContent.contains("modelOutputTruncated"))
         #expect(modelContent.contains("Tool output truncated"))
+        #expect(modelContent.contains("middle of tool output omitted"))
+    }
+
+    @Test("Length-truncated tool calls are rejected and replayed for model recovery")
+    func truncatedToolCallsAreNotExecuted() async throws {
+        let call = AgentToolCall(
+            id: "truncated_call",
+            name: "terminal_execute",
+            arguments: #"{"command":"dangerous but incomplete"}"#
+        )
+        let client = ScriptedChatClient(responses: [
+            AgentChatResponse(
+                message: .assistant(toolCalls: [call]),
+                finishReason: "length"
+            ),
+            AgentChatResponse(message: .assistant("Recovered")),
+        ])
+        let tools = RecordingToolExecutor()
+        let runner = AgentRunner(
+            client: client,
+            toolExecutor: tools,
+            retryPolicy: AgentRetryPolicy(maxAttempts: 1)
+        )
+
+        let result = try await runner.run(makeInput(currentUserMessage: .user("Run it")))
+
+        #expect(result.finalMessage.content == "Recovered")
+        #expect(result.toolExecutionCount == 0)
+        #expect(await tools.calls().isEmpty)
+        let recoveryRequest = try #require((await client.requests()).last)
+        let toolResult = try #require(
+            recoveryRequest.messages.last(where: { $0.role == .tool })
+        )
+        #expect(toolResult.toolCallID == call.id)
+        #expect(toolResult.content?.contains("truncated_model_output") == true)
+        #expect(toolResult.content?.contains("was not executed") == true)
     }
 
     @Test("Bounding verbose tool output preserves its artifact hand-off")

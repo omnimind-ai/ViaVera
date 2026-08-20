@@ -83,7 +83,9 @@ struct ConversationRecordTests {
             promptTokens: 100,
             completionTokens: 25,
             totalTokens: 125,
-            cachedTokens: 60
+            cachedTokens: 60,
+            cacheCreationTokens: 20,
+            reportsCacheUsage: true
         )
         let conversation = ConversationRecord(
             modelID: "test-model",
@@ -100,6 +102,17 @@ struct ConversationRecordTests {
         #expect(reloaded.status == .failed)
         #expect(reloaded.lastErrorMessage == "provider failed")
         #expect(reloaded.usage == usage)
+    }
+
+    @Test("Legacy cache counters imply cache telemetry")
+    @MainActor
+    func legacyCacheCountersRemainVisible() {
+        let conversation = ConversationRecord(modelID: "test-model")
+        conversation.cachedTokens = 40
+        conversation.reportsCacheUsage = false
+
+        #expect(conversation.usage.cachedTokens == 40)
+        #expect(conversation.usage.reportsCacheUsage)
     }
 
     @Test("Startup recovers stale running conversations without losing usage")
@@ -138,6 +151,49 @@ struct ConversationRecordTests {
         #expect(recovered.usage == usage)
         #expect(recovered.updatedAt == recoveryDate)
         #expect(repository.conversation(id: completed.id)?.status == .completed)
+    }
+
+    @Test("Startup settles a persisted tool intent as outcome unknown")
+    @MainActor
+    func interruptedToolIntentRecovery() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: ConversationRecord.self,
+            MessageRecord.self,
+            configurations: configuration
+        )
+        let context = ModelContext(container)
+        let conversation = ConversationRecord(modelID: "test-model", status: .running)
+        context.insert(conversation)
+        try context.save()
+
+        let repository = ConversationRepository(modelContext: context)
+        try repository.reload()
+        let active = try #require(repository.conversation(id: conversation.id))
+        let call = AgentToolCall(id: "call-pending", name: "file_write", arguments: "{}")
+        try repository.append(.assistant(toolCalls: [call]), to: active)
+        let refreshed = try #require(repository.conversation(id: conversation.id))
+        let checkpointID = UUID()
+        try repository.append(
+            .tool(
+                callID: call.id,
+                name: call.name,
+                content: "intent persisted",
+                id: checkpointID
+            ),
+            to: refreshed,
+            status: .pending
+        )
+
+        #expect(try repository.recoverInterruptedRuns() == 1)
+        let recovered = try #require(repository.conversation(id: conversation.id))
+        let checkpoint = try #require(
+            recovered.orderedMessages.first(where: { $0.id == checkpointID })
+        )
+        #expect(checkpoint.status == .interrupted)
+        #expect(checkpoint.toolCallID == call.id)
+        #expect(checkpoint.content?.contains("外部副作用是否发生未知") == true)
+        #expect(checkpoint.content?.contains("outcomeUnknown") == true)
     }
 
     @Test("Pinned conversations persist and sort ahead of newer conversations")

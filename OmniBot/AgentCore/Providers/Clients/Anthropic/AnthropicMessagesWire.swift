@@ -4,6 +4,7 @@ nonisolated struct AnthropicMessagesRequestBody: Encodable, Sendable {
     let value: AgentValue
 
     init(_ request: AgentChatRequest) {
+        let enablesPromptCaching = request.promptCacheKey != nil
         let effectiveEffort = Self.anthropicEffort(request.reasoningEffort)
         let requestedMaxTokens = request.maxTokens
             ?? (effectiveEffort == nil ? 4_096 : 16_000)
@@ -13,7 +14,10 @@ nonisolated struct AnthropicMessagesRequestBody: Encodable, Sendable {
         var payload: [String: AgentValue] = [
             "model": .string(request.model),
             "max_tokens": .number(Double(maxTokens)),
-            "messages": .array(Self.messages(from: request.messages)),
+            "messages": .array(Self.messages(
+                from: request.messages,
+                enablesPromptCaching: enablesPromptCaching
+            )),
             "stream": .bool(request.stream),
         ]
 
@@ -23,18 +27,32 @@ nonisolated struct AnthropicMessagesRequestBody: Encodable, Sendable {
             .filter { !$0.isEmpty }
             .joined(separator: "\n\n")
         if !system.isEmpty {
-            payload["system"] = .string(system)
+            if enablesPromptCaching {
+                payload["system"] = .array([
+                    .object([
+                        "type": .string("text"),
+                        "text": .string(system),
+                        "cache_control": Self.ephemeralCacheControl,
+                    ]),
+                ])
+            } else {
+                payload["system"] = .string(system)
+            }
         }
         if let temperature = request.temperature, effectiveEffort == nil {
             payload["temperature"] = .number(temperature)
         }
         if !request.tools.isEmpty {
-            payload["tools"] = .array(request.tools.map { definition in
-                .object([
+            payload["tools"] = .array(request.tools.enumerated().map { index, definition in
+                var tool: [String: AgentValue] = [
                     "name": .string(definition.name),
                     "description": .string(definition.description),
                     "input_schema": definition.parameters,
-                ])
+                ]
+                if enablesPromptCaching, index == request.tools.count - 1 {
+                    tool["cache_control"] = Self.ephemeralCacheControl
+                }
+                return .object(tool)
             })
         }
         if let effort = effectiveEffort {
@@ -56,6 +74,10 @@ nonisolated struct AnthropicMessagesRequestBody: Encodable, Sendable {
         value = .object(payload)
     }
 
+    private static let ephemeralCacheControl = AgentValue.object([
+        "type": .string("ephemeral"),
+    ])
+
     private static func anthropicEffort(
         _ effort: AgentReasoningEffort?
     ) -> AgentReasoningEffort? {
@@ -73,7 +95,10 @@ nonisolated struct AnthropicMessagesRequestBody: Encodable, Sendable {
         try value.encode(to: encoder)
     }
 
-    private static func messages(from messages: [AgentMessage]) -> [AgentValue] {
+    private static func messages(
+        from messages: [AgentMessage],
+        enablesPromptCaching: Bool
+    ) -> [AgentValue] {
         struct PendingMessage {
             var role: String
             var content: [AgentValue]
@@ -140,11 +165,30 @@ nonisolated struct AnthropicMessagesRequestBody: Encodable, Sendable {
             }
         }
 
+        if enablesPromptCaching,
+           let messageIndex = pending.indices.last,
+           let blockIndex = pending[messageIndex].content.indices.last {
+            pending[messageIndex].content[blockIndex] = addingCacheControl(
+                to: pending[messageIndex].content[blockIndex]
+            )
+        }
+
         return pending.map { message in
             .object([
                 "role": .string(message.role),
                 "content": .array(message.content),
             ])
+        }
+    }
+
+    private static func addingCacheControl(to value: AgentValue) -> AgentValue {
+        guard var object = value.objectValue else { return value }
+        switch object["type"]?.stringValue {
+        case "text", "tool_result", "tool_use":
+            object["cache_control"] = ephemeralCacheControl
+            return .object(object)
+        default:
+            return value
         }
     }
 
@@ -195,6 +239,8 @@ actor AnthropicMessagesAccumulator {
     private var inputTokens = 0
     private var outputTokens = 0
     private var cachedTokens = 0
+    private var cacheCreationTokens = 0
+    private var reportsCacheUsage = false
     private var lastEmittedSnapshot = AgentStreamSnapshot()
     private var didReceiveMessageStop = false
 
@@ -295,11 +341,21 @@ actor AnthropicMessagesAccumulator {
         guard !snapshot.isEmpty || !calls.isEmpty else {
             throw OpenAICompatibleClientError.emptyChoices
         }
+        let noncachedInputTokens = AgentUsage.saturatingSum(
+            inputTokens,
+            cacheCreationTokens
+        )
+        let totalInputTokens = AgentUsage.saturatingSum(
+            noncachedInputTokens,
+            cachedTokens
+        )
         let usage = AgentUsage(
-            promptTokens: inputTokens,
+            promptTokens: noncachedInputTokens,
             completionTokens: outputTokens,
-            totalTokens: AgentUsage.saturatingSum(inputTokens, outputTokens),
-            cachedTokens: cachedTokens
+            totalTokens: AgentUsage.saturatingSum(totalInputTokens, outputTokens),
+            cachedTokens: cachedTokens,
+            cacheCreationTokens: cacheCreationTokens,
+            reportsCacheUsage: reportsCacheUsage
         )
         return AgentChatResponse(
             message: AgentMessage(
@@ -334,14 +390,22 @@ actor AnthropicMessagesAccumulator {
         let nextInputTokens = Self.integer(usage["input_tokens"]) ?? inputTokens
         let nextOutputTokens = Self.integer(usage["output_tokens"]) ?? outputTokens
         let nextCachedTokens = Self.integer(usage["cache_read_input_tokens"])
-            ?? Self.integer(usage["cache_creation_input_tokens"])
             ?? cachedTokens
-        guard nextInputTokens >= 0, nextOutputTokens >= 0, nextCachedTokens >= 0 else {
+        let nextCacheCreationTokens = Self.integer(usage["cache_creation_input_tokens"])
+            ?? cacheCreationTokens
+        guard nextInputTokens >= 0,
+              nextOutputTokens >= 0,
+              nextCachedTokens >= 0,
+              nextCacheCreationTokens >= 0 else {
             throw OpenAICompatibleClientError.invalidUsage
         }
         inputTokens = nextInputTokens
         outputTokens = nextOutputTokens
         cachedTokens = nextCachedTokens
+        cacheCreationTokens = nextCacheCreationTokens
+        reportsCacheUsage = reportsCacheUsage
+            || usage["cache_read_input_tokens"] != nil
+            || usage["cache_creation_input_tokens"] != nil
     }
 
     private func builder(from value: AgentValue) -> ContentBlockBuilder {

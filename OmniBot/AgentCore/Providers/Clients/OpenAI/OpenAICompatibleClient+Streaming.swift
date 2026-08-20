@@ -71,7 +71,19 @@ extension OpenAICompatibleClient {
             case let .responseTooLarge(maximumBytes):
                 throw OpenAICompatibleClientError.responseTooLarge(maximumBytes: maximumBytes)
             case let .httpError(statusCode, data):
-                throw Self.parseHTTPError(statusCode: statusCode, data: data, apiKey: apiKey)
+                let parsed = Self.parseHTTPError(
+                    statusCode: statusCode,
+                    data: data,
+                    apiKey: apiKey
+                )
+                if request.promptCacheKey != nil, parsed.rejectsPromptCacheKey {
+                    return try await stream(
+                        request.replacingPromptCacheKey(nil),
+                        apiKey: apiKey,
+                        onSnapshot: onSnapshot
+                    )
+                }
+                throw parsed
             }
         } catch let error as OpenAICompatibleClientError {
             throw error
@@ -139,17 +151,27 @@ private actor OpenAIStreamAccumulator {
             guard wireUsage.promptTokens >= 0,
                   wireUsage.completionTokens >= 0,
                   wireUsage.totalTokens.map({ $0 >= 0 }) ?? true,
-                  wireUsage.promptTokensDetails?.cachedTokens.map({ $0 >= 0 }) ?? true else {
+                  wireUsage.promptTokensDetails?.cachedTokens.map({ $0 >= 0 }) ?? true,
+                  wireUsage.promptTokensDetails?.cacheWriteTokens.map({ $0 >= 0 }) ?? true else {
+                throw OpenAICompatibleClientError.invalidUsage
+            }
+            let cachedTokens = wireUsage.promptTokensDetails?.cachedTokens ?? 0
+            let cacheCreationTokens = wireUsage.promptTokensDetails?.cacheWriteTokens ?? 0
+            guard cachedTokens <= wireUsage.promptTokens,
+                  cacheCreationTokens <= wireUsage.promptTokens - cachedTokens else {
                 throw OpenAICompatibleClientError.invalidUsage
             }
             usage = AgentUsage(
-                promptTokens: wireUsage.promptTokens,
+                promptTokens: wireUsage.promptTokens - cachedTokens,
                 completionTokens: wireUsage.completionTokens,
                 totalTokens: wireUsage.totalTokens ?? AgentUsage.saturatingSum(
                     wireUsage.promptTokens,
                     wireUsage.completionTokens
                 ),
-                cachedTokens: wireUsage.promptTokensDetails?.cachedTokens ?? 0
+                cachedTokens: cachedTokens,
+                cacheCreationTokens: cacheCreationTokens,
+                reportsCacheUsage: wireUsage.promptTokensDetails?.cachedTokens != nil
+                    || wireUsage.promptTokensDetails?.cacheWriteTokens != nil
             )
         }
 

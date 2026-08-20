@@ -1,7 +1,7 @@
 import Foundation
 
 nonisolated struct AgentTimeContextCache: Sendable {
-    static let defaultLifetime: TimeInterval = 5 * 60
+    static let defaultLifetime: TimeInterval = 60 * 60
 
     private struct Entry: Sendable {
         let value: Date

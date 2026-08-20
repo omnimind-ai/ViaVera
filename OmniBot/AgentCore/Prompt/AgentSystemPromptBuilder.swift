@@ -31,7 +31,9 @@ nonisolated public struct AgentSystemPromptBuilder: Sendable {
             nonEmpty(context.soul, fallback: SoulStore.defaultSoul),
             maximumUTF8Bytes: maximumSoulUTF8Bytes
         )
-        let enabledInstalledSkills = context.installedSkills.filter(\.enabled)
+        let enabledInstalledSkills = context.installedSkills
+            .filter(\.enabled)
+            .sorted { $0.id < $1.id }
         let enabledSkillIDs = Set(enabledInstalledSkills.map(\.id))
         var loadedSkillIDs = Set<String>()
         let enabledResolvedSkills = context.resolvedSkills.filter { skill in
@@ -125,14 +127,14 @@ nonisolated public struct AgentSystemPromptBuilder: Sendable {
         </soul>
 
         <time_context>
-        当前本地时间：\(timeString(context.now, timeZone: context.timeZone))
         本地日期：\(localDateString(context.now, timeZone: context.timeZone))
         星期：\(weekdayString(context.now, timeZone: context.timeZone, localeIdentifier: context.localeIdentifier))
         时区：\(context.timeZone.identifier)
-        UTC：\(timeString(context.now, timeZone: TimeZone(secondsFromGMT: 0) ?? context.timeZone))
         Locale：\(context.localeIdentifier)
-        这段时间上下文由运行时为本轮生成，用于解释“今天”“明天”“现在”等相对时间，不是用户原文或长期记忆。
-        仅需了解当前时间时直接使用这里的值，不要为此调用时间工具。
+        这段粗粒度时间上下文由运行时缓存，仅用于解释“今天”“明天”等相对日期，不是用户原文或长期记忆。
+        \(context.availableToolNames.contains("context_time_now")
+            ? "需要精确的当前时间时调用 `context_time_now`；不要把这里的日期当作精确时钟。"
+            : "本轮没有精确时间工具；需要精确时钟时应明确说明当前无法可靠获取。")
         </time_context>
 
         <workspace>
@@ -206,14 +208,14 @@ nonisolated public struct AgentSystemPromptBuilder: Sendable {
         </soul>
 
         <time_context>
-        Current local time: \(timeString(context.now, timeZone: context.timeZone))
         Local date: \(localDateString(context.now, timeZone: context.timeZone))
         Day of week: \(weekdayString(context.now, timeZone: context.timeZone, localeIdentifier: context.localeIdentifier))
         Timezone: \(context.timeZone.identifier)
-        UTC: \(timeString(context.now, timeZone: TimeZone(secondsFromGMT: 0) ?? context.timeZone))
         Locale: \(context.localeIdentifier)
-        This runtime-generated context is only for interpreting relative times such as today, tomorrow, and now. It is not user-authored text or long-term memory.
-        Use these values directly when only the current time is needed; do not call a time tool for that purpose.
+        This coarse runtime context is cached and only interprets relative dates such as today and tomorrow. It is not user-authored text or long-term memory.
+        \(context.availableToolNames.contains("context_time_now")
+            ? "Call `context_time_now` when exact current time matters; do not treat this date as an exact clock."
+            : "No exact-time tool is available this turn; state that exact current time cannot be retrieved reliably when it matters.")
         </time_context>
 
         <workspace>
@@ -418,8 +420,8 @@ nonisolated public struct AgentSystemPromptBuilder: Sendable {
             : "- Injected and retrieved memory is supporting context. The user's current instruction wins on conflict."]
         if canRead {
             lines.append(isChinese
-                ? "- 需要补充检索时，只使用当前可用的 `memory_search` 或 `memory_load`。"
-                : "- Use only the available `memory_search` or `memory_load` capability when more retrieval is needed.")
+                ? "- 记忆正文不会自动注入。需要历史事实时使用 `memory_search` 或 `memory_load`；重复失败或执行环境敏感动作前，先检索 harness failure 经验。"
+                : "- Memory bodies are not injected automatically. Use `memory_search` or `memory_load` for historical facts, and search harness failures before repeating a failed or environment-sensitive action.")
         }
         if canWriteDaily || canWriteLongTerm {
             var destinations: [String] = []
@@ -454,8 +456,8 @@ nonisolated public struct AgentSystemPromptBuilder: Sendable {
 
     private func emptyLoadedSkills(localeIdentifier: String) -> String {
         localeIdentifier.lowercased().hasPrefix("zh")
-            ? "本轮没有自动命中并加载 skill 正文。"
-            : "No skill body was automatically matched and loaded for this turn."
+            ? "Skill 正文不自动注入；需要时用 `skills_read` 按需加载。"
+            : "Skill bodies are not injected automatically; load one on demand with `skills_read`."
     }
 
     private func nonEmpty(_ value: String, fallback: String) -> String {
@@ -511,15 +513,6 @@ nonisolated public struct AgentSystemPromptBuilder: Sendable {
             usedBytes += characterBytes
         }
         return prefix + marker
-    }
-
-    private func timeString(_ date: Date, timeZone: TimeZone) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.calendar = Calendar(identifier: .gregorian)
-        formatter.timeZone = timeZone
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mmXXX"
-        return formatter.string(from: date)
     }
 
     private func localDateString(_ date: Date, timeZone: TimeZone) -> String {

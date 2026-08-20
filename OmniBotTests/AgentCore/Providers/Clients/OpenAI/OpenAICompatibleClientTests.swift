@@ -22,7 +22,7 @@ struct OpenAICompatibleClientTests {
 
             data: {"choices":[{"delta":{"content":" world"},"finish_reason":"stop"}],"usage":null}
 
-            data: {"choices":[],"usage":{"prompt_tokens":20,"completion_tokens":2,"total_tokens":22,"prompt_tokens_details":{"cached_tokens":8}}}
+            data: {"choices":[],"usage":{"prompt_tokens":20,"completion_tokens":2,"total_tokens":22,"prompt_tokens_details":{"cached_tokens":8,"cache_write_tokens":3}}}
 
             data: [DONE]
 
@@ -42,6 +42,7 @@ struct OpenAICompatibleClientTests {
             runID: UUID(),
             model: "agent-model",
             messages: [.user("Hello")],
+            promptCacheKey: "conversation-cache-key",
             stream: true
         )
 
@@ -50,15 +51,18 @@ struct OpenAICompatibleClientTests {
         }
 
         #expect(result.message.content == "Hello world")
-        #expect(result.usage.promptTokens == 20)
+        #expect(result.usage.promptTokens == 12)
         #expect(result.usage.completionTokens == 2)
         #expect(result.usage.cachedTokens == 8)
+        #expect(result.usage.cacheCreationTokens == 3)
+        #expect(result.usage.reportsCacheUsage)
         #expect(await recorder.values().contains("Hello"))
         #expect(await recorder.values().last == "Hello world")
 
         let bodyData = try #require(capture.bodyData())
         let body = try #require(JSONSerialization.jsonObject(with: bodyData) as? [String: Any])
         #expect(body["stream"] as? Bool == true)
+        #expect(body["prompt_cache_key"] as? String == "conversation-cache-key")
         let streamOptions = try #require(body["stream_options"] as? [String: Any])
         #expect(streamOptions["include_usage"] as? Bool == true)
     }
@@ -315,7 +319,10 @@ struct OpenAICompatibleClientTests {
                         "input_tokens": 20,
                         "output_tokens": 8,
                         "total_tokens": 28,
-                        "input_tokens_details": ["cached_tokens": 5],
+                        "input_tokens_details": [
+                            "cached_tokens": 5,
+                            "cache_write_tokens": 2,
+                        ],
                     ],
                 ],
             ],
@@ -407,10 +414,12 @@ struct OpenAICompatibleClientTests {
             ),
         ])
         #expect(result.usage == AgentUsage(
-            promptTokens: 20,
+            promptTokens: 15,
             completionTokens: 8,
             totalTokens: 28,
-            cachedTokens: 5
+            cachedTokens: 5,
+            cacheCreationTokens: 2,
+            reportsCacheUsage: true
         ))
         let responseItems = result.message.providerMetadata?
             .objectValue?["openai_response_items"]?.arrayValue
@@ -461,6 +470,7 @@ struct OpenAICompatibleClientTests {
                         "input_tokens": 12,
                         "output_tokens": 0,
                         "cache_read_input_tokens": 4,
+                        "cache_creation_input_tokens": 6,
                     ],
                 ],
             ],
@@ -587,6 +597,7 @@ struct OpenAICompatibleClientTests {
                 temperature: 0.6,
                 maxTokens: 4_096,
                 reasoningEffort: .high,
+                promptCacheKey: "anthropic-conversation-cache",
                 stream: true
             ),
             apiKey: "anthropic-key"
@@ -604,10 +615,12 @@ struct OpenAICompatibleClientTests {
             ),
         ])
         #expect(result.usage == AgentUsage(
-            promptTokens: 12,
+            promptTokens: 18,
             completionTokens: 7,
-            totalTokens: 19,
-            cachedTokens: 4
+            totalTokens: 29,
+            cachedTokens: 4,
+            cacheCreationTokens: 6,
+            reportsCacheUsage: true
         ))
         #expect(result.finishReason == "tool_calls")
         let metadataBlocks = result.message.providerMetadata?
@@ -636,7 +649,12 @@ struct OpenAICompatibleClientTests {
         let requestBody = try #require(
             JSONSerialization.jsonObject(with: requestData) as? [String: Any]
         )
-        #expect(requestBody["system"] as? String == "Be concise")
+        let system = try #require(requestBody["system"] as? [[String: Any]])
+        #expect(system.first?["text"] as? String == "Be concise")
+        #expect(
+            (system.first?["cache_control"] as? [String: Any])?["type"] as? String
+                == "ephemeral"
+        )
         #expect(requestBody["temperature"] == nil)
         #expect((requestBody["thinking"] as? [String: Any])?["type"] as? String == "enabled")
         #expect((requestBody["thinking"] as? [String: Any])?["budget_tokens"] as? Int == 4_095)
@@ -646,8 +664,17 @@ struct OpenAICompatibleClientTests {
         let toolResults = try #require(messages[2]["content"] as? [[String: Any]])
         #expect(toolResults.count == 2)
         #expect(toolResults.allSatisfy { $0["type"] as? String == "tool_result" })
+        #expect(toolResults.first?["cache_control"] == nil)
+        #expect(
+            (toolResults.last?["cache_control"] as? [String: Any])?["type"] as? String
+                == "ephemeral"
+        )
         let tools = try #require(requestBody["tools"] as? [[String: Any]])
         #expect(tools.first?["input_schema"] as? [String: Any] != nil)
+        #expect(
+            (tools.first?["cache_control"] as? [String: Any])?["type"] as? String
+                == "ephemeral"
+        )
     }
 
     @Test func encodesToolHistoryAndDecodesAssistantToolCalls() async throws {
@@ -900,6 +927,55 @@ struct OpenAICompatibleClientTests {
             #expect(code == "42901")
             #expect(error.localizedDescription.contains("Rate limit reached"))
         }
+    }
+
+    @Test func retriesWithoutPromptCacheKeyWhenACompatibleGatewayRejectsIt() async throws {
+        let capture = RequestCapture()
+        URLProtocolStub.setHandler { request in
+            capture.store(request)
+            guard let url = request.url else {
+                throw URLProtocolStubError.invalidResponse
+            }
+            let body = try #require(capture.bodyData())
+            let object = try JSONSerialization.jsonObject(with: body) as? [String: Any]
+            let includesCacheKey = object?["prompt_cache_key"] != nil
+            let response = try #require(HTTPURLResponse(
+                url: url,
+                statusCode: includesCacheKey ? 400 : 200,
+                httpVersion: "HTTP/1.1",
+                headerFields: ["Content-Type": "application/json"]
+            ))
+            let data = includesCacheKey
+                ? Data(#"{"error":{"message":"Unknown parameter: prompt_cache_key","type":"invalid_request_error"}}"#.utf8)
+                : Data(#"{"choices":[{"message":{"role":"assistant","content":"fallback ok"},"finish_reason":"stop"}]}"#.utf8)
+            return (response, data)
+        }
+        defer { URLProtocolStub.setHandler(nil) }
+
+        let client = OpenAICompatibleClient(
+            profile: ProviderProfile(
+                name: "Compatible gateway",
+                baseURL: try #require(URL(string: "https://provider.example/v1"))
+            ),
+            session: makeStubSession()
+        )
+        let result = try await client.complete(
+            AgentChatRequest(
+                runID: UUID(),
+                model: "model",
+                messages: [.user("Hello")],
+                promptCacheKey: "stable-key"
+            ),
+            apiKey: "secret"
+        )
+
+        #expect(result.message.content == "fallback ok")
+        #expect(capture.count() == 2)
+        let finalBody = try #require(capture.bodyData())
+        let finalObject = try #require(
+            JSONSerialization.jsonObject(with: finalBody) as? [String: Any]
+        )
+        #expect(finalObject["prompt_cache_key"] == nil)
     }
 
     @Test func redactsEchoedCredentialsFromHTTPErrorFieldsAndBody() async throws {
@@ -1291,12 +1367,14 @@ nonisolated private final class RequestCapture: @unchecked Sendable {
     private let lock = NSLock()
     private var request: URLRequest?
     private var body: Data?
+    private var requestCount = 0
 
     func store(_ request: URLRequest) {
         let body = request.httpBody ?? Self.readBodyStream(request.httpBodyStream)
         lock.lock()
         self.request = request
         self.body = body
+        requestCount += 1
         lock.unlock()
     }
 
@@ -1310,6 +1388,12 @@ nonisolated private final class RequestCapture: @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         return body
+    }
+
+    func count() -> Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return requestCount
     }
 
     private static func readBodyStream(_ stream: InputStream?) -> Data? {

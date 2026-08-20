@@ -4,6 +4,8 @@ import Foundation
 /// A transparent, user-readable memory store. It intentionally starts with lexical
 /// retrieval so the Agent core has no embedding or third-party dependency.
 public actor MarkdownMemoryStore {
+    private static let maximumHarnessFailureEntries = 80
+
     private struct DailyFile: Sendable {
         let url: URL
         let size: Int
@@ -146,6 +148,60 @@ public actor MarkdownMemoryStore {
         )
     }
 
+    public func loadHarnessFailures() throws -> String {
+        try prepare()
+        return try readIfPresent(
+            paths.harnessFailuresFile,
+            maximumBytes: limits.maximumHarnessFailureFileBytes
+        )
+    }
+
+    /// Records a bounded, redacted failure lesson for later retrieval. Repeated
+    /// failures update one entry instead of growing the file without limit.
+    @discardableResult
+    public func recordHarnessFailure(
+        toolName: String,
+        summary: String,
+        runID: UUID,
+        at date: Date = Date()
+    ) throws -> Bool {
+        try prepare()
+        let tool = sanitizedToolName(toolName)
+        let failure = redactedFailureSummary(summary)
+        guard !failure.isEmpty else { return false }
+
+        let identifier = stableSlug("\(tool) \(normalizedForComparison(failure))")
+        let existing = try readIfPresent(
+            paths.harnessFailuresFile,
+            maximumBytes: limits.maximumHarnessFailureFileBytes
+        )
+        var failureEntries = entries(in: existing)
+        let matchingIndex = failureEntries.firstIndex {
+            $0.contains("[id=\(identifier)]")
+        }
+        let count = matchingIndex.map {
+            saturatingSum(harnessFailureCount(in: failureEntries[$0]), 1)
+        } ?? 1
+        if let matchingIndex {
+            failureEntries.remove(at: matchingIndex)
+        }
+
+        failureEntries.append(
+            "[\(timestampString(for: date))] [tool=\(tool)] [count=\(count)] "
+                + "[id=\(identifier)] [run=\(runID.uuidString.lowercased())] \(failure)"
+        )
+        failureEntries = Array(failureEntries.suffix(Self.maximumHarnessFailureEntries))
+        let document = "# Harness failures\n\n"
+            + failureEntries.map { "- \($0)" }.joined(separator: "\n")
+            + "\n"
+        try writeDocument(
+            document,
+            to: paths.harnessFailuresFile,
+            maximumBytes: limits.maximumHarnessFailureFileBytes
+        )
+        return matchingIndex == nil
+    }
+
     public func promptContext(at date: Date = Date()) throws -> MemoryPromptContext {
         MemoryPromptContext(
             longTermMemory: try loadLongTermMemory(),
@@ -179,6 +235,11 @@ public actor MarkdownMemoryStore {
             })
         }
 
+        candidates.append(contentsOf: entries(in: try readIfPresent(
+            paths.harnessFailuresFile,
+            maximumBytes: limits.maximumHarnessFailureFileBytes
+        )).map { ($0, .harnessFailure) })
+
         return candidates.compactMap { text, source in
             let score = lexicalScore(query: normalizedQuery, candidate: text)
             guard score > 0 else { return nil }
@@ -209,6 +270,16 @@ public actor MarkdownMemoryStore {
                 "# Long-term memory\n\n",
                 to: paths.longTermMemoryFile,
                 maximumBytes: limits.maximumLongTermFileBytes
+            )
+        }
+        if try inspectRegularFileIfPresent(
+            paths.harnessFailuresFile,
+            maximumBytes: limits.maximumHarnessFailureFileBytes
+        ) == nil {
+            try writeDocument(
+                "# Harness failures\n\n",
+                to: paths.harnessFailuresFile,
+                maximumBytes: limits.maximumHarnessFailureFileBytes
             )
         }
     }
@@ -516,6 +587,37 @@ public actor MarkdownMemoryStore {
     private func stripDailyTimestamp(from text: String) -> String {
         guard text.hasPrefix("["), let closing = text.firstIndex(of: "]") else { return text }
         return text[text.index(after: closing)...].trimmingCharacters(in: .whitespaces)
+    }
+
+    private func harnessFailureCount(in text: String) -> Int {
+        guard let marker = text.range(of: "[count=") else { return 1 }
+        let suffix = text[marker.upperBound...]
+        guard let closing = suffix.firstIndex(of: "]") else { return 1 }
+        return Int(suffix[..<closing]) ?? 1
+    }
+
+    private func sanitizedToolName(_ value: String) -> String {
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-"))
+        let scalars = value.unicodeScalars.map { allowed.contains($0) ? Character($0) : "_" }
+        let sanitized = String(scalars).trimmingCharacters(in: CharacterSet(charactersIn: "_"))
+        return sanitized.isEmpty ? "unknown" : String(sanitized.prefix(80))
+    }
+
+    private func redactedFailureSummary(_ value: String) -> String {
+        var redacted = cleanEntry(value)
+        let replacements: [(String, String)] = [
+            (#"(?i)(authorization|api[-_ ]?key|password|secret|token)\s*[:=]\s*[^\s,;]+"#, "$1=[REDACTED]"),
+            (#"(?i)bearer\s+[A-Za-z0-9._~+\-/]+=*"#, "Bearer [REDACTED]"),
+            (#"\bsk-[A-Za-z0-9_-]{8,}\b"#, "[REDACTED]")
+        ]
+        for (pattern, replacement) in replacements {
+            redacted = redacted.replacingOccurrences(
+                of: pattern,
+                with: replacement,
+                options: .regularExpression
+            )
+        }
+        return String(redacted.prefix(1_000))
     }
 
     private func normalizedForComparison(_ value: String) -> String {

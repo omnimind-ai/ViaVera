@@ -16,6 +16,8 @@ public final class ConversationRecord {
     public var completionTokens: Int = 0
     public var totalTokens: Int = 0
     public var cachedTokens: Int = 0
+    public var cacheCreationTokens: Int = 0
+    public var reportsCacheUsage: Bool = false
     public var isPinned: Bool = false
     public var createdAt: Date
     public var updatedAt: Date
@@ -52,6 +54,8 @@ public final class ConversationRecord {
         self.completionTokens = usage.completionTokens
         self.totalTokens = usage.totalTokens
         self.cachedTokens = usage.cachedTokens
+        self.cacheCreationTokens = usage.cacheCreationTokens
+        self.reportsCacheUsage = usage.reportsCacheUsage
         self.isPinned = isPinned
         self.createdAt = createdAt
         self.updatedAt = updatedAt
@@ -81,7 +85,11 @@ public final class ConversationRecord {
                 promptTokens: promptTokens,
                 completionTokens: completionTokens,
                 totalTokens: totalTokens,
-                cachedTokens: cachedTokens
+                cachedTokens: cachedTokens,
+                cacheCreationTokens: cacheCreationTokens,
+                reportsCacheUsage: reportsCacheUsage
+                    || cachedTokens > 0
+                    || cacheCreationTokens > 0
             )
         }
         set {
@@ -89,6 +97,8 @@ public final class ConversationRecord {
             completionTokens = newValue.completionTokens
             totalTokens = newValue.totalTokens
             cachedTokens = newValue.cachedTokens
+            cacheCreationTokens = newValue.cacheCreationTokens
+            reportsCacheUsage = newValue.reportsCacheUsage
         }
     }
 

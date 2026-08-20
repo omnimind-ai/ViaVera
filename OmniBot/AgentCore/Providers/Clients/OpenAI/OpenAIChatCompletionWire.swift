@@ -74,6 +74,7 @@ nonisolated struct OpenAIChatCompletionRequestBody: Encodable, Sendable {
     let reasoningEffort: AgentReasoningEffort?
     let enableThinking: Bool?
     let thinking: Thinking?
+    let promptCacheKey: String?
     let stream: Bool
     let streamOptions: StreamOptions?
 
@@ -99,6 +100,7 @@ nonisolated struct OpenAIChatCompletionRequestBody: Encodable, Sendable {
         case reasoningEffort = "reasoning_effort"
         case enableThinking = "enable_thinking"
         case thinking
+        case promptCacheKey = "prompt_cache_key"
         case stream
         case streamOptions = "stream_options"
     }
@@ -136,6 +138,9 @@ nonisolated struct OpenAIChatCompletionRequestBody: Encodable, Sendable {
             enableThinking = nil
             thinking = nil
         }
+        promptCacheKey = protocolType == .openAICompatible
+            ? request.promptCacheKey
+            : nil
         stream = request.stream
         streamOptions = request.stream ? StreamOptions(includeUsage: true) : nil
     }
@@ -223,9 +228,11 @@ nonisolated struct OpenAIChatCompletionResponseBody: Decodable, Sendable {
     struct Usage: Decodable, Sendable {
         struct PromptTokensDetails: Decodable, Sendable {
             let cachedTokens: Int?
+            let cacheWriteTokens: Int?
 
             enum CodingKeys: String, CodingKey {
                 case cachedTokens = "cached_tokens"
+                case cacheWriteTokens = "cache_write_tokens"
             }
         }
 

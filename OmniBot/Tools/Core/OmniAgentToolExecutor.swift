@@ -149,6 +149,8 @@ public actor OmniAgentToolExecutor: AgentToolExecuting {
                 result = try statFile(arguments)
             case "file_move":
                 result = try moveFile(arguments)
+            case "context_time_now":
+                result = currentTime(arguments)
             case "memory_search":
                 result = try await searchMemory(arguments)
             case "memory_load":
@@ -332,6 +334,7 @@ public actor OmniAgentToolExecutor: AgentToolExecuting {
     private nonisolated static func toolType(for name: String) -> String {
         if name.hasPrefix("terminal_") { return "terminal" }
         if name.hasPrefix("file_") { return "filesystem" }
+        if name.hasPrefix("context_") { return "context" }
         if name.hasPrefix("memory_") { return "memory" }
         if name.hasPrefix("skills_") { return "skills" }
         if name == "browser_use" { return "browser" }

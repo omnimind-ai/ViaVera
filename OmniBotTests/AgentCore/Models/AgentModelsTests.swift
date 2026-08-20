@@ -71,5 +71,7 @@ struct AgentModelsTests {
         let usage = try JSONDecoder().decode(AgentUsage.self, from: data)
 
         #expect(usage.cachedTokens == 0)
+        #expect(usage.cacheCreationTokens == 0)
+        #expect(!usage.reportsCacheUsage)
     }
 }

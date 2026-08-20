@@ -3,7 +3,7 @@ import Foundation
 /// A tool-agnostic Agent loop. The iSH integration only needs to provide an
 /// AgentToolExecuting implementation; model and persistence concerns remain separate.
 public actor AgentRunner {
-    private static let maximumModelToolResultBytesPerCall = 32 * 1_024
+    private static let maximumModelToolResultBytesPerCall = 12 * 1_024
     private static let maximumModelToolResultBytesPerRun = 128 * 1_024
     private static let minimumReservedModelToolResultBytes = 192
     private static let maximumToolCallArgumentsBytes = 32 * 1_024
@@ -127,7 +127,9 @@ public actor AgentRunner {
         try Task.checkCancellation()
         try await onEvent(.started(runID: input.runID))
 
-        let tools = input.allowsToolCalls ? await toolExecutor.availableTools() : []
+        let tools = input.allowsToolCalls
+            ? await toolExecutor.availableTools().sorted { $0.name < $1.name }
+            : []
         let boundedHistory = AgentConversationHistoryWindow.select(
             history: input.history,
             currentUserMessage: input.currentUserMessage,
@@ -199,6 +201,9 @@ public actor AgentRunner {
                 temperature: input.temperature,
                 maxTokens: input.maxTokens,
                 reasoningEffort: input.reasoningEffort,
+                promptCacheKey: AgentChatRequest.promptCacheKey(
+                    conversationID: input.conversationID
+                ),
                 stream: supportsStreaming
             )
             let assistantMessageID = UUID()
@@ -211,10 +216,15 @@ public actor AgentRunner {
             )
             try Task.checkCancellation()
 
-            switch response.finishReason?
+            let normalizedFinishReason = response.finishReason?
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-                .lowercased() {
-            case "length":
+                .lowercased()
+            let hasTruncatedToolCalls = Self.isLengthFinishReason(
+                normalizedFinishReason
+            ) && !response.message.toolCalls.isEmpty
+            switch normalizedFinishReason {
+            case let reason where Self.isLengthFinishReason(reason)
+                && !hasTruncatedToolCalls:
                 throw AgentRunnerError.outputTruncated
             case "content_filter", "content-filter":
                 throw AgentRunnerError.contentFiltered
@@ -294,6 +304,42 @@ public actor AgentRunner {
 
             guard round < maxRounds else {
                 throw AgentRunnerError.maximumRoundsExceeded(maxRounds)
+            }
+
+            if hasTruncatedToolCalls {
+                for (callIndex, call) in assistant.toolCalls.enumerated() {
+                    try Task.checkCancellation()
+                    try await onEvent(.toolStarted(call, round: round))
+                    let rejected = AgentToolExecutionResult(
+                        content: "This tool call was not executed because the model output reached its length limit and the arguments may be truncated. Re-issue it in the next round with complete arguments.",
+                        isError: true,
+                        metadata: [
+                            "reason": .string("truncated_model_output"),
+                            "finishReason": .string(normalizedFinishReason ?? "length"),
+                        ]
+                    )
+                    let modelByteLimit = modelToolResultByteLimit(
+                        bytesAlreadyUsed: modelAssistantToolBytes + modelToolResultBytes,
+                        callsRemainingInTurn: assistant.toolCalls.count - callIndex - 1,
+                        maximumBytes: modelToolResultBudget
+                    )
+                    let boundedResult = try boundedToolResult(
+                        rejected,
+                        maximumModelUTF8Bytes: modelByteLimit
+                    )
+                    modelToolResultBytes += boundedResult.modelContent.utf8.count
+                    try await onEvent(.toolCompleted(
+                        call,
+                        result: boundedResult.result,
+                        round: round
+                    ))
+                    messages.append(.tool(
+                        callID: call.id,
+                        name: call.name,
+                        content: boundedResult.modelContent
+                    ))
+                }
+                continue
             }
 
             let context = AgentToolExecutionContext(
@@ -561,9 +607,9 @@ public actor AgentRunner {
         var best: (AgentToolExecutionResult, String)?
         while lower <= upper {
             let midpoint = lower + (upper - lower) / 2
-            let prefix = Self.utf8Prefix(result.content, maximumBytes: midpoint)
+            let excerpt = Self.utf8HeadTail(result.content, maximumBytes: midpoint)
             let candidate = AgentToolExecutionResult(
-                content: prefix + marker,
+                content: excerpt + marker,
                 isError: result.isError,
                 metadata: metadata,
                 artifacts: retainedArtifacts,
@@ -599,6 +645,34 @@ public actor AgentRunner {
     private static func utf8Prefix(_ value: String, maximumBytes: Int) -> String {
         guard maximumBytes > 0 else { return "" }
         return String(decoding: value.utf8.prefix(maximumBytes), as: UTF8.self)
+    }
+
+    private static func isLengthFinishReason(_ value: String?) -> Bool {
+        switch value {
+        case "length", "max_tokens", "max_completion_tokens", "max_output_tokens":
+            true
+        default:
+            false
+        }
+    }
+
+    /// Retains both the start (usually the command/result summary) and the end
+    /// (usually the error or completion state), matching the compact tool-result
+    /// envelope used by the Android harness.
+    private static func utf8HeadTail(_ value: String, maximumBytes: Int) -> String {
+        guard maximumBytes > 0 else { return "" }
+        guard value.utf8.count > maximumBytes else { return value }
+        let separator = "\n...[middle of tool output omitted]...\n"
+        let separatorBytes = separator.utf8.count
+        guard maximumBytes > separatorBytes else {
+            return utf8Prefix(value, maximumBytes: maximumBytes)
+        }
+        let contentBudget = maximumBytes - separatorBytes
+        let headBytes = (contentBudget + 1) / 2
+        let tailBytes = contentBudget / 2
+        let head = String(decoding: value.utf8.prefix(headBytes), as: UTF8.self)
+        let tail = String(decoding: value.utf8.suffix(tailBytes), as: UTF8.self)
+        return head + separator + tail
     }
 
     private func completeWithRetry(

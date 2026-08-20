@@ -38,6 +38,43 @@ struct MarkdownMemoryStoreTests {
         #expect(context.todayMemory.contains("Alpine rootfs initialized"))
     }
 
+    @Test("Harness failures are redacted, deduplicated, and searchable")
+    func harnessFailureJournal() async throws {
+        let temporary = try makeTemporaryWorkspace()
+        defer { try? FileManager.default.removeItem(at: temporary.root) }
+        let utc = try #require(TimeZone(identifier: "UTC"))
+        let date = try #require(ISO8601DateFormatter().date(from: "2026-07-10T08:00:00Z"))
+        let store = MarkdownMemoryStore(paths: temporary.paths, timeZone: utc)
+        let firstRunID = try #require(
+            UUID(uuidString: "00000000-0000-0000-0000-000000000001")
+        )
+        let secondRunID = try #require(
+            UUID(uuidString: "00000000-0000-0000-0000-000000000002")
+        )
+
+        #expect(try await store.recordHarnessFailure(
+            toolName: "terminal_execute",
+            summary: "deployment failed token=secret-one",
+            runID: firstRunID,
+            at: date
+        ))
+        #expect(try await !store.recordHarnessFailure(
+            toolName: "terminal_execute",
+            summary: "deployment failed token=secret-two",
+            runID: secondRunID,
+            at: date
+        ))
+
+        let journal = try await store.loadHarnessFailures()
+        #expect(journal.contains("[count=2]"))
+        #expect(journal.contains("token=[REDACTED]"))
+        #expect(!journal.contains("secret-one"))
+        #expect(!journal.contains("secret-two"))
+        let hits = try await store.search("deployment failed", limit: 5)
+        #expect(hits.count == 1)
+        #expect(hits.first?.source == .harnessFailure)
+    }
+
     @Test("Long-term and daily writes enforce UTF-8 byte limits")
     func writeByteLimits() async throws {
         let temporary = try makeTemporaryWorkspace()

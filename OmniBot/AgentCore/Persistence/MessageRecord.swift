@@ -16,6 +16,8 @@ public final class MessageRecord {
     public var promptTokens: Int = 0
     public var completionTokens: Int = 0
     public var cachedTokens: Int = 0
+    public var cacheCreationTokens: Int = 0
+    public var reportsCacheUsage: Bool = false
     public var createdAt: Date
     public var updatedAt: Date
     public var conversation: ConversationRecord?
@@ -43,6 +45,8 @@ public final class MessageRecord {
         self.promptTokens = usage.promptTokens
         self.completionTokens = usage.completionTokens
         self.cachedTokens = usage.cachedTokens
+        self.cacheCreationTokens = usage.cacheCreationTokens
+        self.reportsCacheUsage = usage.reportsCacheUsage
         self.createdAt = createdAt
         self.updatedAt = updatedAt ?? createdAt
         self.conversation = conversation
@@ -80,6 +84,8 @@ public final class MessageRecord {
             promptTokens = usage.promptTokens
             completionTokens = usage.completionTokens
             cachedTokens = usage.cachedTokens
+            cacheCreationTokens = usage.cacheCreationTokens
+            reportsCacheUsage = usage.reportsCacheUsage
         }
         if let contextWindow { self.contextWindow = contextWindow }
         self.updatedAt = updatedAt
