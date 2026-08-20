@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import WebKit
 @testable import Via_Vera
 
 @Suite("Apple WebKit browser session")
@@ -87,6 +88,81 @@ struct AppleBrowserSessionTests {
         #expect(throws: AppleBrowserError.self) {
             _ = try session.normalizedWebURL("file:///tmp/private")
         }
+    }
+
+    @Test("New tabs identify as a current Safari browser before first navigation")
+    func newTabUsesSafariUserAgent() throws {
+        let temporary = try makeTemporaryWorkspace()
+        defer { try? FileManager.default.removeItem(at: temporary.root) }
+        let session = AppleBrowserSession(paths: temporary.paths)
+
+        let userAgent = try #require(session.createTab().page.customUserAgent)
+
+        #expect(userAgent.contains("Version/"))
+        #expect(userAgent.contains(" Safari/"))
+        #expect(userAgent == AppleBrowserUserAgent.currentDefault)
+    }
+
+    @Test("Safari user agents cover macOS, iPhone, and iPad browser modes")
+    func safariUserAgentPlatforms() {
+        let mac = AppleBrowserUserAgent.safari(
+            profile: .desktopSafari,
+            platform: .macOS,
+            version: "26.5.2"
+        )
+        #expect(mac == [
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+            "AppleWebKit/605.1.15 (KHTML, like Gecko)",
+            "Version/26.5 Safari/605.1.15",
+        ].joined(separator: " "))
+
+        let iPhone = AppleBrowserUserAgent.safari(
+            profile: .mobileSafari,
+            platform: .iPhone,
+            version: "26.5"
+        )
+        #expect(iPhone == [
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 26_5 like Mac OS X)",
+            "AppleWebKit/605.1.15 (KHTML, like Gecko)",
+            "Version/26.5 Mobile/15E148 Safari/604.1",
+        ].joined(separator: " "))
+
+        let iPad = AppleBrowserUserAgent.safari(
+            profile: AppleBrowserUserAgent.defaultProfile(for: .iPad),
+            platform: .iPad,
+            version: "26.5"
+        )
+        #expect(iPad == [
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15)",
+            "AppleWebKit/605.1.15 (KHTML, like Gecko)",
+            "Version/26.5 Mobile/15E148 Safari/604.1",
+        ].joined(separator: " "))
+    }
+
+    @Test("Explicit user-agent profiles use the same current Safari identity")
+    func explicitSafariUserAgentProfile() throws {
+        let temporary = try makeTemporaryWorkspace()
+        defer { try? FileManager.default.removeItem(at: temporary.root) }
+        let session = AppleBrowserSession(paths: temporary.paths)
+        let tab = try session.createTab()
+
+        let output = try session.setUserAgent(
+            browserArguments(["user_agent": .string("mobile_safari")]),
+            in: tab
+        )
+
+        #expect(tab.page.customUserAgent == AppleBrowserUserAgent.current(
+            profile: .mobileSafari
+        ))
+        #expect(output.payload.objectValue?["profile"] == .string("mobile_safari"))
+    }
+
+    @Test("Safari version normalization rejects malformed values")
+    func safariVersionNormalization() {
+        #expect(AppleBrowserUserAgent.normalizedVersion("26.5.2") == "26.5")
+        #expect(AppleBrowserUserAgent.normalizedVersion("26") == "26.0")
+        #expect(AppleBrowserUserAgent.normalizedVersion("invalid") == nil)
+        #expect(AppleBrowserUserAgent.normalizedVersion("26.beta") == nil)
     }
 
     @Test("Visible browser presentation reuses the conversation WebKit tab")

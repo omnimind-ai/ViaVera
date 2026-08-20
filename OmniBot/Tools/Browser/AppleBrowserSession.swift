@@ -170,7 +170,9 @@ final class AppleBrowserSession {
         navigationPreferences.allowsContentJavaScript = true
         navigationPreferences.preferredHTTPSNavigationPolicy = .automaticFallbackToHTTP
         configuration.defaultNavigationPreferences = navigationPreferences
-        return WebPage(configuration: configuration)
+        let page = WebPage(configuration: configuration)
+        page.customUserAgent = AppleBrowserUserAgent.currentDefault
+        return page
     }
 
     func createTab() throws -> AppleBrowserTab {
@@ -383,23 +385,18 @@ final class AppleBrowserSession {
         _ arguments: OmniToolArguments,
         in tab: AppleBrowserTab
     ) throws -> AppleBrowserOperationOutput {
-        let profile = try arguments.requiredString("user_agent", maximumLength: 64)
-        let userAgent: String
-        switch profile {
-        case "desktop_safari":
-            userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15"
-        case "mobile_safari":
-            userAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1"
-        default:
+        let rawProfile = try arguments.requiredString("user_agent", maximumLength: 64)
+        guard let profile = AppleBrowserUserAgentProfile(rawValue: rawProfile) else {
             throw OmniAgentToolError(
                 "Invalid parameter 'user_agent': expected desktop_safari or mobile_safari."
             )
         }
+        let userAgent = AppleBrowserUserAgent.current(profile: profile)
         tab.page.customUserAgent = userAgent
         return AppleBrowserOperationOutput(
             summary: "Set the WebKit user-agent profile for browser tab \(tab.id).",
             payload: .object([
-                "profile": .string(profile),
+                "profile": .string(profile.rawValue),
                 "appliesOnNextNavigation": .bool(true),
             ])
         )
