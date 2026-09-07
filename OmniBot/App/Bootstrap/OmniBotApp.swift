@@ -21,6 +21,7 @@ struct OmniBotApp: App {
                 ContentView()
                     .environment(dependencies.appModel)
                     .modelContainer(dependencies.modelContainer)
+                    .preferredColorScheme(dependencies.appModel.appearanceSettings.themeMode.colorScheme)
             } else {
                 BootstrapFailureView(
                     message: bootstrap.errorMessage ?? "未知启动错误",
@@ -40,6 +41,7 @@ struct OmniBotApp: App {
                 MenuBarChatView(session: menuBarSession)
                     .environment(dependencies.appModel)
                     .modelContainer(dependencies.modelContainer)
+                    .preferredColorScheme(dependencies.appModel.appearanceSettings.themeMode.colorScheme)
             } else {
                 BootstrapFailureView(
                     message: bootstrap.errorMessage ?? "未知启动错误",
@@ -57,6 +59,7 @@ struct OmniBotApp: App {
                 MenuBarChatView(session: menuBarSession, isDetached: true)
                     .environment(dependencies.appModel)
                     .modelContainer(dependencies.modelContainer)
+                    .preferredColorScheme(dependencies.appModel.appearanceSettings.themeMode.colorScheme)
             }
         }
         .defaultSize(width: 480, height: 640)

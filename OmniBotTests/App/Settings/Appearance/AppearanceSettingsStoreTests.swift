@@ -41,6 +41,7 @@ struct AppearanceSettingsStoreTests {
 
         try await store.save(
             AppearancePreferences(
+                themeMode: .dark,
                 backgroundOpacity: 2,
                 backgroundBrightness: -2,
                 backgroundBlur: 80
@@ -58,6 +59,7 @@ struct AppearanceSettingsStoreTests {
         #expect(importedData == pngData)
 
         let reloadedState = try await store.load()
+        #expect(reloadedState.preferences.themeMode == .dark)
         #expect(reloadedState.preferences.backgroundOpacity == 1)
         #expect(reloadedState.preferences.backgroundBrightness == -0.5)
         #expect(reloadedState.preferences.backgroundBlur == 30)
@@ -66,5 +68,66 @@ struct AppearanceSettingsStoreTests {
         try await store.removeBackgroundImage()
         let stateAfterRemoval = try await store.load()
         #expect(stateAfterRemoval.backgroundImageData == nil)
+        #expect(stateAfterRemoval.preferences == reloadedState.preferences)
+    }
+
+    @Test("Existing appearance settings default to the system theme without losing adjustments")
+    func loadsLegacyPreferences() async throws {
+        let root = FileManager.default.temporaryDirectory.appending(
+            path: "AppearanceSettingsLegacyTests-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let legacyData = Data("""
+            {"backgroundOpacity":0.65,"backgroundBrightness":-0.2,"backgroundBlur":14}
+            """.utf8)
+        try legacyData.write(to: root.appending(path: "appearance.json"))
+
+        let store = AppearanceSettingsStore(directoryURL: root)
+        let state = try await store.load()
+
+        #expect(state.preferences.themeMode == .system)
+        #expect(state.preferences.backgroundOpacity == 0.65)
+        #expect(state.preferences.backgroundBrightness == -0.2)
+        #expect(state.preferences.backgroundBlur == 14)
+
+        try await store.save(state.preferences)
+        let reloadedState = try await store.load()
+        #expect(reloadedState.preferences == state.preferences)
+    }
+
+    @Test("Theme changes survive model reload, including returning to the system theme")
+    @MainActor
+    func persistsThemeChangesThroughModel() async throws {
+        let root = FileManager.default.temporaryDirectory.appending(
+            path: "AppearanceSettingsThemeTests-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: root) }
+        let model = AppearanceSettingsModel(store: AppearanceSettingsStore(directoryURL: root))
+        await model.load()
+        #expect(model.themeMode == .system)
+        model.backgroundOpacity = 0.65
+        model.backgroundBrightness = -0.2
+        model.backgroundBlur = 14
+
+        for mode in [AppearanceThemeMode.dark, .light, .system] {
+            model.themeMode = mode
+            await model.save(model.preferences)
+            #expect(model.errorMessage == nil)
+
+            let reloadedModel = AppearanceSettingsModel(
+                store: AppearanceSettingsStore(directoryURL: root)
+            )
+            await reloadedModel.load()
+
+            #expect(reloadedModel.errorMessage == nil)
+            #expect(reloadedModel.themeMode == mode)
+            #expect(reloadedModel.preferences == model.preferences)
+            #expect(reloadedModel.backgroundOpacity == 0.65)
+            #expect(reloadedModel.backgroundBrightness == -0.2)
+            #expect(reloadedModel.backgroundBlur == 14)
+        }
     }
 }

@@ -11,22 +11,45 @@ nonisolated struct AppearancePreferences: Codable, Equatable, Sendable {
         backgroundBlur: 8
     )
 
+    var themeMode: AppearanceThemeMode
     var backgroundOpacity: Double
     var backgroundBrightness: Double
     var backgroundBlur: Double
 
     init(
+        themeMode: AppearanceThemeMode = .system,
         backgroundOpacity: Double,
         backgroundBrightness: Double,
         backgroundBlur: Double
     ) {
+        self.themeMode = themeMode
         self.backgroundOpacity = backgroundOpacity
         self.backgroundBrightness = backgroundBrightness
         self.backgroundBlur = backgroundBlur
     }
 
+    private enum CodingKeys: String, CodingKey {
+        case themeMode
+        case backgroundOpacity
+        case backgroundBrightness
+        case backgroundBlur
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        // Existing appearance files predate the theme preference.
+        themeMode = try container.decodeIfPresent(
+            AppearanceThemeMode.self,
+            forKey: .themeMode
+        ) ?? .system
+        backgroundOpacity = try container.decode(Double.self, forKey: .backgroundOpacity)
+        backgroundBrightness = try container.decode(Double.self, forKey: .backgroundBrightness)
+        backgroundBlur = try container.decode(Double.self, forKey: .backgroundBlur)
+    }
+
     var normalized: AppearancePreferences {
         AppearancePreferences(
+            themeMode: themeMode,
             backgroundOpacity: Self.clamp(
                 backgroundOpacity,
                 to: Self.opacityRange,

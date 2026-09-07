@@ -8,18 +8,28 @@ struct AppearanceAdjustmentRow: View {
     let step: Double
 
     var body: some View {
-        LabeledContent {
-            VStack(alignment: .trailing, spacing: AppDesign.compactSpacing / 2) {
-                Text(valueText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: AppDesign.compactSpacing) {
+            HStack(alignment: .firstTextBaseline, spacing: AppDesign.standardSpacing) {
+                Text(title)
+                    .foregroundStyle(.primary)
 
-                Slider(value: $value, in: range, step: step)
-                    .accessibilityLabel(title)
-                    .accessibilityValue(valueText)
+                Spacer(minLength: AppDesign.compactSpacing)
+
+                Text(valueText)
+                    .font(.subheadline)
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: true, vertical: false)
             }
-        } label: {
-            Text(title)
+            .accessibilityHidden(true)
+
+            Slider(value: $value, in: range, step: step) {
+                Text(title)
+            }
+            .labelsHidden()
+            .accessibilityValue(valueText)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, AppDesign.compactSpacing / 2)
     }
 }

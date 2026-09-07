@@ -2,6 +2,9 @@ import SwiftUI
 
 struct SettingsCardView: View {
     @Environment(\.dismiss) private var dismiss
+#if !os(macOS)
+    @Environment(AppModel.self) private var appModel
+#endif
     @State private var selection: SettingsCardDestination?
     @State private var path: NavigationPath
 
@@ -49,6 +52,8 @@ struct SettingsCardView: View {
                 )
             }
         }
+        // The sheet owns its presentation appearance independently of the main window.
+        .preferredColorScheme(appModel.appearanceSettings.themeMode.colorScheme)
 #endif
     }
 

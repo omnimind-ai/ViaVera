@@ -5,6 +5,7 @@ import Observation
 @MainActor
 @Observable
 final class AppearanceSettingsModel {
+    var themeMode = AppearancePreferences.defaultValue.themeMode
     var backgroundOpacity = AppearancePreferences.defaultValue.backgroundOpacity
     var backgroundBrightness = AppearancePreferences.defaultValue.backgroundBrightness
     var backgroundBlur = AppearancePreferences.defaultValue.backgroundBlur
@@ -19,6 +20,7 @@ final class AppearanceSettingsModel {
 
     var preferences: AppearancePreferences {
         AppearancePreferences(
+            themeMode: themeMode,
             backgroundOpacity: backgroundOpacity,
             backgroundBrightness: backgroundBrightness,
             backgroundBlur: backgroundBlur
@@ -32,6 +34,7 @@ final class AppearanceSettingsModel {
     func load() async {
         do {
             let state = try await store.load()
+            themeMode = state.preferences.themeMode
             backgroundOpacity = state.preferences.backgroundOpacity
             backgroundBrightness = state.preferences.backgroundBrightness
             backgroundBlur = state.preferences.backgroundBlur
@@ -54,6 +57,7 @@ final class AppearanceSettingsModel {
             let normalized = preferencesSnapshot.normalized
             try await store.save(normalized)
             if preferences == preferencesSnapshot {
+                themeMode = normalized.themeMode
                 backgroundOpacity = normalized.backgroundOpacity
                 backgroundBrightness = normalized.backgroundBrightness
                 backgroundBlur = normalized.backgroundBlur

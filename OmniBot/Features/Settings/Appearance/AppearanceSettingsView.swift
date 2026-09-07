@@ -22,6 +22,15 @@ struct AppearanceSettingsView: View {
             : "选择背景图片"
 
         SettingsPageLayout(title: "外观") {
+            Section("主题") {
+                Picker("主题模式", selection: $settings.themeMode) {
+                    ForEach(AppearanceThemeMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+
             Section {
 #if os(iOS)
                 PhotosPicker(

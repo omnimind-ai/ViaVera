@@ -40,8 +40,11 @@ struct MenuBarChatView: View {
         .symbolRenderingMode(.hierarchical)
         .modifier(AppSceneLifecycleModifier())
         .background {
-            MenuBarWindowAccessor(reference: windowReference)
-                .frame(width: 0, height: 0)
+            MenuBarWindowAccessor(
+                reference: windowReference,
+                themeMode: appModel.appearanceSettings.themeMode
+            )
+            .frame(width: 0, height: 0)
         }
     }
 
