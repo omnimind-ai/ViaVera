@@ -7,14 +7,16 @@
 
 import SwiftUI
 import SwiftData
-import Observation
 
 @main
 struct OmniBotApp: App {
     @State private var bootstrap = AppBootstrapModel()
+#if os(macOS)
+    @State private var menuBarSession = MenuBarChatSession()
+#endif
 
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: AppSceneID.mainWindow, for: String.self) { _ in
             if let dependencies = bootstrap.dependencies {
                 ContentView()
                     .environment(dependencies.appModel)
@@ -25,53 +27,43 @@ struct OmniBotApp: App {
                     retry: bootstrap.retry
                 )
             }
+        } defaultValue: {
+            AppSceneID.mainWindow
         }
 #if os(macOS)
         .defaultSize(width: 1_180, height: 780)
 #endif
-    }
-}
 
-@MainActor
-@Observable
-private final class AppBootstrapModel {
-    private(set) var dependencies: AppDependencies?
-    private(set) var errorMessage: String?
-
-    init() {
-        retry()
-    }
-
-    func retry() {
-        do {
-            dependencies = try AppDependencies.live()
-            errorMessage = nil
-        } catch {
-            dependencies = nil
-            errorMessage = error.localizedDescription
-        }
-    }
-}
-
-private struct BootstrapFailureView: View {
-    let message: String
-    let retry: () -> Void
-
-    var body: some View {
-        ContentUnavailableView {
-            Label("OmniBot 无法启动", systemImage: "exclamationmark.triangle")
-        } description: {
-            VStack(spacing: 12) {
-                Text(message)
-                    .textSelection(.enabled)
-                Text("本地数据没有被自动删除。修复 Application Support/OmniBot 中的数据后可重新尝试。")
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
+#if os(macOS)
+        MenuBarExtra {
+            if let dependencies = bootstrap.dependencies {
+                MenuBarChatView(session: menuBarSession)
+                    .environment(dependencies.appModel)
+                    .modelContainer(dependencies.modelContainer)
+            } else {
+                BootstrapFailureView(
+                    message: bootstrap.errorMessage ?? "未知启动错误",
+                    retry: bootstrap.retry
+                )
+                .frame(width: 480, height: 360)
             }
-        } actions: {
-            Button("重新尝试", systemImage: "arrow.clockwise", action: retry)
-                .buttonStyle(.borderedProminent)
+        } label: {
+            Label("OmniBot", image: .menuBarIcon)
         }
-        .padding()
+        .menuBarExtraStyle(.window)
+
+        Window("快捷聊天", id: AppSceneID.detachedChat) {
+            if let dependencies = bootstrap.dependencies {
+                MenuBarChatView(session: menuBarSession, isDetached: true)
+                    .environment(dependencies.appModel)
+                    .modelContainer(dependencies.modelContainer)
+            }
+        }
+        .defaultSize(width: 480, height: 640)
+        .windowResizability(.contentMinSize)
+        .windowLevel(menuBarSession.isPinned ? .floating : .normal)
+        .defaultLaunchBehavior(.suppressed)
+        .restorationBehavior(.disabled)
+#endif
     }
 }

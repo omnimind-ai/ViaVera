@@ -5,11 +5,27 @@ import SwiftData
 @MainActor
 @Observable
 final class AppModel {
-    var destination: AppDestination?
+    var destination: AppDestination? {
+        didSet {
+            if case let .conversation(identifier) = destination {
+                lastConversationID = identifier
+            }
+        }
+    }
     var globalErrorMessage: String?
     var presentedSettingsDestination: SettingsCardDestination?
     var isTerminalPresented = false
     private(set) var hasStarted = false
+    private var lastConversationID: UUID?
+    @ObservationIgnored private var startupTask: Task<Void, Never>?
+
+    var selectedConversation: ConversationRecord? {
+        if let lastConversationID,
+           let conversation = conversations.conversation(id: lastConversationID) {
+            return conversation
+        }
+        return conversations.conversations.first
+    }
 
     private let bootstrapNotice: String?
 
@@ -86,7 +102,20 @@ final class AppModel {
     }
 
     func start() async {
+        if let startupTask {
+            await startupTask.value
+            return
+        }
         guard !hasStarted else { return }
+        // Startup belongs to the application, so dismissing a menu bar window
+        // must not cancel it or trigger a second load from another scene.
+        let task = Task { await loadInitialState() }
+        startupTask = task
+        await task.value
+        startupTask = nil
+    }
+
+    private func loadInitialState() async {
         hasStarted = true
         globalErrorMessage = nil
         do {

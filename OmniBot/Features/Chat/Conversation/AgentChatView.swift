@@ -9,9 +9,11 @@ struct AgentChatView: View {
     @Environment(AppModel.self) private var appModel
 
     let conversationID: UUID
+    let onOpenMainWindow: (() -> Void)?
+    let onTogglePin: (() -> Void)?
+    let isPinned: Bool
 
-    @State private var draft = ""
-    @State private var editingUserMessageID: UUID?
+    @State private var composerDraft: ChatComposerDraft
     @State private var composerFocusRequestID = 0
     @State private var turnExpansion = AgentTurnExpansionState()
     @State private var isToolActivityExpanded = false
@@ -53,6 +55,30 @@ struct AgentChatView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
 
+    init(
+        conversationID: UUID,
+        onOpenMainWindow: (() -> Void)? = nil,
+        onTogglePin: (() -> Void)? = nil,
+        isPinned: Bool = false,
+        composerDraft: ChatComposerDraft? = nil
+    ) {
+        self.conversationID = conversationID
+        self.onOpenMainWindow = onOpenMainWindow
+        self.onTogglePin = onTogglePin
+        self.isPinned = isPinned
+        _composerDraft = State(initialValue: composerDraft ?? ChatComposerDraft())
+    }
+
+    private var draft: String {
+        get { composerDraft.text }
+        nonmutating set { composerDraft.text = newValue }
+    }
+
+    private var editingUserMessageID: UUID? {
+        get { composerDraft.editingUserMessageID }
+        nonmutating set { composerDraft.editingUserMessageID = newValue }
+    }
+
     var body: some View {
         if let conversation = appModel.conversations.conversation(id: conversationID) {
             let messages = conversation.orderedMessages
@@ -73,6 +99,26 @@ struct AgentChatView: View {
             )
 
             VStack(spacing: 0) {
+#if os(macOS)
+                if let onOpenMainWindow, let onTogglePin {
+                    MenuBarChatHeader(
+                        title: conversation.title,
+                        onNewConversation: newMenuBarConversation,
+                        onOpenMainWindow: onOpenMainWindow,
+                        isPinned: isPinned,
+                        onTogglePin: onTogglePin
+                    ) {
+                        MacChatMoreMenu(
+                            conversationID: conversation.id,
+                            isPresentingBrowser: $isPresentingBrowser,
+                            openBrowser: openBrowser,
+                            openWorkspace: openWorkspace,
+                            openSettings: openSettings,
+                            dismissComposerFocus: dismissComposerFocus
+                        )
+                    }
+                }
+#endif
                 Group {
                     if transcript.messages.isEmpty {
                         ChatEmptyStateView { prompt in
@@ -252,7 +298,7 @@ struct AgentChatView: View {
                     }
 
                     ChatComposerView(
-                        text: $draft,
+                        text: $composerDraft.text,
                         conversation: conversation,
                         isBusy: isBusy,
                         isRunning: isRunning,
@@ -416,21 +462,20 @@ struct AgentChatView: View {
 #if os(macOS)
             .navigationTitle(conversation.title)
             .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    ChatMoreMenu(
-                        openBrowser: openBrowser,
-                        openWorkspace: openWorkspace,
-                        openSettings: openSettings
-                    )
-                    .popover(isPresented: $isPresentingBrowser, arrowEdge: .top) {
-                        BrowserCardView(conversationID: conversation.id)
+                if onOpenMainWindow == nil {
+                    ToolbarItem(placement: .primaryAction) {
+                        MacChatMoreMenu(
+                            conversationID: conversation.id,
+                            isPresentingBrowser: $isPresentingBrowser,
+                            openBrowser: openBrowser,
+                            openWorkspace: openWorkspace,
+                            openSettings: openSettings,
+                            dismissComposerFocus: dismissComposerFocus
+                        )
+                        .disabled(isSettingsPresented)
                     }
-                    .simultaneousGesture(
-                        TapGesture().onEnded(dismissComposerFocus)
-                    )
-                    .disabled(isSettingsPresented)
+                    .sharedBackgroundVisibility(.hidden)
                 }
-                .sharedBackgroundVisibility(.hidden)
             }
             .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
 #else
@@ -832,6 +877,7 @@ struct AgentChatView: View {
         collapseChatPanels()
 #if os(macOS)
         appModel.presentSettings(.workspace)
+        onOpenMainWindow?()
 #else
         settingsSheetPresentation = SettingsSheetPresentation(
             initialDestination: .workspace
@@ -843,12 +889,19 @@ struct AgentChatView: View {
         collapseChatPanels()
 #if os(macOS)
         appModel.presentSettings()
+        onOpenMainWindow?()
 #else
         settingsSheetPresentation = SettingsSheetPresentation()
 #endif
     }
 
 #if os(macOS)
+    private func newMenuBarConversation() {
+        appModel.newConversation()
+        isComposerFocused = true
+        composerFocusRequestID &+= 1
+    }
+
     private func closeTerminal() {
         withAnimation(reduceMotion ? nil : .easeOut(duration: 0.18)) {
             isPresentingTerminal = false

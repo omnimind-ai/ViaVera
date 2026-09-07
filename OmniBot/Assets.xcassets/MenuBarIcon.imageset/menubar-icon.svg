@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 1024 1024">
+  <!-- The application mark, with a transparent ear detail for template tinting. -->
+  <defs>
+    <mask id="ear-cutout" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <rect width="1024" height="1024" fill="white"/>
+      <path d="M 824 394 C 858 405 872 440 857 471 C 848 489 834 501 816 509"
+        fill="none" stroke="black" stroke-width="28" stroke-linecap="round"/>
+    </mask>
+  </defs>
+  <path d="M 716 245 A 350 350 0 1 0 831 657" fill="none" stroke="black"
+    stroke-width="78" stroke-linecap="round" stroke-linejoin="round"/>
+  <g transform="rotate(12 842 448)">
+    <ellipse cx="842" cy="448" rx="65" ry="116" fill="black" mask="url(#ear-cutout)"/>
+  </g>
+  <g fill="none" stroke="black" stroke-linecap="round">
+    <path d="M 397 433 Q 450 484 500 512 Q 450 540 397 591" stroke-width="72" stroke-linejoin="round"/>
+    <circle cx="650" cy="483" r="35" fill="black" stroke="none"/>
+    <path d="M 568 603 Q 630 642 692 603" stroke-width="58"/>
+  </g>
+</svg>

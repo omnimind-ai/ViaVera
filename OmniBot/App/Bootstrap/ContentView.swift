@@ -46,29 +46,7 @@ struct ContentView: View {
             }
         }
 #endif
-        .task {
-            guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else {
-                return
-            }
-            await appModel.start()
-        }
-        .alert(
-            "OmniBot 出现问题",
-            isPresented: Binding(
-                get: { appModel.globalErrorMessage != nil },
-                set: { isPresented in
-                    if !isPresented {
-                        appModel.globalErrorMessage = nil
-                    }
-                }
-            )
-        ) {
-            Button("好", role: .cancel) {
-                appModel.globalErrorMessage = nil
-            }
-        } message: {
-            Text(appModel.globalErrorMessage ?? "未知错误")
-        }
+        .modifier(AppSceneLifecycleModifier())
     }
 
 #if os(macOS)
