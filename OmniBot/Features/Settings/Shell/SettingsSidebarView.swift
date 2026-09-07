@@ -8,6 +8,8 @@ struct SettingsSidebarView: View {
             Section("模型") {
                 SettingsCardRow(destination: .providers)
                     .tag(SettingsCardDestination.providers)
+                SettingsCardRow(destination: .usage)
+                    .tag(SettingsCardDestination.usage)
             }
 
             Section("Agent") {

@@ -7,6 +7,9 @@ struct SettingsNavigationListView: View {
                 NavigationLink(value: SettingsCardDestination.providers) {
                     SettingsCardRow(destination: .providers)
                 }
+                NavigationLink(value: SettingsCardDestination.usage) {
+                    SettingsCardRow(destination: .usage)
+                }
             }
 
             Section("Agent") {

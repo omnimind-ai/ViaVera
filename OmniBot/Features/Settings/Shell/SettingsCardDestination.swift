@@ -2,6 +2,7 @@ import Foundation
 
 enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
     case providers
+    case usage
     case soul
     case memory
     case skills
@@ -16,6 +17,8 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
         switch self {
         case .providers:
             "模型服务"
+        case .usage:
+            "模型用量"
         case .soul:
             "Soul"
         case .memory:
@@ -37,6 +40,8 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
         switch self {
         case .providers:
             "服务地址、密钥与默认模型"
+        case .usage:
+            "消息活跃度、Token 消耗与模型分布"
         case .soul:
             "Agent 的身份与工作边界"
         case .memory:
@@ -58,6 +63,8 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
         switch self {
         case .providers:
             "cpu"
+        case .usage:
+            "chart.bar.xaxis"
         case .soul:
             "sparkles"
         case .memory:

@@ -18,6 +18,10 @@ public final class MessageRecord {
     public var cachedTokens: Int = 0
     public var cacheCreationTokens: Int = 0
     public var reportsCacheUsage: Bool = false
+    /// Capture attribution when the message is created; conversation selection can change later.
+    /// Nil on older records means the original model was not recorded.
+    public var modelID: String?
+    public var providerID: String?
     public var createdAt: Date
     public var updatedAt: Date
     public var conversation: ConversationRecord?
@@ -47,6 +51,8 @@ public final class MessageRecord {
         self.cachedTokens = usage.cachedTokens
         self.cacheCreationTokens = usage.cacheCreationTokens
         self.reportsCacheUsage = usage.reportsCacheUsage
+        self.modelID = conversation?.modelID
+        self.providerID = conversation?.providerID
         self.createdAt = createdAt
         self.updatedAt = updatedAt ?? createdAt
         self.conversation = conversation

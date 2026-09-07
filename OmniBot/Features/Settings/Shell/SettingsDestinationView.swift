@@ -19,6 +19,8 @@ struct SettingsDestinationView: View {
         switch destination {
         case .providers:
             ProviderSettingsView()
+        case .usage:
+            ModelUsageView()
         case .soul:
             SoulSettingsView()
         case .memory:
