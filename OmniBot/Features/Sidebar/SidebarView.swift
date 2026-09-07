@@ -31,9 +31,11 @@ struct SidebarView: View {
             ToolbarItemGroup(placement: .primaryAction) {
                 Button("设置", systemImage: "gearshape", action: showSettings)
                     .help("设置")
+                    .disabled(appModel.presentedSettingsDestination != nil)
 
                 Button("新建会话", systemImage: "square.and.pencil", action: appModel.newConversation)
                     .help("新建会话")
+                    .disabled(appModel.presentedSettingsDestination != nil)
             }
         }
 #else

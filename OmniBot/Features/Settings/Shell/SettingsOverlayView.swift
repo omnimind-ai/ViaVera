@@ -33,6 +33,10 @@ struct SettingsOverlayView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
+        .background {
+            SettingsTitlebarDismissHandler(onDismiss: onDismiss)
+                .frame(width: 0, height: 0)
+        }
         .onExitCommand(perform: onDismiss)
     }
 

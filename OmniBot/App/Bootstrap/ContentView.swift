@@ -37,6 +37,8 @@ struct ContentView: View {
         }
 #endif
 #if os(macOS)
+        .disabled(isSettingsPresented)
+        .accessibilityHidden(isSettingsPresented)
         .overlay {
             if let destination = appModel.presentedSettingsDestination {
                 SettingsOverlayView(
@@ -50,6 +52,10 @@ struct ContentView: View {
     }
 
 #if os(macOS)
+    private var isSettingsPresented: Bool {
+        appModel.presentedSettingsDestination != nil
+    }
+
     private var isConversationDestination: Bool {
         if case .conversation = appModel.destination {
             true
