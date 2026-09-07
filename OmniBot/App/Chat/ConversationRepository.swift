@@ -229,7 +229,7 @@ final class ConversationRepository {
         try saveAndReload()
     }
 
-    func updateModel(providerID: String, modelID: String, for conversation: ConversationRecord) throws {
+    func updateModel(providerID: String?, modelID: String, for conversation: ConversationRecord) throws {
         conversation.providerID = providerID
         conversation.modelID = modelID
         conversation.updatedAt = .now

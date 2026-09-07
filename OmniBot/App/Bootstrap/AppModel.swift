@@ -28,6 +28,7 @@ final class AppModel {
     }
 
     private let bootstrapNotice: String?
+    private let preferredModelStore: PreferredModelStore
 
     let workspacePaths: WorkspacePaths
     let attachmentImporter: WorkspaceAttachmentImporter
@@ -63,9 +64,11 @@ final class AppModel {
         memoryStore: MarkdownMemoryStore,
         skillStore: AgentSkillStore,
         appearanceStore: AppearanceSettingsStore,
-        bootstrapNotice: String? = nil
+        bootstrapNotice: String? = nil,
+        preferredModelStore: PreferredModelStore = PreferredModelStore()
     ) {
         self.bootstrapNotice = bootstrapNotice
+        self.preferredModelStore = preferredModelStore
         self.workspacePaths = workspacePaths
         self.attachmentImporter = WorkspaceAttachmentImporter(paths: workspacePaths)
         self.alpineRuntime = alpineRuntime
@@ -145,18 +148,24 @@ final class AppModel {
     }
 
     func newConversation() {
-        if let draftConversation = conversations.draftConversation {
-            destination = .conversation(draftConversation.id)
-            return
-        }
-
         do {
-            let profile = providerSettings.profiles.first { profile in
-                profile.isEnabled && profile.models.contains { !$0.isHidden }
+            let selection = preferredModelStore.selection(in: providerSettings.profiles)
+            if let draftConversation = conversations.draftConversation {
+                if draftConversation.providerID != selection?.providerID
+                    || draftConversation.modelID != (selection?.modelID ?? "") {
+                    try conversations.updateModel(
+                        providerID: selection?.providerID,
+                        modelID: selection?.modelID ?? "",
+                        for: draftConversation
+                    )
+                }
+                destination = .conversation(draftConversation.id)
+                return
             }
+
             let conversation = try conversations.createConversation(
-                providerID: profile?.id,
-                modelID: profile?.models.first(where: { !$0.isHidden })?.id ?? ""
+                providerID: selection?.providerID,
+                modelID: selection?.modelID ?? ""
             )
             destination = .conversation(conversation.id)
         } catch {
@@ -191,6 +200,9 @@ final class AppModel {
                 providerID: providerID,
                 modelID: modelID,
                 for: conversation
+            )
+            preferredModelStore.remember(
+                ProviderModelSelection(providerID: providerID, modelID: modelID)
             )
         } catch {
             globalErrorMessage = error.localizedDescription
