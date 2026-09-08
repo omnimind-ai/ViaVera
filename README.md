@@ -162,7 +162,7 @@ Thanks to every community contributor, including developers from [linux.do](http
 <table align="center">
   <tr>
     <td align="center">
-      <img src="Docs/pic/wechat.jpg" alt="WeChat Group" width="220"><br>
+      <img src="https://omni.1775885.xyz/community/wechat-qr-2" alt="WeChat Group" width="220"><br>
       WeChat Group
     </td>
   </tr>
