@@ -21,14 +21,28 @@ public actor AgentSkillStore {
     private struct SkillRegistry: Codable {
         let version: Int
         var enabledSkillIDs: [String]
+        var disabledBuiltInSkillIDs: [String]
 
         init(version: Int = 1, enabledSkillIDs: [String] = []) {
             self.version = version
             self.enabledSkillIDs = enabledSkillIDs
+            self.disabledBuiltInSkillIDs = []
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case version, enabledSkillIDs, disabledBuiltInSkillIDs
+        }
+
+        init(from decoder: any Decoder) throws {
+            let values = try decoder.container(keyedBy: CodingKeys.self)
+            version = try values.decode(Int.self, forKey: .version)
+            enabledSkillIDs = try values.decode([String].self, forKey: .enabledSkillIDs)
+            disabledBuiltInSkillIDs = try values.decodeIfPresent([String].self, forKey: .disabledBuiltInSkillIDs) ?? []
         }
     }
 
     private let paths: WorkspacePaths
+    private let builtInSkillsURL: URL?
     private let resourceProtocol: AgentResourceProtocol
     private let fileManager: FileManager
     private let workspaceFileSystem: WorkspaceDescriptorFileSystem
@@ -40,9 +54,11 @@ public actor AgentSkillStore {
 
     public init(
         paths: WorkspacePaths,
-        importLimits: AgentSkillImportLimits = .default
+        importLimits: AgentSkillImportLimits = .default,
+        builtInSkillsURL: URL? = nil
     ) {
         self.paths = paths
+        self.builtInSkillsURL = builtInSkillsURL
         resourceProtocol = AgentResourceProtocol(paths: paths)
         fileManager = .default
         workspaceFileSystem = WorkspaceDescriptorFileSystem(paths: paths)
@@ -141,7 +157,11 @@ public actor AgentSkillStore {
         let previousRegistry = try readRegistry()
         var registry = previousRegistry
         var enabledIDs = Set(registry.enabledSkillIDs)
-        if enabled {
+        if record.entry.isBuiltIn {
+            var disabledIDs = Set(registry.disabledBuiltInSkillIDs)
+            if enabled { disabledIDs.remove(record.entry.id) } else { disabledIDs.insert(record.entry.id) }
+            registry.disabledBuiltInSkillIDs = disabledIDs.sorted()
+        } else if enabled {
             enabledIDs.insert(record.entry.id)
         } else {
             enabledIDs.remove(record.entry.id)
@@ -255,6 +275,7 @@ public actor AgentSkillStore {
     public func delete(_ identifier: String) throws {
         let records = try scan(shouldRefreshProjection: false)
         let record = try matchingRecord(identifier: identifier, in: records)
+        guard !record.entry.isBuiltIn else { throw AgentSkillStoreError.builtInSkillCannotBeDeleted }
         let canonicalAuthority = paths.authoritativeSkillsDirectory
             .resolvingSymlinksInPath()
             .standardizedFileURL
@@ -501,7 +522,8 @@ public actor AgentSkillStore {
 
     private func scan(shouldRefreshProjection: Bool = true) throws -> [IndexedSkill] {
         try paths.prepare(fileManager: fileManager)
-        let enabledSkillIDs = Set(try readRegistry().enabledSkillIDs)
+        let registry = try readRegistry()
+        let enabledSkillIDs = Set(registry.enabledSkillIDs)
         guard let enumerator = fileManager.enumerator(
             at: paths.authoritativeSkillsDirectory,
             includingPropertiesForKeys: [
@@ -534,9 +556,29 @@ public actor AgentSkillStore {
             skillFiles.append(fileURL)
         }
 
-        let records = try skillFiles
+        var records = try skillFiles
             .sorted { $0.path < $1.path }
             .compactMap { try indexEntry(for: $0, enabledSkillIDs: enabledSkillIDs) }
+        if let builtInSkillsURL {
+            let directories = try fileManager.contentsOfDirectory(
+                at: builtInSkillsURL,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsHiddenFiles]
+            ).filter { isDirectory($0) }
+            for directory in directories.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+                let file = directory.appending(path: "SKILL.md")
+                guard fileManager.fileExists(atPath: file.path) else { continue }
+                if let initial = try indexEntry(for: file, enabledSkillIDs: []),
+                   let record = try indexEntry(
+                        for: file,
+                        enabledSkillIDs: registry.disabledBuiltInSkillIDs.contains(initial.entry.id)
+                            ? [] : [initial.entry.id],
+                        isBuiltIn: true
+                    ) {
+                    records.append(record)
+                }
+            }
+        }
         var seenIDs = Set<String>()
         for record in records where !seenIDs.insert(record.entry.id).inserted {
             throw AgentSkillStoreError.duplicateIdentifier(record.entry.id)
@@ -549,7 +591,8 @@ public actor AgentSkillStore {
 
     private func indexEntry(
         for skillFile: URL,
-        enabledSkillIDs: Set<String>
+        enabledSkillIDs: Set<String>,
+        isBuiltIn: Bool = false
     ) throws -> IndexedSkill? {
         let document = try parse(skillFile)
         let authoritativeRoot = skillFile.deletingLastPathComponent()
@@ -581,7 +624,8 @@ public actor AgentSkillStore {
             hasReferences: isDirectory(authoritativeRoot.appending(path: "references", directoryHint: .isDirectory)),
             hasAssets: isDirectory(authoritativeRoot.appending(path: "assets", directoryHint: .isDirectory)),
             hasEvals: isDirectory(authoritativeRoot.appending(path: "evals", directoryHint: .isDirectory)),
-            enabled: enabledSkillIDs.contains(id)
+            enabled: enabledSkillIDs.contains(id),
+            isBuiltIn: isBuiltIn
         )
         return IndexedSkill(
             entry: entry,
@@ -755,6 +799,10 @@ public actor AgentSkillStore {
             from: Data(contentsOf: paths.skillRegistryFile)
         )
         guard registry.version == 1 else { throw AgentSkillStoreError.invalidRegistry }
+        guard registry.disabledBuiltInSkillIDs.count == Set(registry.disabledBuiltInSkillIDs).count,
+              registry.disabledBuiltInSkillIDs.allSatisfy(Self.isSafeSkillID) else {
+            throw AgentSkillStoreError.invalidRegistry
+        }
         let normalizedIDs = registry.enabledSkillIDs.map(Self.sanitizedSkillID)
         guard normalizedIDs.count == Set(normalizedIDs).count,
               normalizedIDs.allSatisfy(Self.isSafeSkillID),
@@ -907,6 +955,7 @@ public actor AgentSkillStore {
 }
 
 nonisolated public enum AgentSkillStoreError: LocalizedError, Sendable {
+    case builtInSkillCannotBeDeleted
     case missingIdentifier
     case notFound(String)
     case ambiguousIdentifier(String)
@@ -936,6 +985,7 @@ nonisolated public enum AgentSkillStoreError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
+        case .builtInSkillCannotBeDeleted: "内置 Skill 随应用提供，可以停用，不能删除。"
         case .missingIdentifier: "A skill id, name, or path is required."
         case let .notFound(value): "Installed skill not found: \(value)"
         case let .ambiguousIdentifier(value): "Skill identifier is ambiguous: \(value)"

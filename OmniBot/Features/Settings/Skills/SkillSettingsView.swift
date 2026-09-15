@@ -20,7 +20,21 @@ struct SkillSettingsView: View {
                         .listRowBackground(Color.clear)
                         .accessibilityHidden(true)
                 } else {
-                    ForEach(settings.skills) { skill in
+                    ForEach(settings.skills.filter(\.isBuiltIn)) { skill in
+                        SkillSettingsRow(
+                            skill: skill,
+                            isBusy: settings.busySkillIDs.contains(skill.id),
+                            onSetEnabled: { enabled in await settings.setEnabled(enabled, for: skill.id) },
+                            onDelete: {}
+                        )
+                    }
+                }
+            } header: {
+                Text("内置")
+            }
+            if settings.skills.contains(where: { !$0.isBuiltIn }) {
+                Section {
+                    ForEach(settings.skills.filter { !$0.isBuiltIn }) { skill in
                         SkillSettingsRow(
                             skill: skill,
                             isBusy: settings.busySkillIDs.contains(skill.id),
@@ -32,9 +46,9 @@ struct SkillSettingsView: View {
                             }
                         )
                     }
+                } header: {
+                    Text("已安装")
                 }
-            } header: {
-                Text("已安装")
             }
         }
         .alert(item: $settings.alert) { alert in

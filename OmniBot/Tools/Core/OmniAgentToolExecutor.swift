@@ -28,6 +28,7 @@ public actor OmniAgentToolExecutor: AgentToolExecuting {
     let appleContactsService: AppleContactsService?
     let appleHealthKitService: AppleHealthKitService?
     let browserSession: AppleBrowserSession?
+    let nativeToolStore: NativeToolStore
 
     var terminalSessions: [UUID: OmniTerminalSession] = [:]
     var activeTerminalCommands: [UUID: OmniActiveTerminalCommand] = [:]
@@ -70,7 +71,8 @@ public actor OmniAgentToolExecutor: AgentToolExecuting {
         appleCalendarService: AppleCalendarService?,
         appleContactsService: AppleContactsService?,
         appleHealthKitService: AppleHealthKitService?,
-        browserSession: AppleBrowserSession?
+        browserSession: AppleBrowserSession?,
+        nativeToolStore: NativeToolStore? = nil
     ) {
         self.paths = paths
         self.memoryStore = memoryStore
@@ -87,6 +89,7 @@ public actor OmniAgentToolExecutor: AgentToolExecuting {
         self.appleContactsService = appleContactsService
         self.appleHealthKitService = appleHealthKitService
         self.browserSession = browserSession
+        self.nativeToolStore = nativeToolStore ?? NativeToolStore(paths: paths)
     }
 
     public nonisolated func availableTools() async -> [AgentToolDefinition] {
@@ -117,6 +120,8 @@ public actor OmniAgentToolExecutor: AgentToolExecuting {
 
             let result: AgentToolExecutionResult
             switch call.name {
+            case "native_tool_list", "native_tool_read", "native_tool_validate", "native_tool_install":
+                result = try await executeNativeTool(call.name, arguments: arguments, context: context)
             case "terminal_execute":
                 result = try await executeTerminal(
                     arguments,

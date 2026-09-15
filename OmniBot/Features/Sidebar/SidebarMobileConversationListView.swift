@@ -8,9 +8,7 @@ struct SidebarMobileConversationListView: View {
     let isSearching: Bool
 
     var body: some View {
-        @Bindable var appModel = appModel
-
-        List(selection: $appModel.destination) {
+        List {
             if conversations.isEmpty, isSearching {
                 ContentUnavailableView.search
                     .listRowSeparator(.hidden)
@@ -28,7 +26,7 @@ struct SidebarMobileConversationListView: View {
                     if !conversations.isEmpty {
                         Section(group.title) {
                             ForEach(conversations) { conversation in
-                                NavigationLink(value: AppDestination.conversation(conversation.id)) {
+                                NavigationLink(value: conversation.id) {
                                     SidebarConversationRow(conversation: conversation)
                                 }
                                 .navigationLinkIndicatorVisibility(.hidden)

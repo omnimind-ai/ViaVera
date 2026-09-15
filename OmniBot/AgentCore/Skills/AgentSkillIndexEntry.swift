@@ -13,6 +13,10 @@ nonisolated public struct AgentSkillIndexEntry: Codable, Hashable, Sendable, Ide
     public let hasAssets: Bool
     public let hasEvals: Bool
     public let enabled: Bool
+    public var isBuiltIn: Bool = false
+
+    public var displayName: String { metadata["display-name"] ?? name }
+    public var displayDescription: String { metadata["display-description"] ?? description }
 
     public var capabilities: [String] {
         var result: [String] = []

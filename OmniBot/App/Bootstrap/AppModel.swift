@@ -5,10 +5,25 @@ import SwiftData
 @MainActor
 @Observable
 final class AppModel {
+    var selectedTab: AppTab = .conversations
+    var conversationPath: [UUID] = [] {
+        didSet {
+            if let id = conversationPath.last { lastConversationID = id }
+#if os(iOS)
+            let selected = conversationPath.last.map(AppDestination.conversation)
+            if destination != selected { destination = selected }
+#endif
+        }
+    }
+    var nativeToolPath: [UUID] = []
     var destination: AppDestination? {
         didSet {
             if case let .conversation(identifier) = destination {
                 lastConversationID = identifier
+#if os(iOS)
+                selectedTab = .conversations
+                if conversationPath.last != identifier { conversationPath = [identifier] }
+#endif
             }
         }
     }
@@ -18,6 +33,7 @@ final class AppModel {
     private(set) var hasStarted = false
     private var lastConversationID: UUID?
     @ObservationIgnored private var startupTask: Task<Void, Never>?
+    @ObservationIgnored private var chatDrafts: [UUID: ChatComposerDraft] = [:]
 
     var selectedConversation: ConversationRecord? {
         if let lastConversationID,
@@ -40,6 +56,7 @@ final class AppModel {
     let soulSettings: SoulSettingsModel
     let memorySettings: MemorySettingsModel
     let skillSettings: SkillSettingsModel
+    let nativeTools: NativeToolLibraryModel
     let appearanceSettings: AppearanceSettingsModel
     let workspaceBrowser: WorkspaceBrowserModel
     let alpineRuntime: AlpineRuntime
@@ -65,7 +82,8 @@ final class AppModel {
         skillStore: AgentSkillStore,
         appearanceStore: AppearanceSettingsStore,
         bootstrapNotice: String? = nil,
-        preferredModelStore: PreferredModelStore = PreferredModelStore()
+        preferredModelStore: PreferredModelStore = PreferredModelStore(),
+        nativeToolStore: NativeToolStore? = nil
     ) {
         self.bootstrapNotice = bootstrapNotice
         self.preferredModelStore = preferredModelStore
@@ -88,6 +106,7 @@ final class AppModel {
         self.soulSettings = soulSettings
         self.memorySettings = memorySettings
         self.skillSettings = skillSettings
+        self.nativeTools = NativeToolLibraryModel(store: nativeToolStore ?? NativeToolStore(paths: workspacePaths))
         self.appearanceSettings = appearanceSettings
         self.workspaceBrowser = WorkspaceBrowserModel(paths: workspacePaths)
         self.alpineEnvironmentSettings = AlpineEnvironmentSettingsModel(commandRunner: alpineRuntime)
@@ -129,13 +148,16 @@ final class AppModel {
             await soulSettings.load()
             await memorySettings.load()
             await skillSettings.load()
+            await nativeTools.load()
             await appearanceSettings.load()
 
+#if os(macOS)
             if conversations.conversations.isEmpty {
                 newConversation()
             } else if destination == nil, let first = conversations.conversations.first {
                 destination = .conversation(first.id)
             }
+#endif
 
             try await alpineRuntime.prepare()
             if let bootstrapNotice {
@@ -150,7 +172,9 @@ final class AppModel {
     func newConversation() {
         do {
             let selection = preferredModelStore.selection(in: providerSettings.profiles)
-            if let draftConversation = conversations.draftConversation {
+            if let draftConversation = conversations.conversations.first(where: {
+                $0.status == .idle && $0.messages.isEmpty && chatDrafts[$0.id]?.skillReference == nil
+            }) {
                 if draftConversation.providerID != selection?.providerID
                     || draftConversation.modelID != (selection?.modelID ?? "") {
                     try conversations.updateModel(
@@ -173,6 +197,33 @@ final class AppModel {
         }
     }
 
+    func openNativeTool(_ id: UUID) {
+        selectedTab = .tools
+        nativeToolPath = [id]
+#if os(macOS)
+        destination = .tools
+#endif
+    }
+
+    func chatDraft(for conversationID: UUID) -> ChatComposerDraft {
+        if let existing = chatDrafts[conversationID] { return existing }
+        let draft = ChatComposerDraft()
+        chatDrafts[conversationID] = draft
+        return draft
+    }
+
+    func beginNativeToolConversation(editing id: UUID? = nil) throws {
+        guard skillSettings.skills.contains(where: { $0.id == "native-tool-builder" && $0.enabled }) else {
+            throw NativeToolError("请先在 Skills 中启用「原生工具制作」。")
+        }
+        let selection = preferredModelStore.selection(in: providerSettings.profiles)
+        let conversation = try conversations.createConversation(providerID: selection?.providerID, modelID: selection?.modelID ?? "")
+        let draft = chatDraft(for: conversation.id)
+        draft.skillReference = .nativeToolBuilder(editing: id)
+        draft.requestsFocus = true
+        destination = .conversation(conversation.id)
+    }
+
     func deleteConversation(_ conversation: ConversationRecord) async {
         if chatCoordinator.pendingResendConversationID == conversation.id {
             globalErrorMessage = "正在准备编辑或重试，暂时无法删除这个会话。"
@@ -183,12 +234,18 @@ final class AppModel {
         }
         do {
             try conversations.delete(conversation)
+            chatDrafts.removeValue(forKey: conversation.id)
+#if os(iOS)
+            conversationPath.removeAll { $0 == conversation.id }
+            if lastConversationID == conversation.id { lastConversationID = nil }
+#else
             if conversations.conversations.isEmpty {
                 newConversation()
             } else if destination == .conversation(conversation.id),
                       let first = conversations.conversations.first {
                 destination = .conversation(first.id)
             }
+#endif
         } catch {
             globalErrorMessage = error.localizedDescription
         }

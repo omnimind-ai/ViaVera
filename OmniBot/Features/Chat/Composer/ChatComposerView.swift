@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ChatComposerView: View {
     @Binding var text: String
+    @Binding var skillReference: ChatComposerSkillReference?
 
 #if os(macOS)
     @State private var macTextHeight = AppDesign.composerTextLineHeight
@@ -32,6 +33,12 @@ struct ChatComposerView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppDesign.compactSpacing) {
             VStack(alignment: .leading, spacing: AppDesign.compactSpacing) {
+                if let skillReference {
+                    ChatComposerSkillCapsule(reference: skillReference) {
+                        self.skillReference = nil
+                    }
+                    .disabled(!availability.isTextEntryEnabled)
+                }
 #if os(macOS)
                 ZStack(alignment: .topLeading) {
                     MacChatComposerTextView(

@@ -7,19 +7,23 @@ struct ContentView: View {
     var body: some View {
         @Bindable var appModel = appModel
 
-        NavigationSplitView {
-            SidebarView()
-#if os(macOS)
-                .navigationSplitViewColumnWidth(
-                    min: AppDesign.sidebarMinimumWidth,
-                    ideal: AppDesign.sidebarIdealWidth,
-                    max: AppDesign.sidebarMaximumWidth
-                )
+        Group {
+#if os(iOS)
+            MobileAppRootView()
+#else
+            NavigationSplitView {
+                SidebarView()
+                    .navigationSplitViewColumnWidth(
+                        min: AppDesign.sidebarMinimumWidth,
+                        ideal: AppDesign.sidebarIdealWidth,
+                        max: AppDesign.sidebarMaximumWidth
+                    )
+            } detail: {
+                destinationView
+            }
+            .navigationSplitViewStyle(.balanced)
 #endif
-        } detail: {
-            destinationView
         }
-        .navigationSplitViewStyle(.balanced)
 #if os(macOS)
         .background {
             if isConversationDestination {
@@ -69,7 +73,8 @@ struct ContentView: View {
     private var destinationView: some View {
         switch appModel.destination {
         case let .conversation(identifier):
-            AgentChatView(conversationID: identifier)
+            AgentChatView(conversationID: identifier, composerDraft: appModel.chatDraft(for: identifier))
+                .id(identifier)
         case .providers:
             ProviderSettingsView()
         case .soul:
@@ -80,6 +85,8 @@ struct ContentView: View {
             SkillSettingsView()
         case .runtime:
             AlpineRuntimeView()
+        case .tools:
+            NativeToolsRootView()
         case nil:
             ContentUnavailableView {
                 Label("OmniBot", systemImage: "sparkles")

@@ -6,6 +6,86 @@ import Testing
 @Suite("App model selection")
 @MainActor
 struct AppModelSelectionTests {
+    @Test("Tool creation opens an empty referenced chat without requiring a model or sending a message")
+    func nativeToolComposerEntry() async throws {
+        let suiteName = "NativeToolComposerEntryTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        let directory = FileManager.default.temporaryDirectory.appending(path: suiteName)
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+            try? FileManager.default.removeItem(at: directory)
+        }
+        let (model, container) = try await makeModel(
+            directory: directory, defaults: defaults, withBuiltInSkills: true, withModels: false
+        )
+        defer { withExtendedLifetime(container) {} }
+        model.newConversation()
+        let ordinary = try #require(model.selectedConversation)
+        model.chatDraft(for: ordinary.id).text = "Keep this draft"
+        model.selectedTab = .tools
+        try model.beginNativeToolConversation()
+        let builder = try #require(model.selectedConversation)
+        #expect(builder.id != ordinary.id)
+        #expect(builder.messages.isEmpty)
+        #expect(builder.modelID.isEmpty)
+        #expect(model.chatCoordinator.busyConversationID == nil)
+        let draft = model.chatDraft(for: builder.id)
+        #expect(draft.text.isEmpty)
+        #expect(draft.skillReference?.id == "native-tool-builder")
+        #expect(draft.requestsFocus)
+        #expect(model.destination == .conversation(builder.id))
+#if os(iOS)
+        #expect(model.selectedTab == .conversations)
+        #expect(model.conversationPath == [builder.id])
+#endif
+        draft.text = "Build a checklist"
+        model.newConversation()
+        #expect(model.selectedConversation?.id == ordinary.id)
+        #expect(model.chatDraft(for: ordinary.id).skillReference == nil)
+        #expect(model.chatDraft(for: ordinary.id).text == "Keep this draft")
+        #expect(model.chatDraft(for: builder.id) === draft)
+        #expect(draft.text == "Build a checklist")
+        let toolID = UUID()
+        try model.beginNativeToolConversation(editing: toolID)
+        let editing = try #require(model.selectedConversation)
+        #expect(model.chatDraft(for: editing.id).skillReference?.context.contains(toolID.uuidString) == true)
+        #expect(editing.messages.isEmpty)
+    }
+
+    @Test("Tool navigation preserves conversation identity and composer drafts")
+    func toolNavigationPreservesChat() async throws {
+        let suiteName = "ToolNavigationTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        let directory = FileManager.default.temporaryDirectory.appending(path: suiteName)
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+            try? FileManager.default.removeItem(at: directory)
+        }
+        let (model, container) = try await makeModel(directory: directory, defaults: defaults)
+        defer { withExtendedLifetime(container) {} }
+        #expect(model.selectedTab == .conversations)
+        #expect(model.conversationPath.isEmpty)
+        model.newConversation()
+        let conversation = try #require(model.selectedConversation)
+        let draft = model.chatDraft(for: conversation.id)
+        draft.text = "Unsent message"
+        let toolID = UUID()
+        model.openNativeTool(toolID)
+        #expect(model.selectedTab == .tools)
+        #expect(model.nativeToolPath == [toolID])
+        #expect(model.selectedConversation?.id == conversation.id)
+        model.selectedTab = .conversations
+        #expect(model.chatDraft(for: conversation.id) === draft)
+        #expect(draft.text == "Unsent message")
+#if os(iOS)
+        #expect(model.conversationPath == [conversation.id])
+        model.conversationPath = []
+        #expect(model.destination == nil)
+#endif
+        await model.deleteConversation(conversation)
+        #expect(model.nativeToolPath == [toolID])
+    }
+
     @Test("Manual choices carry into new and reused drafts without changing history")
     func manualSelectionCarriesIntoNewConversations() async throws {
         let suiteName = "AppModelSelectionTests-\(UUID().uuidString)"
@@ -57,7 +137,9 @@ struct AppModelSelectionTests {
 
     private func makeModel(
         directory: URL,
-        defaults: UserDefaults
+        defaults: UserDefaults,
+        withBuiltInSkills: Bool = false,
+        withModels: Bool = true
     ) async throws -> (AppModel, ModelContainer) {
         let container = try ModelContainer(
             for: ConversationRecord.self,
@@ -70,12 +152,14 @@ struct AppModelSelectionTests {
         )
         try paths.prepare()
         let providerStore = try ProviderStore(fileURL: paths.providerConfigFile)
-        try await providerStore.upsert(ProviderProfile(
-            id: "provider",
-            name: "Provider",
-            baseURL: try #require(URL(string: "https://example.com/v1")),
-            models: [ModelOption(id: "first"), ModelOption(id: "second"), ModelOption(id: "third")]
-        ))
+        if withModels {
+            try await providerStore.upsert(ProviderProfile(
+                id: "provider",
+                name: "Provider",
+                baseURL: try #require(URL(string: "https://example.com/v1")),
+                models: [ModelOption(id: "first"), ModelOption(id: "second"), ModelOption(id: "third")]
+            ))
+        }
         let runtimeState = directory.appending(path: "runtime")
         let model = AppModel(
             modelContext: container.mainContext,
@@ -96,11 +180,15 @@ struct AppModelSelectionTests {
             browserSession: AppleBrowserSession(paths: paths),
             soulStore: SoulStore(paths: paths),
             memoryStore: MarkdownMemoryStore(paths: paths),
-            skillStore: AgentSkillStore(paths: paths),
+            skillStore: AgentSkillStore(
+                paths: paths,
+                builtInSkillsURL: withBuiltInSkills ? NativeToolTestFixtures.skillDirectory.deletingLastPathComponent() : nil
+            ),
             appearanceStore: AppearanceSettingsStore(directoryURL: directory.appending(path: "appearance")),
             preferredModelStore: PreferredModelStore(defaults: defaults)
         )
         await model.providerSettings.load()
+        await model.skillSettings.load()
         return (model, container)
     }
 }

@@ -155,6 +155,7 @@ struct ToolCallPresentation: Identifiable, Hashable {
     }
 
     private static func symbolName(for toolName: String) -> String {
+        if toolName.hasPrefix("native_tool_") { return "square.grid.2x2" }
         if toolName.hasPrefix("terminal_") {
             return "terminal"
         }
@@ -171,6 +172,7 @@ struct ToolCallPresentation: Identifiable, Hashable {
     }
 
     private static func typeLabel(for toolName: String) -> String {
+        if toolName.hasPrefix("native_tool_") { return "原生工具" }
         if toolName.hasPrefix("terminal_") {
             return "终端"
         }

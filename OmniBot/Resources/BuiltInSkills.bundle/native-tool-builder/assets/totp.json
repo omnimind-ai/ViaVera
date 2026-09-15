@@ -1,0 +1,7 @@
+{
+  "schemaVersion":1,"name":"两步认证","summary":"在本机管理账户验证码。","symbol":"lock.shield",
+  "stateVersion":1,"initialState":{},"actions":{},"capabilities":["totp"],
+  "screens":[{"id":"main","title":"两步认证","components":[
+    {"id":"authenticator","type":"totp","title":"验证码"}
+  ]}]
+}

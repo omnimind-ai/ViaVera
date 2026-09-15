@@ -299,6 +299,7 @@ struct AgentChatView: View {
 
                     ChatComposerView(
                         text: $composerDraft.text,
+                        skillReference: $composerDraft.skillReference,
                         conversation: conversation,
                         isBusy: isBusy,
                         isRunning: isRunning,
@@ -400,6 +401,7 @@ struct AgentChatView: View {
                 resetUserMessageContextMenuLayoutLock()
                 editingUserMessageID = nil
                 draft = ""
+                composerDraft.skillReference = nil
                 cancelResourcePreview()
                 isPresentingBrowser = false
 #if os(macOS)
@@ -409,7 +411,17 @@ struct AgentChatView: View {
                 settingsSheetPresentation = nil
 #endif
             }
+            .task(id: conversationID) {
+                if composerDraft.requestsFocus {
+                    composerDraft.requestsFocus = false
+                    composerFocusRequestID &+= 1
+                }
+            }
             .environment(\.openURL, OpenURLAction { url in
+                if let id = NativeToolRecord.identifier(from: url) {
+                    appModel.openNativeTool(id)
+                    return .handled
+                }
                 guard url.scheme?.lowercased() == AgentResourceProtocol.scheme else {
                     return .systemAction(url)
                 }
@@ -537,6 +549,7 @@ struct AgentChatView: View {
             return
         }
         draft = content
+        composerDraft.skillReference = nil
         editingUserMessageID = message.id
         composerFocusRequestID &+= 1
         collapseChatPanels()
@@ -551,8 +564,14 @@ struct AgentChatView: View {
                 execute(command, in: conversation)
                 return
             }
-            let message = draft
-            draft = ""
+            guard appModel.chatCoordinator.busyConversationID == nil,
+                  let message = composerDraft.messageToSend else { return }
+            if let reference = composerDraft.skillReference,
+               !appModel.skillSettings.skills.contains(where: { $0.id == reference.id && $0.enabled }) {
+                appModel.globalErrorMessage = "请先在 Skills 中启用「\(reference.id)」，或移除输入框中的 Skill 引用。"
+                return
+            }
+            composerDraft.clearAfterSending()
             isCommandToolbarPresented = false
             // The user just submitted; follow the new turn as it streams in
             // even if they had been scrolled up reading earlier output.

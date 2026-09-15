@@ -7,4 +7,5 @@ enum AppDestination: Hashable {
     case memory
     case skills
     case runtime
+    case tools
 }

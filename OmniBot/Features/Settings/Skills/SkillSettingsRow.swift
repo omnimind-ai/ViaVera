@@ -26,44 +26,46 @@ struct SkillSettingsRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: AppDesign.standardSpacing) {
             VStack(alignment: .leading, spacing: AppDesign.compactSpacing) {
-                Text(skill.name)
+                Text(skill.displayName)
                     .font(.body)
 
-                if !skill.description.isEmpty {
-                    Text(skill.description)
+                if !skill.displayDescription.isEmpty {
+                    Text(skill.displayDescription)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .lineLimit(3)
                 }
 
-                Text(skill.id)
+                Text(skill.isBuiltIn ? "内置 · \(skill.id)" : skill.id)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .textSelection(.enabled)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Toggle("启用 \(skill.name)", isOn: $isEnabled)
+            Toggle("启用 \(skill.displayName)", isOn: $isEnabled)
                 .labelsHidden()
                 .disabled(isApplying || isBusy)
                 .frame(minWidth: 44, minHeight: 44)
 
-            Menu("Skill 操作", systemImage: "ellipsis.circle") {
-                Button("删除", systemImage: "trash", role: .destructive) {
-                    isConfirmingDelete = true
+            if !skill.isBuiltIn {
+                Menu("Skill 操作", systemImage: "ellipsis.circle") {
+                    Button("删除", systemImage: "trash", role: .destructive) {
+                        isConfirmingDelete = true
+                    }
                 }
-            }
-            .labelStyle(.iconOnly)
-            .disabled(isApplying || isBusy)
-            .frame(minWidth: 44, minHeight: 44)
-            .confirmationDialog(
-                "删除 \(skill.name)？",
-                isPresented: $isConfirmingDelete,
-                titleVisibility: .visible
-            ) {
-                Button("删除", role: .destructive, action: onDelete)
-            } message: {
-                Text("将从受保护的 Control 目录删除此 Skill；工作区投影也会同步移除。")
+                .labelStyle(.iconOnly)
+                .disabled(isApplying || isBusy)
+                .frame(minWidth: 44, minHeight: 44)
+                .confirmationDialog(
+                    "删除 \(skill.displayName)？",
+                    isPresented: $isConfirmingDelete,
+                    titleVisibility: .visible
+                ) {
+                    Button("删除", role: .destructive, action: onDelete)
+                } message: {
+                    Text("删除后，此 Skill 将不再供 Agent 使用。")
+                }
             }
         }
         .onChange(of: isEnabled) { _, newValue in

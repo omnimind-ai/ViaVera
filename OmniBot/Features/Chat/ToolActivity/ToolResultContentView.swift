@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct ToolResultContentView: View {
+    @Environment(AppModel.self) private var appModel
+    @Environment(\.dismiss) private var dismiss
     let tool: ToolCallPresentation
     let showsTitle: Bool
 
@@ -17,6 +19,14 @@ struct ToolResultContentView: View {
                 Label(tool.typeLabel, systemImage: tool.symbolName)
                     .font(.headline)
                     .foregroundStyle(.secondary)
+
+                if let id = nativeToolID {
+                    Button("打开工具", systemImage: "square.grid.2x2") {
+                        dismiss()
+                        appModel.openNativeTool(id)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
 
                 if tool.isTerminal {
                     Text(tool.terminalTranscript)
@@ -52,5 +62,13 @@ struct ToolResultContentView: View {
             .frame(maxWidth: AppDesign.chatContentMaximumWidth)
             .frame(maxWidth: .infinity)
         }
+    }
+
+    private var nativeToolID: UUID? {
+        guard tool.name == "native_tool_install", tool.status == .succeeded,
+              let metadata = try? JSONDecoder().decode(AgentValue.self, from: Data(tool.metadata.utf8)),
+              let urlString = metadata.objectValue?["openURL"]?.stringValue,
+              let url = URL(string: urlString) else { return nil }
+        return NativeToolRecord.identifier(from: url)
     }
 }

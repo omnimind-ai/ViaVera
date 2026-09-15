@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "name": "随手清单",
+  "summary": "记录待办、标记完成，自动保存。",
+  "symbol": "checklist",
+  "stateVersion": 1,
+  "initialState": {"draft": "", "tasks": []},
+  "capabilities": [],
+  "screens": [{"id":"main","title":"随手清单","components":[
+    {"id":"draftInput","type":"textField","title":"添加待办","binding":"draft"},
+    {"id":"addButton","type":"button","title":"添加","action":"add"},
+    {"id":"taskCount","type":"value","title":"记录数","value":{"op":"count","args":[{"get":"tasks"}]}},
+    {"id":"taskList","type":"list","binding":"tasks","title":"还没有待办","children":[
+      {"id":"taskTitle","type":"text","value":{"op":"concat","args":[{"op":"if","args":[{"item":"done"},"✓ ",""]},{"item":"title"}]}},
+      {"id":"taskActions","type":"row","children":[
+        {"id":"toggleTask","type":"button","title":"切换完成","action":"toggle"},
+        {"id":"removeTask","type":"button","title":"删除","action":"remove"}
+      ]}
+    ]}
+  ]}],
+  "actions": {
+    "add": [
+      {"type":"append","key":"tasks","value":{"title":{"op":"trim","args":[{"get":"draft"}]},"done":false},"when":{"op":"trim","args":[{"get":"draft"}]}},
+      {"type":"set","key":"draft","value":""}
+    ],
+    "toggle": [{"type":"toggleItem","key":"tasks","field":"done"}],
+    "remove": [{"type":"remove","key":"tasks"}]
+  }
+}

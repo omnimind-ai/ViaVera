@@ -3,9 +3,12 @@ import SwiftData
 
 enum AppBootstrapError: LocalizedError {
     case missingAlpineRootFileSystem
+    case missingBuiltInSkills
 
     var errorDescription: String? {
         switch self {
+        case .missingBuiltInSkills:
+            "应用包中缺少内置 Skills。"
         case .missingAlpineRootFileSystem:
             "应用包中缺少 Alpine 根文件系统。"
         }
@@ -44,7 +47,14 @@ struct AppDependencies {
 
         let soulStore = SoulStore(paths: workspacePaths)
         let memoryStore = MarkdownMemoryStore(paths: workspacePaths)
-        let skillStore = AgentSkillStore(paths: workspacePaths)
+        guard let builtInSkillsURL = BuiltInAgentSkills.directory(in: bundle) else {
+            throw AppBootstrapError.missingBuiltInSkills
+        }
+        let skillStore = AgentSkillStore(paths: workspacePaths, builtInSkillsURL: builtInSkillsURL)
+        let nativeToolStore = NativeToolStore(
+            paths: workspacePaths,
+            builtInTools: try BuiltInNativeTools.load(from: builtInSkillsURL)
+        )
         let appearanceStore = AppearanceSettingsStore(
             directoryURL: workspacePaths.hostOmniBotDirectory.appending(
                 path: "appearance",
@@ -111,7 +121,8 @@ struct AppDependencies {
             appleCalendarService: AppleCalendarService(),
             appleContactsService: AppleContactsService(),
             appleHealthKitService: AppleHealthKitService(),
-            browserSession: browserSession
+            browserSession: browserSession,
+            nativeToolStore: nativeToolStore
         )
         let appModel = AppModel(
             modelContext: modelContainer.mainContext,
@@ -127,7 +138,8 @@ struct AppDependencies {
             memoryStore: memoryStore,
             skillStore: skillStore,
             appearanceStore: appearanceStore,
-            bootstrapNotice: providerBootstrap.notice
+            bootstrapNotice: providerBootstrap.notice,
+            nativeToolStore: nativeToolStore
         )
 
         return AppDependencies(

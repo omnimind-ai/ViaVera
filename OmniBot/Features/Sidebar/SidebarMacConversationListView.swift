@@ -11,6 +11,16 @@ struct SidebarMacConversationListView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
+                Button {
+                    appModel.destination = .tools
+                } label: {
+                    Label("我的工具", systemImage: "square.grid.2x2")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(AppDesign.compactSpacing)
+                }
+                .buttonStyle(.plain)
+                .padding(.bottom, AppDesign.standardSpacing)
+
                 Text("最近会话")
                     .font(.caption)
                     .bold()

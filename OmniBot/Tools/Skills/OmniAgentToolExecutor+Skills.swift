@@ -11,6 +11,7 @@ extension OmniAgentToolExecutor {
                 "name": .string(skill.name),
                 "description": .string(skill.description),
                 "enabled": .bool(skill.enabled),
+                "builtIn": .bool(skill.isBuiltIn),
                 "rootPath": .string(skill.rootPath),
                 "skillFilePath": .string(skill.skillFilePath),
                 "capabilities": .array(skill.capabilities.map(AgentValue.string)),

@@ -1,0 +1,9 @@
+{
+  "schemaVersion":1,"name":"长度换算","summary":"输入米，立即换算厘米和英尺。","symbol":"ruler",
+  "stateVersion":1,"initialState":{"meters":1},"capabilities":[],"actions":{},
+  "screens":[{"id":"main","title":"长度换算","components":[
+    {"id":"metersInput","type":"numberField","title":"米","binding":"meters"},
+    {"id":"centimeters","type":"value","title":"厘米","value":{"op":"multiply","args":[{"get":"meters"},100]}},
+    {"id":"feet","type":"value","title":"英尺","value":{"op":"multiply","args":[{"get":"meters"},3.280839895]}}
+  ]}]
+}

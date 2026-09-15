@@ -1,0 +1,14 @@
+{
+  "schemaVersion":1,"name":"专注计时","summary":"设置分钟数，开始一段专注时间。","symbol":"timer",
+  "stateVersion":1,"initialState":{"minutes":25,"deadline":0},"capabilities":[],
+  "screens":[{"id":"main","title":"专注计时","components":[
+    {"id":"minutesInput","type":"numberField","title":"分钟","binding":"minutes"},
+    {"id":"remaining","type":"countdown","title":"剩余时间","value":{"get":"deadline"}},
+    {"id":"startButton","type":"button","title":"开始","action":"start"},
+    {"id":"stopButton","type":"button","title":"结束","action":"stop"}
+  ]}],
+  "actions":{
+    "start":[{"type":"set","key":"deadline","value":{"op":"add","args":[{"now":true},{"op":"multiply","args":[{"op":"max","args":[0,{"get":"minutes"}]},60]}]}}],
+    "stop":[{"type":"set","key":"deadline","value":0}]
+  }
+}
