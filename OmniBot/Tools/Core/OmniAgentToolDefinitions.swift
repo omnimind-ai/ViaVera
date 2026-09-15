@@ -22,6 +22,7 @@ nonisolated enum OmniAgentToolDefinitions {
         skillsList,
         skillsRead,
         nativeToolList,
+        nativeToolCapabilities,
         nativeToolRead,
         nativeToolValidate,
         nativeToolInstall,

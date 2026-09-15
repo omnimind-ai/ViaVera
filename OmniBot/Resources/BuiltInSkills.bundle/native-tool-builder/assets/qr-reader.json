@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "name": "二维码读取器",
+  "summary": "复用相机与剪贴板能力的示例。",
+  "stateVersion": 1,
+  "initialState": {},
+  "sessionState": {
+    "scan": {},
+    "copied": {}
+  },
+  "capabilities": [
+    "camera",
+    "clipboard"
+  ],
+  "screens": [
+    {
+      "id": "main",
+      "title": "二维码读取器",
+      "components": [
+        {
+          "id": "scanButton",
+          "type": "button",
+          "title": "扫描二维码",
+          "action": "scan"
+        },
+        {
+          "id": "result",
+          "type": "text",
+          "value": {
+            "op": "field",
+            "args": [
+              {
+                "get": "scan"
+              },
+              "text"
+            ]
+          }
+        },
+        {
+          "id": "copyButton",
+          "type": "button",
+          "title": "复制内容",
+          "action": "copy"
+        }
+      ]
+    }
+  ],
+  "actions": {
+    "scan": [
+      {
+        "type": "invoke",
+        "operation": "camera.scanQRCode",
+        "arguments": {},
+        "result": "scan"
+      }
+    ],
+    "copy": [
+      {
+        "type": "invoke",
+        "operation": "clipboard.copy",
+        "arguments": {
+          "text": {
+            "op": "field",
+            "args": [
+              {
+                "get": "scan"
+              },
+              "text"
+            ]
+          }
+        },
+        "result": "copied"
+      }
+    ]
+  }
+}

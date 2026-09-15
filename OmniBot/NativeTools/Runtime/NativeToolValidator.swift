@@ -13,6 +13,12 @@ nonisolated enum NativeToolValidator {
         let package: NativeToolPackage
         do { package = try JSONDecoder().decode(NativeToolPackage.self, from: data) }
         catch { throw NativeToolError("工具包字段不完整或类型错误：\(error.localizedDescription)") }
+        func containsLegacy(_ nodes: [NativeToolComponent]) -> Bool {
+            nodes.contains { $0.type == .totp || containsLegacy($0.children ?? []) }
+        }
+        guard !package.screens.contains(where: { containsLegacy($0.components) }) else {
+            throw NativeToolError("totp 整体组件已停用。请使用通用组件与 invoke 能力调用组合工具。")
+        }
         try validate(package)
         return package
     }
@@ -27,12 +33,17 @@ nonisolated enum NativeToolValidator {
               (package.symbol?.count ?? 0) <= 100 else { throw NativeToolError("工具名称或说明长度不合法。") }
         guard !package.screens.isEmpty, package.screens.count <= 12,
               package.initialState.count <= 100, package.actions.count <= 100,
-              Set(package.capabilities).isSubset(of: ["totp"]),
+              Set(package.capabilities).isSubset(of: NativeToolCapabilityRegistry.permissions.union(["totp"])),
               Set(package.capabilities).count == package.capabilities.count else {
             throw NativeToolError("页面、状态、动作数量或能力声明不受支持。")
         }
         guard package.initialState.keys.allSatisfy(validKey) else { throw NativeToolError("状态键必须是字母开头的简单标识符。") }
         try validateState(package.initialState)
+        let session = package.sessionState ?? [:]
+        guard session.count <= 100, session.keys.allSatisfy(validKey),
+              Set(session.keys).isDisjoint(with: package.initialState.keys) else { throw NativeToolError("会话状态键无效或与持久状态重复。") }
+        try validateState(session)
+        let allKeys = Set(package.initialState.keys).union(session.keys)
         let screens = Set(package.screens.map(\.id))
         guard screens.count == package.screens.count, screens.allSatisfy(validKey) else {
             throw NativeToolError("页面 ID 无效或重复。")
@@ -48,11 +59,25 @@ nonisolated enum NativeToolValidator {
         for (id, steps) in package.actions {
             guard validKey(id), !steps.isEmpty, steps.count <= 32 else { throw NativeToolError("动作 ID 或步骤数量无效。") }
             for step in steps {
-                if let value = step.value { try validateExpression(value, keys: Set(package.initialState.keys)) }
-                if let condition = step.when { try validateExpression(condition, keys: Set(package.initialState.keys)) }
-                if step.type == .navigate {
+                if let condition = step.when { try validateExpression(condition, keys: allKeys) }
+                if step.type == .invoke {
+                    guard let operation = step.operation else { throw NativeToolError("invoke 需要 operation。") }
+                    let entry = try NativeToolCapabilityRegistry.resolve(operation, declared: package.capabilities)
+                    try NativeToolCapabilityRegistry.validate(step.arguments ?? [:], for: entry, evaluated: false)
+                    for expression in (step.arguments ?? [:]).values { try validateExpression(expression, keys: allKeys) }
+                    if let key = step.result, session[key]?.objectValue == nil { throw NativeToolError("能力结果只能写入已声明的对象类型会话状态。") }
+                } else if step.type == .setSession {
+                    guard let key = step.key, session[key] != nil, let value = step.value else { throw NativeToolError("setSession 需要会话状态键和 value。") }
+                    try validateExpression(value, keys: allKeys)
+                } else if step.type == .navigate {
                     guard let screen = step.screen, screens.contains(screen) else { throw NativeToolError("动作引用了不存在的页面。") }
                 } else {
+                    if let value = step.value {
+                        try validateExpression(value, keys: Set(package.initialState.keys))
+                        if !session.isEmpty, [.set, .append].contains(step.type), containsItem(value) {
+                            throw NativeToolError("能力列表数据只能写入会话状态，不能复制到持久状态。")
+                        }
+                    }
                     guard let key = step.key, package.initialState[key] != nil else { throw NativeToolError("动作引用了不存在的状态。") }
                     if step.type != .set, package.initialState[key]?.arrayValue == nil {
                         throw NativeToolError("集合动作需要数组状态。")
@@ -65,6 +90,12 @@ nonisolated enum NativeToolValidator {
                     }
                 }
             }
+        }
+        if let refresh = package.onRefresh {
+            guard let steps = package.actions[refresh], steps.allSatisfy({ step in
+                guard step.type == .invoke, let operation = step.operation else { return false }
+                return (try? NativeToolCapabilityRegistry.resolve(operation, declared: package.capabilities).passive) == true
+            }) else { throw NativeToolError("onRefresh 只能调用已声明的被动读取能力。") }
         }
     }
 
@@ -99,15 +130,19 @@ nonisolated enum NativeToolValidator {
         guard (node.title?.count ?? 0) <= 500 else { throw NativeToolError("组件标题过长。") }
         if let action = node.action, package.actions[action] == nil { throw NativeToolError("组件引用了不存在的动作：\(action)") }
         if let binding = node.binding, package.initialState[binding] == nil { throw NativeToolError("组件引用了不存在的状态：\(binding)") }
-        if let value = node.value { try validateExpression(value, keys: Set(package.initialState.keys)) }
-        if let value = node.visibleWhen { try validateExpression(value, keys: Set(package.initialState.keys)) }
+        if let binding = node.sessionBinding, package.sessionState?[binding] == nil { throw NativeToolError("组件引用了不存在的会话状态。") }
+        guard node.binding == nil || node.sessionBinding == nil else { throw NativeToolError("组件不能同时绑定两类状态。") }
+        let keys = Set(package.initialState.keys).union((package.sessionState ?? [:]).keys)
+        if let value = node.value { try validateExpression(value, keys: keys) }
+        if let value = node.visibleWhen { try validateExpression(value, keys: keys) }
         switch node.type {
-        case .textField, .numberField, .toggle, .picker:
-            guard let key = node.binding, let value = package.initialState[key] else { throw NativeToolError("输入组件必须绑定状态。") }
+        case .textField, .secureField, .numberField, .toggle, .picker:
+            guard let value = node.binding.flatMap({ package.initialState[$0] }) ?? node.sessionBinding.flatMap({ package.sessionState?[$0] }) else { throw NativeToolError("输入组件必须绑定状态。") }
             switch (node.type, value) {
-            case (.textField, .string), (.picker, .string), (.numberField, .number), (.toggle, .bool): break
+            case (.textField, .string), (.secureField, .string), (.picker, .string), (.numberField, .number), (.toggle, .bool): break
             default: throw NativeToolError("输入组件与绑定状态的类型不匹配。")
             }
+            if node.type == .secureField, node.sessionBinding == nil { throw NativeToolError("密码输入必须绑定会话状态。") }
             if node.type == .picker {
                 guard let options = node.options, !options.isEmpty, options.count <= 50,
                       Set(options).count == options.count, options.allSatisfy({ $0.count <= 200 }),
@@ -116,7 +151,7 @@ nonisolated enum NativeToolValidator {
         case .button:
             guard node.action != nil, node.title?.isEmpty == false else { throw NativeToolError("按钮需要标题和动作。") }
         case .list:
-            guard !insideList, let key = node.binding, package.initialState[key]?.arrayValue != nil else {
+            guard !insideList, node.binding.flatMap({ package.initialState[$0]?.arrayValue }) != nil || node.value != nil else {
                 throw NativeToolError("列表必须绑定数组，且不能嵌套列表。")
             }
         case .totp:
@@ -144,7 +179,7 @@ nonisolated enum NativeToolValidator {
                       let args = object["args"]?.arrayValue, args.count <= 16 else { throw NativeToolError("运算名称或参数无效。") }
                 let unary: Set<String> = ["round", "trim", "uppercase", "lowercase", "count", "not"]
                 let variadic: Set<String> = ["concat", "and", "or"]
-                let expected = name == "if" ? 3 : unary.contains(name) ? 1 : 2
+                let expected = ["if", "filter"].contains(name) ? 3 : unary.contains(name) ? 1 : 2
                 guard variadic.contains(name) || args.count == expected || (name == "sum" && args.count == 1) else {
                     throw NativeToolError("运算 \(name) 参数数量不正确。")
                 }
@@ -176,18 +211,23 @@ nonisolated enum NativeToolValidator {
             return value
         }
         func component(_ raw: Any) throws {
-            let node = try object(raw, allowed: ["id", "type", "title", "value", "binding", "action", "children", "options", "visibleWhen"])
+            let node = try object(raw, allowed: ["id", "type", "title", "value", "binding", "sessionBinding", "action", "children", "options", "visibleWhen"])
             for child in node["children"] as? [Any] ?? [] { try component(child) }
         }
-        let root = try object(raw, allowed: ["schemaVersion", "name", "summary", "symbol", "stateVersion", "initialState", "screens", "actions", "capabilities"])
+        let root = try object(raw, allowed: ["schemaVersion", "name", "summary", "symbol", "stateVersion", "initialState", "sessionState", "onRefresh", "screens", "actions", "capabilities"])
         for rawScreen in root["screens"] as? [Any] ?? [] {
             let screen = try object(rawScreen, allowed: ["id", "title", "components"])
             for node in screen["components"] as? [Any] ?? [] { try component(node) }
         }
         for steps in (root["actions"] as? [String: Any] ?? [:]).values {
             for step in steps as? [Any] ?? [] {
-                _ = try object(step, allowed: ["type", "key", "value", "field", "screen", "when"])
+                _ = try object(step, allowed: ["type", "key", "value", "field", "screen", "when", "operation", "arguments", "result"])
             }
         }
+    }
+
+    private static func containsItem(_ value: AgentValue) -> Bool {
+        if let object = value.objectValue { return object["item"] != nil || object.values.contains(where: containsItem) }
+        return value.arrayValue?.contains(where: containsItem) ?? false
     }
 }

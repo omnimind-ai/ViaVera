@@ -5,7 +5,7 @@ nonisolated enum NativeToolExpression {
     static let operations: Set<String> = [
         "add", "subtract", "multiply", "divide", "round", "min", "max",
         "concat", "trim", "uppercase", "lowercase", "count", "sum",
-        "equal", "greater", "less", "not", "and", "or", "if", "contains",
+        "equal", "greater", "less", "not", "and", "or", "if", "contains", "field", "filter",
     ]
 
     static func evaluate(
@@ -63,6 +63,13 @@ nonisolated enum NativeToolExpression {
                 return .number(number)
             }
             switch operation {
+            case "field":
+                guard values.count == 2, let key = values[1].stringValue else { throw NativeToolError("field 需要对象和字段名。") }
+                return values[0].objectValue?[key] ?? .null
+            case "filter":
+                guard values.count == 3, let entries = values[0].arrayValue, let field = values[1].stringValue,
+                      let query = values[2].stringValue else { throw NativeToolError("filter 需要记录列表、字段和查询文本。") }
+                return .array(entries.filter { query.isEmpty || display($0.objectValue?[field] ?? .null).localizedStandardContains(query) })
             case "add": return try finite(number(0) + number(1))
             case "subtract": return try finite(number(0) - number(1))
             case "multiply": return try finite(number(0) * number(1))

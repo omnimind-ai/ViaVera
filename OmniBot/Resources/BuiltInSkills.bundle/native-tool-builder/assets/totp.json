@@ -1,7 +1,945 @@
 {
-  "schemaVersion":1,"name":"两步认证","summary":"在本机管理账户验证码。","symbol":"lock.shield",
-  "stateVersion":1,"initialState":{},"actions":{},"capabilities":["totp"],
-  "screens":[{"id":"main","title":"两步认证","components":[
-    {"id":"authenticator","type":"totp","title":"验证码"}
-  ]}]
+  "schemaVersion": 1,
+  "name": "两步认证",
+  "summary": "用通用原生组件与宿主能力组合的认证工具。",
+  "symbol": "lock.shield",
+  "stateVersion": 1,
+  "initialState": {},
+  "sessionState": {
+    "otp": {
+      "unlocked": false,
+      "accounts": [],
+      "message": ""
+    },
+    "input": {},
+    "source": {},
+    "preview": {},
+    "confirmation": {},
+    "copyResult": {},
+    "secret": "",
+    "name": "",
+    "issuer": "",
+    "algorithm": "SHA1",
+    "digits": 6,
+    "period": 30,
+    "search": "",
+    "password": "",
+    "passwordAgain": ""
+  },
+  "capabilities": [
+    "otp",
+    "camera",
+    "photos",
+    "files",
+    "clipboard",
+    "dialog"
+  ],
+  "onRefresh": "refresh",
+  "screens": [
+    {
+      "id": "main",
+      "title": "验证码",
+      "components": [
+        {
+          "id": "mainLocked",
+          "type": "text",
+          "title": "解锁后管理本机认证账户",
+          "visibleWhen": {
+            "op": "not",
+            "args": [
+              {
+                "op": "field",
+                "args": [
+                  {
+                    "get": "otp"
+                  },
+                  "unlocked"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "mainUnlock",
+          "type": "button",
+          "title": "解锁验证码",
+          "action": "unlock",
+          "visibleWhen": {
+            "op": "not",
+            "args": [
+              {
+                "op": "field",
+                "args": [
+                  {
+                    "get": "otp"
+                  },
+                  "unlocked"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "mainUnlocked",
+          "type": "stack",
+          "visibleWhen": {
+            "op": "field",
+            "args": [
+              {
+                "get": "otp"
+              },
+              "unlocked"
+            ]
+          },
+          "children": [
+            {
+              "id": "mainButtons",
+              "type": "row",
+              "children": [
+                {
+                  "id": "add",
+                  "type": "button",
+                  "title": "添加账户",
+                  "action": "openImport"
+                },
+                {
+                  "id": "backup",
+                  "type": "button",
+                  "title": "备份与恢复",
+                  "action": "openBackup"
+                },
+                {
+                  "id": "lock",
+                  "type": "button",
+                  "title": "锁定",
+                  "action": "lock"
+                }
+              ]
+            },
+            {
+              "id": "message",
+              "type": "text",
+              "value": {
+                "op": "field",
+                "args": [
+                  {
+                    "get": "otp"
+                  },
+                  "message"
+                ]
+              }
+            },
+            {
+              "id": "search",
+              "type": "textField",
+              "title": "搜索账户",
+              "sessionBinding": "search"
+            },
+            {
+              "id": "accounts",
+              "type": "list",
+              "value": {
+                "op": "filter",
+                "args": [
+                  {
+                    "op": "field",
+                    "args": [
+                      {
+                        "get": "otp"
+                      },
+                      "accounts"
+                    ]
+                  },
+                  "name",
+                  {
+                    "get": "search"
+                  }
+                ]
+              },
+              "title": "添加账户后，在这里查看和复制验证码。",
+              "children": [
+                {
+                  "id": "accountName",
+                  "type": "heading",
+                  "value": {
+                    "item": "name"
+                  }
+                },
+                {
+                  "id": "accountIssuer",
+                  "type": "text",
+                  "value": {
+                    "item": "issuer"
+                  }
+                },
+                {
+                  "id": "accountCode",
+                  "type": "value",
+                  "title": "验证码",
+                  "value": {
+                    "item": "code"
+                  }
+                },
+                {
+                  "id": "accountProgress",
+                  "type": "progress",
+                  "title": "有效期",
+                  "value": {
+                    "item": "progress"
+                  }
+                },
+                {
+                  "id": "accountButtons",
+                  "type": "row",
+                  "children": [
+                    {
+                      "id": "copy",
+                      "type": "button",
+                      "title": "复制验证码",
+                      "action": "copy"
+                    },
+                    {
+                      "id": "delete",
+                      "type": "button",
+                      "title": "删除账户",
+                      "action": "delete"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "import",
+      "title": "添加账户",
+      "components": [
+        {
+          "id": "importLocked",
+          "type": "text",
+          "title": "解锁后管理本机认证账户",
+          "visibleWhen": {
+            "op": "not",
+            "args": [
+              {
+                "op": "field",
+                "args": [
+                  {
+                    "get": "otp"
+                  },
+                  "unlocked"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "importUnlock",
+          "type": "button",
+          "title": "解锁验证码",
+          "action": "unlock",
+          "visibleWhen": {
+            "op": "not",
+            "args": [
+              {
+                "op": "field",
+                "args": [
+                  {
+                    "get": "otp"
+                  },
+                  "unlocked"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "importUnlocked",
+          "type": "stack",
+          "visibleWhen": {
+            "op": "field",
+            "args": [
+              {
+                "get": "otp"
+              },
+              "unlocked"
+            ]
+          },
+          "children": [
+            {
+              "id": "importButtons",
+              "type": "row",
+              "children": [
+                {
+                  "id": "scan",
+                  "type": "button",
+                  "title": "扫描二维码",
+                  "action": "scan"
+                },
+                {
+                  "id": "photo",
+                  "type": "button",
+                  "title": "从二维码图片导入",
+                  "action": "photo"
+                },
+                {
+                  "id": "txt",
+                  "type": "button",
+                  "title": "从 TXT 文件批量导入",
+                  "action": "txt"
+                }
+              ]
+            },
+            {
+              "id": "manualFields",
+              "type": "section",
+              "title": "手动添加",
+              "children": [
+                {
+                  "id": "name",
+                  "type": "textField",
+                  "title": "账户名称",
+                  "sessionBinding": "name"
+                },
+                {
+                  "id": "issuer",
+                  "type": "textField",
+                  "title": "服务商（可选）",
+                  "sessionBinding": "issuer"
+                },
+                {
+                  "id": "secret",
+                  "type": "secureField",
+                  "title": "密钥或 otpauth 链接",
+                  "sessionBinding": "secret"
+                },
+                {
+                  "id": "algorithm",
+                  "type": "picker",
+                  "title": "算法",
+                  "sessionBinding": "algorithm",
+                  "options": [
+                    "SHA1",
+                    "SHA256",
+                    "SHA512"
+                  ]
+                },
+                {
+                  "id": "digits",
+                  "type": "numberField",
+                  "title": "验证码位数（6 或 8）",
+                  "sessionBinding": "digits"
+                },
+                {
+                  "id": "period",
+                  "type": "numberField",
+                  "title": "周期（秒）",
+                  "sessionBinding": "period"
+                },
+                {
+                  "id": "manual",
+                  "type": "button",
+                  "title": "预览账户",
+                  "action": "manual"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "preview",
+      "title": "确认导入",
+      "components": [
+        {
+          "id": "previewLocked",
+          "type": "text",
+          "title": "解锁后管理本机认证账户",
+          "visibleWhen": {
+            "op": "not",
+            "args": [
+              {
+                "op": "field",
+                "args": [
+                  {
+                    "get": "otp"
+                  },
+                  "unlocked"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "previewUnlock",
+          "type": "button",
+          "title": "解锁验证码",
+          "action": "unlock",
+          "visibleWhen": {
+            "op": "not",
+            "args": [
+              {
+                "op": "field",
+                "args": [
+                  {
+                    "get": "otp"
+                  },
+                  "unlocked"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "previewUnlocked",
+          "type": "stack",
+          "visibleWhen": {
+            "op": "field",
+            "args": [
+              {
+                "get": "otp"
+              },
+              "unlocked"
+            ]
+          },
+          "children": [
+            {
+              "id": "previewMessage",
+              "type": "text",
+              "value": {
+                "op": "field",
+                "args": [
+                  {
+                    "get": "preview"
+                  },
+                  "message"
+                ]
+              }
+            },
+            {
+              "id": "previewAccounts",
+              "type": "list",
+              "value": {
+                "op": "field",
+                "args": [
+                  {
+                    "get": "preview"
+                  },
+                  "accounts"
+                ]
+              },
+              "title": "暂无待导入账户",
+              "children": [
+                {
+                  "id": "previewName",
+                  "type": "text",
+                  "value": {
+                    "item": "name"
+                  }
+                },
+                {
+                  "id": "previewIssuer",
+                  "type": "text",
+                  "value": {
+                    "item": "issuer"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "previewButtons",
+              "type": "row",
+              "children": [
+                {
+                  "id": "commit",
+                  "type": "button",
+                  "title": "确认导入",
+                  "action": "commit"
+                },
+                {
+                  "id": "discard",
+                  "type": "button",
+                  "title": "取消本次导入",
+                  "action": "discard"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "backup",
+      "title": "备份与恢复",
+      "components": [
+        {
+          "id": "backupLocked",
+          "type": "text",
+          "title": "解锁后管理本机认证账户",
+          "visibleWhen": {
+            "op": "not",
+            "args": [
+              {
+                "op": "field",
+                "args": [
+                  {
+                    "get": "otp"
+                  },
+                  "unlocked"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "backupUnlock",
+          "type": "button",
+          "title": "解锁验证码",
+          "action": "unlock",
+          "visibleWhen": {
+            "op": "not",
+            "args": [
+              {
+                "op": "field",
+                "args": [
+                  {
+                    "get": "otp"
+                  },
+                  "unlocked"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "backupUnlocked",
+          "type": "stack",
+          "visibleWhen": {
+            "op": "field",
+            "args": [
+              {
+                "get": "otp"
+              },
+              "unlocked"
+            ]
+          },
+          "children": [
+            {
+              "id": "backupInfo",
+              "type": "text",
+              "title": "导出时输入至少 12 个字符的密码并再次确认；恢复时输入原备份密码。"
+            },
+            {
+              "id": "password",
+              "type": "secureField",
+              "title": "备份密码",
+              "sessionBinding": "password"
+            },
+            {
+              "id": "passwordAgain",
+              "type": "secureField",
+              "title": "再次输入密码（导出时）",
+              "sessionBinding": "passwordAgain"
+            },
+            {
+              "id": "export",
+              "type": "button",
+              "title": "导出加密备份",
+              "action": "export",
+              "visibleWhen": {
+                "op": "and",
+                "args": [
+                  {
+                    "op": "greater",
+                    "args": [
+                      {
+                        "op": "count",
+                        "args": [
+                          {
+                            "get": "password"
+                          }
+                        ]
+                      },
+                      11
+                    ]
+                  },
+                  {
+                    "op": "equal",
+                    "args": [
+                      {
+                        "get": "password"
+                      },
+                      {
+                        "get": "passwordAgain"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "restore",
+              "type": "button",
+              "title": "从加密备份恢复",
+              "action": "restore",
+              "visibleWhen": {
+                "get": "password"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "actions": {
+    "refresh": [
+      {
+        "type": "invoke",
+        "operation": "otp.snapshot",
+        "arguments": {},
+        "result": "otp"
+      }
+    ],
+    "unlock": [
+      {
+        "type": "invoke",
+        "operation": "otp.unlock",
+        "arguments": {},
+        "result": "otp"
+      }
+    ],
+    "lock": [
+      {
+        "type": "invoke",
+        "operation": "otp.lock",
+        "arguments": {},
+        "result": "otp"
+      }
+    ],
+    "openImport": [
+      {
+        "type": "invoke",
+        "operation": "otp.discardImport",
+        "arguments": {}
+      },
+      {
+        "type": "setSession",
+        "key": "preview",
+        "value": {}
+      },
+      {
+        "type": "navigate",
+        "screen": "import"
+      }
+    ],
+    "openBackup": [
+      {
+        "type": "navigate",
+        "screen": "backup"
+      }
+    ],
+    "home": [
+      {
+        "type": "navigate",
+        "screen": "main"
+      }
+    ],
+    "scan": [
+      {
+        "type": "invoke",
+        "operation": "camera.scanQRCode",
+        "arguments": {},
+        "result": "input"
+      },
+      {
+        "type": "invoke",
+        "operation": "otp.previewImport",
+        "arguments": {
+          "text": {
+            "op": "field",
+            "args": [
+              {
+                "get": "input"
+              },
+              "text"
+            ]
+          }
+        },
+        "result": "preview"
+      },
+      {
+        "type": "setSession",
+        "key": "input",
+        "value": {}
+      },
+      {
+        "type": "navigate",
+        "screen": "preview"
+      }
+    ],
+    "photo": [
+      {
+        "type": "invoke",
+        "operation": "photos.scanQRCode",
+        "arguments": {},
+        "result": "input"
+      },
+      {
+        "type": "invoke",
+        "operation": "otp.previewImport",
+        "arguments": {
+          "text": {
+            "op": "field",
+            "args": [
+              {
+                "get": "input"
+              },
+              "text"
+            ]
+          }
+        },
+        "result": "preview"
+      },
+      {
+        "type": "setSession",
+        "key": "input",
+        "value": {}
+      },
+      {
+        "type": "navigate",
+        "screen": "preview"
+      }
+    ],
+    "txt": [
+      {
+        "type": "invoke",
+        "operation": "files.openText",
+        "arguments": {},
+        "result": "source"
+      },
+      {
+        "type": "invoke",
+        "operation": "otp.previewImport",
+        "arguments": {
+          "handle": {
+            "op": "field",
+            "args": [
+              {
+                "get": "source"
+              },
+              "handle"
+            ]
+          }
+        },
+        "result": "preview"
+      },
+      {
+        "type": "setSession",
+        "key": "source",
+        "value": {}
+      },
+      {
+        "type": "navigate",
+        "screen": "preview"
+      }
+    ],
+    "manual": [
+      {
+        "type": "invoke",
+        "operation": "otp.previewImport",
+        "arguments": {
+          "text": {
+            "get": "secret"
+          },
+          "name": {
+            "get": "name"
+          },
+          "issuer": {
+            "get": "issuer"
+          },
+          "algorithm": {
+            "get": "algorithm"
+          },
+          "digits": {
+            "get": "digits"
+          },
+          "period": {
+            "get": "period"
+          }
+        },
+        "result": "preview"
+      },
+      {
+        "type": "setSession",
+        "key": "secret",
+        "value": ""
+      },
+      {
+        "type": "navigate",
+        "screen": "preview"
+      }
+    ],
+    "commit": [
+      {
+        "type": "invoke",
+        "operation": "otp.commitImport",
+        "arguments": {},
+        "result": "otp"
+      },
+      {
+        "type": "setSession",
+        "key": "preview",
+        "value": {}
+      },
+      {
+        "type": "navigate",
+        "screen": "main"
+      }
+    ],
+    "discard": [
+      {
+        "type": "invoke",
+        "operation": "otp.discardImport",
+        "arguments": {}
+      },
+      {
+        "type": "setSession",
+        "key": "preview",
+        "value": {}
+      },
+      {
+        "type": "navigate",
+        "screen": "import"
+      }
+    ],
+    "copy": [
+      {
+        "type": "invoke",
+        "operation": "clipboard.copy",
+        "arguments": {
+          "text": {
+            "item": "code"
+          }
+        },
+        "result": "copyResult"
+      }
+    ],
+    "delete": [
+      {
+        "type": "invoke",
+        "operation": "dialog.confirm",
+        "arguments": {
+          "title": "删除认证账户？",
+          "message": "请确认已保存备份或恢复码。"
+        },
+        "result": "confirmation"
+      },
+      {
+        "type": "invoke",
+        "operation": "otp.delete",
+        "arguments": {
+          "id": {
+            "item": "id"
+          }
+        },
+        "result": "otp",
+        "when": {
+          "op": "field",
+          "args": [
+            {
+              "get": "confirmation"
+            },
+            "confirmed"
+          ]
+        }
+      }
+    ],
+    "export": [
+      {
+        "type": "invoke",
+        "operation": "otp.encryptBackup",
+        "arguments": {
+          "password": {
+            "get": "password"
+          }
+        },
+        "result": "source"
+      },
+      {
+        "type": "invoke",
+        "operation": "files.save",
+        "arguments": {
+          "handle": {
+            "op": "field",
+            "args": [
+              {
+                "get": "source"
+              },
+              "handle"
+            ]
+          },
+          "name": "totp-encrypted-backup.json"
+        }
+      },
+      {
+        "type": "setSession",
+        "key": "password",
+        "value": ""
+      },
+      {
+        "type": "setSession",
+        "key": "passwordAgain",
+        "value": ""
+      },
+      {
+        "type": "setSession",
+        "key": "source",
+        "value": {}
+      }
+    ],
+    "restore": [
+      {
+        "type": "invoke",
+        "operation": "files.openData",
+        "arguments": {},
+        "result": "source"
+      },
+      {
+        "type": "invoke",
+        "operation": "otp.previewBackup",
+        "arguments": {
+          "handle": {
+            "op": "field",
+            "args": [
+              {
+                "get": "source"
+              },
+              "handle"
+            ]
+          },
+          "password": {
+            "get": "password"
+          }
+        },
+        "result": "preview"
+      },
+      {
+        "type": "setSession",
+        "key": "password",
+        "value": ""
+      },
+      {
+        "type": "setSession",
+        "key": "source",
+        "value": {}
+      },
+      {
+        "type": "navigate",
+        "screen": "preview"
+      }
+    ]
+  }
 }

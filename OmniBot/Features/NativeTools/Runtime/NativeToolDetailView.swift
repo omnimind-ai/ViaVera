@@ -3,8 +3,10 @@ import UniformTypeIdentifiers
 
 struct NativeToolDetailView: View {
     @Environment(AppModel.self) private var appModel
+    @Environment(\.scenePhase) private var scenePhase
     let toolID: UUID
     @State private var runtime: NativeToolRuntime?
+    @State private var host: NativeToolHostCapabilities?
     @State private var alert: NativeToolAlert?
     @State private var isExporting = false
     @State private var exportDocument: NativeToolJSONDocument?
@@ -53,6 +55,16 @@ struct NativeToolDetailView: View {
         .onReceive(NotificationCenter.default.publisher(for: NativeToolStore.didChange)) { _ in
             Task { await load() }
         }
+        .background {
+            if let host { NativeToolCapabilityPresentation(host: host) }
+        }
+        .onDisappear { runtime?.suspend() }
+        .onChange(of: host?.isCredentialSessionUnlocked) { previous, current in
+            if previous == true, current == false { runtime?.suspend() }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background || (phase == .inactive && host?.isAuthorizing != true) { runtime?.suspend() }
+        }
     }
 
     private func load(force: Bool = false) async {
@@ -63,7 +75,10 @@ struct NativeToolDetailView: View {
         do {
             let document = try await appModel.nativeTools.store.load(toolID)
             if !force, runtime?.record.revision == document.record.revision { return }
-            runtime = NativeToolRuntime(document: document, store: appModel.nativeTools.store)
+            runtime?.suspend()
+            let host = NativeToolHostCapabilities(toolID: toolID, permissions: document.record.package.capabilities)
+            self.host = host
+            runtime = NativeToolRuntime(document: document, store: appModel.nativeTools.store, host: host)
             loadError = nil
         } catch {
             if runtime == nil { loadError = error.localizedDescription }

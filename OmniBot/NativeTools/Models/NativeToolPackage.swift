@@ -11,4 +11,6 @@ nonisolated struct NativeToolPackage: Codable, Hashable, Sendable {
     let screens: [NativeToolScreen]
     let actions: [String: [NativeToolAction]]
     let capabilities: [String]
+    var sessionState: [String: AgentValue]? = nil
+    var onRefresh: String? = nil
 }

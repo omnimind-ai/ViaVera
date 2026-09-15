@@ -50,6 +50,7 @@ nonisolated enum NativeToolActionEngine {
                 }
                 updated[key] = .array(entries)
             case .navigate: break
+            case .invoke, .setSession: throw NativeToolError("此动作需要能力运行时。")
             }
         }
         try validateTypes(updated, package: package)

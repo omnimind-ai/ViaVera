@@ -12,8 +12,12 @@ nonisolated struct NativeToolAgentBridge {
     func execute(
         _ name: String, arguments: OmniToolArguments, context: AgentToolExecutionContext
     ) async throws -> AgentToolExecutionResult {
-        guard ["native_tool_list", "native_tool_read", "native_tool_validate", "native_tool_install"].contains(name) else {
+        guard ["native_tool_list", "native_tool_read", "native_tool_validate", "native_tool_install", "native_tool_capabilities"].contains(name) else {
             throw NativeToolError("不支持的原生工具操作。")
+        }
+        if name == "native_tool_capabilities" {
+            let catalog = AgentValue.array(NativeToolCapabilityRegistry.entries.map(\.value))
+            return AgentToolExecutionResult(content: String(decoding: try JSONEncoder().encode(catalog), as: UTF8.self), metadata: ["operations": catalog])
         }
         if name == "native_tool_list" {
             let records = try await nativeToolStore.list()

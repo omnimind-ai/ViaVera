@@ -32,14 +32,13 @@ nonisolated struct TOTPKeychainVault {
     }
 
     func add(_ additions: [TOTPAccount], context: LAContext) throws -> [TOTPAccount] {
-        var accounts = try load(context: context)
-        for account in additions {
-            try account.validate()
-            guard !accounts.contains(where: { $0.issuer == account.issuer && $0.name == account.name && $0.secret == account.secret && $0.algorithm == account.algorithm && $0.digits == account.digits && $0.period == account.period }) else { continue }
-            accounts.append(TOTPAccount(id: UUID(), issuer: account.issuer, name: account.name, secret: account.secret, algorithm: account.algorithm, digits: account.digits, period: account.period))
-        }
-        try save(accounts, context: context)
-        return accounts
+        try importAccounts(additions, context: context).accounts
+    }
+
+    func importAccounts(_ additions: [TOTPAccount], context: LAContext) throws -> TOTPAccountImportResult {
+        let result = try TOTPAccountImport.merging(additions, into: load(context: context))
+        if result.importedCount > 0 { try save(result.accounts, context: context) }
+        return result
     }
 
     func remove(_ id: UUID, context: LAContext) throws -> [TOTPAccount] {

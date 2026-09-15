@@ -1,6 +1,9 @@
 import Foundation
 
 nonisolated extension OmniAgentToolDefinitions {
+    static let nativeToolCapabilities = nativeDefinition(
+        "native_tool_capabilities", "Discover the native tool host capability catalog, operation parameters, permissions and result shapes. Use invoke actions to compose these capabilities in any tool package.", properties: [:], required: []
+    )
     static let nativeToolList = nativeDefinition(
         "native_tool_list", "List the user's installed native tools (metadata only; no user data or credentials).", properties: [:], required: []
     )

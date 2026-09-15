@@ -3,7 +3,7 @@ import Foundation
 nonisolated struct NativeToolComponent: Codable, Hashable, Sendable, Identifiable {
     enum Kind: String, Codable, Sendable {
         case text, heading, stack, row, section, divider
-        case textField, numberField, toggle, picker, button
+        case textField, secureField, numberField, toggle, picker, button
         case list, value, progress, countdown, totp
     }
 
@@ -12,6 +12,7 @@ nonisolated struct NativeToolComponent: Codable, Hashable, Sendable, Identifiabl
     var title: String? = nil
     var value: AgentValue? = nil
     var binding: String? = nil
+    var sessionBinding: String? = nil
     var action: String? = nil
     var children: [NativeToolComponent]? = nil
     var options: [String]? = nil

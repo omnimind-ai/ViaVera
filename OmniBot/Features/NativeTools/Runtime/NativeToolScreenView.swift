@@ -24,7 +24,7 @@ struct NativeToolScreenView: View {
             .padding(20)
             .frame(maxWidth: 760, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .top)
-            .disabled(runtime.persistenceFailed)
+            .disabled(runtime.persistenceFailed || runtime.isPerforming)
         }
         .alert(item: $alert) { alert in
             Alert(title: Text("操作未完成"), message: Text(alert.message), dismissButton: .default(Text("好")) {
@@ -33,6 +33,14 @@ struct NativeToolScreenView: View {
         }
         .onChange(of: runtime.errorMessage) { _, message in
             if let message { alert = NativeToolAlert(message) }
+        }
+        .privacySensitive()
+        .task(id: ObjectIdentifier(runtime)) {
+            guard runtime.record.package.onRefresh != nil else { return }
+            while !Task.isCancelled {
+                await runtime.refresh()
+                do { try await Task.sleep(for: .seconds(1)) } catch { return }
+            }
         }
     }
 }

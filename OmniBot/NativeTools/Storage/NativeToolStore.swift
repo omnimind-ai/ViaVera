@@ -44,11 +44,22 @@ actor NativeToolStore {
         let values = try url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
         guard values.isRegularFile == true, values.isSymbolicLink != true,
               let size = values.fileSize, size <= 2 * 1_024 * 1_024 else { throw NativeToolError("工具记录无效或过大。") }
-        let document = try JSONDecoder().decode(NativeToolDocument.self, from: Data(contentsOf: url))
+        var document = try JSONDecoder().decode(NativeToolDocument.self, from: Data(contentsOf: url))
         guard document.record.id == id else { throw NativeToolError("工具记录身份不匹配。") }
+        var migrated = false
+        if let template = builtInTools.first(where: { $0.id == "totp" })?.package,
+           let package = NativeToolLegacyMigration.upgrade(document.record.package, template: template) {
+            document.record.package = package
+            if let previous = document.record.previousPackage {
+                document.record.previousPackage = NativeToolLegacyMigration.upgrade(previous, template: template) ?? previous
+            }
+            document.record.revision += 1
+            migrated = true
+        }
         try NativeToolValidator.validate(document.record.package)
         try NativeToolValidator.validateState(document.state)
         try NativeToolActionEngine.validateTypes(document.state, package: document.record.package)
+        if migrated { try write(document) }
         return document
     }
 

@@ -34,7 +34,7 @@ struct NativeToolComponentView: View {
             return AnyView(GroupBox(component.title ?? "") {
                 VStack(alignment: .leading, spacing: 12) { children }.frame(maxWidth: .infinity, alignment: .leading)
             })
-        case .textField, .numberField, .toggle, .picker:
+        case .textField, .secureField, .numberField, .toggle, .picker:
             return AnyView(NativeToolInputView(component: component, runtime: runtime))
         case .button:
             return AnyView(Button(component.title ?? "执行", action: perform).buttonStyle(.bordered).frame(minHeight: 44))
@@ -46,10 +46,7 @@ struct NativeToolComponentView: View {
         case .countdown:
             return AnyView(NativeToolCountdownView(component: component, runtime: runtime, item: item))
         case .totp:
-            if runtime.isPreview {
-                return AnyView(Label("添加工具后，在这里解锁并管理验证码账户。", systemImage: "lock.shield").foregroundStyle(.secondary))
-            }
-            return AnyView(NativeToolTOTPView(toolID: runtime.record.id, title: component.title ?? "验证码"))
+            return AnyView(Text("此旧版组件需要升级为能力调用工具包。").foregroundStyle(.secondary))
         }
     }
 

@@ -20,9 +20,11 @@ Optional `summary` (up to 500 characters) and `symbol` (SF Symbol name). Name is
 
 `initialState` is a dictionary of typed JSON values. Input bindings target top-level keys. Collections are arrays of objects; each initial record needs a unique string `id`. Normally begin with an empty array; append assigns IDs. Initial values are used only for new keys when updating, never to overwrite saved user data. State types and stateVersion cannot change in v1. Preserve existing keys when editing. Do not place real user data or credentials in initialState.
 
+Optional `sessionState` declares transient typed values (up to 100 keys, disjoint from initialState). Use empty strings/objects/arrays for host results and password inputs. It is never persisted and resets when the tool closes, the app becomes inactive/backgrounded, or the credential session changes. `get` can read either state dictionary. Optional `onRefresh` names an action run when opened and once per second while visible; that action may only invoke catalog operations with `passive: true`. It cannot activate camera, files, authentication or writes.
+
 ## Components
 
-Every component requires `id` and `type`. Optional fields: `title`, `value`, `binding`, `action`, `children`, `options`, `visibleWhen`. `value` and `visibleWhen` are expressions. `action` refers to a key in root actions. Bindings refer to declared initialState keys. Only use fields applicable to the component.
+Every component requires `id` and `type`. Optional fields: `title`, `value`, `binding`, `sessionBinding`, `action`, `children`, `options`, `visibleWhen`. `value` and `visibleWhen` are expressions. `action` refers to a key in root actions. Use either `binding` for initialState or `sessionBinding` for sessionState, never both. Only use fields applicable to the component.
 
 | type | Fields and behavior |
 | --- | --- |
@@ -32,14 +34,14 @@ Every component requires `id` and `type`. Optional fields: `title`, `value`, `bi
 | section | title and children; native group |
 | divider | no additional fields |
 | textField | title and binding to a string |
+| secureField | title and sessionBinding to a string; masked password/secret input, never persistent |
 | numberField | title and binding to a number |
 | toggle | title and binding to a boolean |
 | picker | title, string binding, unique string options including the initial value |
 | button | nonempty title and action name |
-| list | binding to an array of records, children as the repeated row template, optional title for an empty collection; no nested lists |
+| list | either binding to persistent records or value expression returning records (e.g. a host result); children as repeated row template; optional title for empty collection; no nested lists |
 | progress | title and value expression in range 0…1 |
 | countdown | title and value expression returning a Unix timestamp in seconds; updates only while visible; no background notification |
-| totp | optional title; requires totp capability; use once outside list templates |
 
 Inside a list template, expressions can read the current record with `{"item":"fieldName"}`; `{"item":""}` returns the record. Actions triggered from the row receive that record. Use root state for input fields; to edit a record, build explicit state/actions within the supported operations.
 
@@ -58,6 +60,8 @@ Operations:
 - Unary numeric: round.
 - Text: concat (0…16 args), trim, uppercase, lowercase (one arg), contains (two args, case-insensitive substring).
 - Collection: count (one array or string), sum (array of records and numeric field name, or array of numbers produced by an expression).
+- Object: field (object, string field name); reads one property, returns null if absent.
+- Filter: filter (array of records, string field name, search text); case-insensitive substring match; empty search returns all records.
 - Conditions: equal, greater, less (two args), not (one), and/or (0…16), if (condition, true branch, false branch). if evaluates only the selected branch.
 
 Example: `{"op":"multiply","args":[{"get":"meters"},100]}`.
@@ -65,13 +69,17 @@ An ordinary object for append can contain expressions: `{"title":{"get":"draft"}
 
 ## Actions
 
-Each named action is a list of steps. Every step has `type`, optionally `key`, `value`, `field`, `screen`, `when`. `when` conditionally skips the step. Steps run in order against the updated state and commit together only if all steps succeed.
+Each named action is a list of steps. Every step has `type`, optionally `key`, `value`, `field`, `screen`, `when`, `operation`, `arguments`, `result`. `when` conditionally skips a step. Pure persistent actions keep transactional behavior. Actions involving session state or capabilities run sequentially and stop on failure/cancellation; completed native effects cannot be rolled back by later steps. Do not claim an entire multi-capability action is atomic.
 
 - `set`: key and value expression; preserves the declared state type.
 - `append`: array key and value expression producing a record object; host assigns/overwrites its id with a UUID.
 - `remove`: array key; value optionally supplies a record ID, otherwise uses the current list record ID.
 - `toggleItem`: array key and boolean field; optional value supplies record ID, otherwise uses current list record ID.
 - `navigate`: screen ID from the screens array.
+- `setSession`: session key and value expression; preserves the declared type.
+- `invoke`: operation from native_tool_capabilities, expression-valued arguments, optional result naming a sessionState object. The operation's capability must be declared. See capabilities.md.
+
+Persistent mutations cannot read session keys. In packages with sessionState, set/append also cannot copy list item values into persistent storage. Keep host-derived data in sessionState or its native storage capability.
 
 ```json
 "add": [
@@ -82,7 +90,7 @@ Each named action is a list of steps. Every step has `type`, optionally `key`, `
 
 ## Host capabilities
 
-Use `capabilities: []` for ordinary offline tools. The only optional capability in v1 is `totp`. Declaring it makes the native manager available, but does not grant scripts or generic state access to accounts, secrets or codes. The user unlocks and manages accounts in the host UI; credentials are isolated by installed tool UUID. Real secrets must never appear in the source package.
+Use `capabilities: []` for ordinary offline tools. Supported namespaces are `camera`, `photos`, `files`, `clipboard`, `dialog`, and `otp`; discover operations and parameter/result shapes with native_tool_capabilities. Declaring a namespace authorizes matching invoke actions within the tool runtime, subject to platform/user permissions. It does not expose the capability to Agent execution. TOTP is composed from ordinary components and these operations; the old opaque `totp` component is rejected for newly authored packages. Real secrets must never appear in source.
 
 ## Installation and updates
 

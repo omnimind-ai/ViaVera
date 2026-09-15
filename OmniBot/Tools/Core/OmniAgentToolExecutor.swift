@@ -120,7 +120,7 @@ public actor OmniAgentToolExecutor: AgentToolExecuting {
 
             let result: AgentToolExecutionResult
             switch call.name {
-            case "native_tool_list", "native_tool_read", "native_tool_validate", "native_tool_install":
+            case "native_tool_list", "native_tool_read", "native_tool_validate", "native_tool_install", "native_tool_capabilities":
                 result = try await executeNativeTool(call.name, arguments: arguments, context: context)
             case "terminal_execute":
                 result = try await executeTerminal(

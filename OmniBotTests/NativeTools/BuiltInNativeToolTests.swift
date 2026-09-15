@@ -25,7 +25,7 @@ struct BuiltInNativeToolTests {
         #expect(!library.hasMissingBuiltInTools)
         #expect(totp.conversationID == nil)
         let runtime = NativeToolRuntime(document: try await store.load(totp.id), store: store)
-        #expect(runtime.screen.components.first?.type == .totp)
+        #expect(runtime.record.package.actions.values.flatMap { $0 }.contains { $0.operation == "otp.snapshot" })
         await library.load()
         #expect(library.records.count == 2)
         let reopened = NativeToolStore(paths: workspace.paths, builtInTools: try catalog())
