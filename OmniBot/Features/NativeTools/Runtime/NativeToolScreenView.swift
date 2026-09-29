@@ -26,6 +26,9 @@ struct NativeToolScreenView: View {
             .frame(maxWidth: .infinity, alignment: .top)
             .disabled(runtime.persistenceFailed || runtime.isPerforming)
         }
+#if os(macOS)
+        .scrollEdgeEffectHidden(true, for: .top)
+#endif
         .alert(item: $alert) { alert in
             Alert(title: Text("操作未完成"), message: Text(alert.message), dismissButton: .default(Text("好")) {
                 runtime.errorMessage = nil

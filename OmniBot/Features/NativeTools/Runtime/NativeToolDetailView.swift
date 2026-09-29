@@ -26,6 +26,12 @@ struct NativeToolDetailView: View {
             } else { ProgressView("正在打开工具…") }
         }
         .navigationTitle(runtime?.record.package.name ?? String(localized: "工具"))
+#if os(macOS)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(nsColor: .windowBackgroundColor).ignoresSafeArea())
+        // Apply this on the pushed page as well as the navigation root.
+        .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
+#endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu("工具操作", systemImage: "ellipsis.circle") {

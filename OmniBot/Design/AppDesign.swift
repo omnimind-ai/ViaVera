@@ -54,7 +54,8 @@ enum AppDesign {
     static let composerTerminalIconSize: Double = 13
     static let macInlineTerminalHeaderHeight: Double = 38
     static let macInlineTerminalHeight: Double = 260
-    static let macChatScrollTopFadeHeight: Double = 44
+    // End the fade before the first message's top edge at the start of the transcript.
+    static let macChatScrollTopFadeHeight: Double = contentPadding
 #endif
     static let composerTextFont = Font.body
     static let composerModelControlMaximumWidth: Double = 180
