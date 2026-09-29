@@ -11,14 +11,19 @@ struct SidebarMacConversationListView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
-                Button {
-                    appModel.destination = .tools
-                } label: {
+                Button(action: appModel.openNativeToolLibrary) {
                     Label("我的工具", systemImage: "square.grid.2x2")
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(AppDesign.compactSpacing)
+                        .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
+                .focusEffectDisabled()
+                .background(
+                    appModel.destination == .tools ? AppDesign.sidebarSelectionBackground : .clear,
+                    in: .rect(cornerRadius: AppDesign.compactCornerRadius)
+                )
+                .accessibilityAddTraits(appModel.destination == .tools ? .isSelected : [])
                 .padding(.bottom, AppDesign.standardSpacing)
 
                 Text("最近会话")

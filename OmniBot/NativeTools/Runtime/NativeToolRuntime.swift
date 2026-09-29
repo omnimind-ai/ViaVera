@@ -9,7 +9,12 @@ final class NativeToolRuntime {
     private(set) var state: [String: AgentValue]
     private(set) var sessionState: [String: AgentValue]
     private(set) var isPerforming = false
-    var screenID: String
+    var screenID: String {
+        didSet {
+            if screenID != oldValue { onScreenChange?(screenID) }
+        }
+    }
+    @ObservationIgnored var onScreenChange: ((String) -> Void)?
     var errorMessage: String?
     private(set) var persistenceFailed = false
     var isSaving: Bool { pendingSaves > 0 }

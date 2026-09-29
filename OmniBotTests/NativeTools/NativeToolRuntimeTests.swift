@@ -95,4 +95,26 @@ struct NativeToolRuntimeTests {
         #expect(runtime.state["tasks"]?.arrayValue?.count == 1)
         #expect(try await store.list().isEmpty)
     }
+
+    @Test("Screen changes from actions and the page picker notify navigation only once")
+    @MainActor
+    func screenNavigation() async throws {
+        let workspace = try NativeToolTestFixtures.workspace()
+        defer { try? FileManager.default.removeItem(at: workspace.root) }
+        let store = NativeToolStore(paths: workspace.paths)
+        let package = try NativeToolTestFixtures.package("totp")
+        let record = NativeToolRecord(id: UUID(), revision: 0, package: package, previousPackage: nil, conversationID: nil, createdAt: .now, updatedAt: .now, isFavorite: false)
+        let runtime = NativeToolRuntime(document: NativeToolDocument(record: record, state: package.initialState, stateRevision: 0), store: store, isPreview: true)
+        var visited: [String] = []
+        runtime.onScreenChange = { visited.append($0) }
+        runtime.perform("openBackup")
+        await runtime.finishActions()
+        #expect(runtime.screenID == "backup")
+        runtime.screenID = "backup"
+        runtime.screenID = "import"
+        runtime.perform("home")
+        await runtime.finishActions()
+        #expect(visited == ["backup", "import", "main"])
+        #expect(runtime.errorMessage == nil)
+    }
 }
