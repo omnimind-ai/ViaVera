@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct SettingsDestinationView: View {
+    @Environment(AppModel.self) private var appModel
+    @State private var editingToken = UUID().uuidString
     let destination: SettingsCardDestination
     let onSelectWorkspacePath: (WorkspaceBrowserPath, WorkspaceBrowserPath) -> Void
 
@@ -16,6 +18,15 @@ struct SettingsDestinationView: View {
     }
 
     var body: some View {
+        destinationContent
+            .onAppear { if destination != .sync { appModel.cloudSync.editingSettings.insert(editingToken) } }
+            .onDisappear {
+                appModel.cloudSync.editingSettings.remove(editingToken)
+                appModel.cloudSync.requestSync()
+            }
+    }
+
+    @ViewBuilder private var destinationContent: some View {
         switch destination {
         case .providers:
             ProviderSettingsView()
@@ -31,6 +42,8 @@ struct SettingsDestinationView: View {
             IOSPermissionSettingsView()
         case .appearance:
             AppearanceSettingsView()
+        case .sync:
+            CloudSyncSettingsView()
         case .workspace:
             WorkspaceBrowserView(onSelectBreadcrumbPath: onSelectWorkspacePath)
         case .runtime:

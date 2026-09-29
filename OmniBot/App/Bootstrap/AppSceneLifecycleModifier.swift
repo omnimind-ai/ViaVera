@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AppSceneLifecycleModifier: ViewModifier {
     @Environment(AppModel.self) private var appModel
+    @Environment(\.scenePhase) private var scenePhase
 #if os(macOS)
     @Environment(\.appearsActive) private var appearsActive
 #endif
@@ -9,6 +10,9 @@ struct AppSceneLifecycleModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .task(start)
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { appModel.cloudSync.requestSync() }
+            }
             .alert("OmniBot 出现问题", isPresented: isErrorPresented) {
                 Button("好", role: .cancel, action: dismissError)
             } message: {

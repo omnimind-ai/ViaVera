@@ -28,7 +28,10 @@ struct AppDependencies {
         let configuration = ModelConfiguration(
             "OmniBotAgent",
             schema: schema,
-            isStoredInMemoryOnly: false
+            isStoredInMemoryOnly: false,
+            // Cloud sync uses versioned snapshots. Do not let adding the
+            // entitlement implicitly enable SwiftData's incompatible mirroring.
+            cloudKitDatabase: .none
         )
         let modelContainer = try ModelContainer(
             for: schema,

@@ -26,6 +26,8 @@ final class ChatCoordinator {
 
     @ObservationIgnored private var timeContextCache = AgentTimeContextCache()
     private var runTask: Task<Void, Never>?
+    private var compactionTask: Task<Bool, Error>?
+    var onWorkFinished: (() -> Void)?
     private var currentRunner: AgentRunner?
     private var currentRunID: UUID?
     private var toolCheckpointMessageIDs: [String: UUID] = [:]
@@ -218,10 +220,16 @@ final class ChatCoordinator {
         lastCompactionFailed = false
         statusMessage = String(localized: "正在压缩上下文…")
         errorMessage = nil
+        let backgroundLease = BackgroundExecutionController.shared.begin { [weak self] in
+            self?.compactionTask?.cancel()
+        }
         defer {
             if compactingConversationID == conversationID {
                 compactingConversationID = nil
             }
+            compactionTask = nil
+            BackgroundExecutionController.shared.end(backgroundLease)
+            onWorkFinished?()
         }
 
         do {
@@ -230,14 +238,16 @@ final class ChatCoordinator {
                 lastCompactionMessage = statusMessage
                 return
             }
-            let configuration = try await providerSettings.runtimeConfiguration(
-                providerID: conversation.providerID,
-                modelID: conversation.modelID
-            )
-            guard try await performContextCompaction(
-                conversationID: conversationID,
-                configuration: configuration
-            ) else {
+            let task = Task {
+                let configuration = try await providerSettings.runtimeConfiguration(
+                    providerID: conversation.providerID,
+                    modelID: conversation.modelID
+                )
+                try Task.checkCancellation()
+                return try await performContextCompaction(conversationID: conversationID, configuration: configuration)
+            }
+            compactionTask = task
+            guard try await withTaskCancellationHandler(operation: { try await task.value }, onCancel: { task.cancel() }) else {
                 statusMessage = String(localized: "当前暂无可压缩的上下文")
                 lastCompactionMessage = statusMessage
                 return
@@ -313,6 +323,9 @@ final class ChatCoordinator {
         preparedConfiguration: ProviderRuntimeConfiguration? = nil
     ) async {
         runningConversationID = conversation.id
+        let backgroundLease = BackgroundExecutionController.shared.begin { [weak self] in
+            self?.runTask?.cancel()
+        }
         statusMessage = String(localized: "正在准备上下文…")
         errorMessage = nil
         latestUsage = .zero
@@ -327,6 +340,8 @@ final class ChatCoordinator {
             toolCheckpointMessageIDs.removeAll(keepingCapacity: true)
             runTask = nil
             runningConversationID = nil
+            BackgroundExecutionController.shared.end(backgroundLease)
+            onWorkFinished?()
         }
 
         do {

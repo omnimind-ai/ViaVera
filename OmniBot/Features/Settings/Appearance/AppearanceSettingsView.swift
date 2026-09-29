@@ -62,7 +62,7 @@ struct AppearanceSettingsView: View {
             } header: {
                 Text("聊天背景")
             } footer: {
-                Text("图片只保存在本机，并应用到聊天页面背景。")
+                Text("图片应用到聊天页面背景；开启 iCloud 同步后也会同步到其他设备。")
             }
 
             Section("显示效果") {

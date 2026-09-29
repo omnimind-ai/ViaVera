@@ -54,3 +54,11 @@ align the project license with those obligations. Binary distributors remain
 responsible for providing exact corresponding source and required notices.
 App Store review of an Agent that downloads and executes packages is separate
 from the absence of JIT.
+
+## OpenMinis background execution
+
+The iOS task-scoped background execution controller adapts OpenMinis's
+GPLv3 background-task and silent-audio implementation at revision
+`4ef29002e88db1e20e462ec2ff46916e8a7dcb45`. Source attribution and modification
+notes are included in `OmniBot/Resources/Legal/OpenMinis-Notice.md`.
+Upstream: https://github.com/OpenMinis/OpenMinis.

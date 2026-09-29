@@ -17,6 +17,21 @@ final class PreferredModelStore {
         )
     }
 
+    func syncData() throws -> Data? {
+        guard let value = defaults.dictionary(forKey: Self.selectionKey) as? [String: String] else { return nil }
+        return try CloudSyncCoding.encode(value)
+    }
+
+    func applySyncData(_ data: Data?, expectedDigest: String?) throws -> Bool {
+        guard try syncData().map(CloudSyncRevision.hash) == expectedDigest else { return false }
+        if let data {
+            let value = try JSONDecoder().decode([String: String].self, from: data)
+            guard value.keys.sorted() == ["modelID", "providerID"] else { throw CloudSyncError.invalidData }
+            defaults.set(value, forKey: Self.selectionKey)
+        } else { defaults.removeObject(forKey: Self.selectionKey) }
+        return true
+    }
+
     func selection(in profiles: [ProviderProfile]) -> ProviderModelSelection? {
         if let stored = defaults.dictionary(forKey: Self.selectionKey),
            let providerID = stored["providerID"] as? String,

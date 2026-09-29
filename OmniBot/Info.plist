@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>UIBackgroundModes</key>
+	<array><string>audio</string></array>
 	<key>NSCameraUsageDescription</key>
 	<string>Via Vera uses the camera to scan QR codes in tools. Results are processed only on this device.</string>
 	<key>NSFaceIDUsageDescription</key>

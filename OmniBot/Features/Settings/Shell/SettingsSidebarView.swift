@@ -22,6 +22,8 @@ struct SettingsSidebarView: View {
             }
 
             Section("系统") {
+                SettingsCardRow(destination: .sync)
+                    .tag(SettingsCardDestination.sync)
                 SettingsCardRow(destination: .permissions)
                     .tag(SettingsCardDestination.permissions)
                 SettingsCardRow(destination: .appearance)

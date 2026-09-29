@@ -46,6 +46,18 @@ final class ProviderSettingsModel {
         }
     }
 
+    /// A remote deletion must not seed a new default profile and resurrect it
+    /// on every peer. Reuse the mutation gate and preserve endpoint key binding.
+    func refreshAfterSync() async {
+        await withMutation {
+            profiles = await store.profiles()
+            do {
+                try loadEditor(providerID: profiles.first?.id)
+                errorMessage = nil
+            } catch { errorMessage = error.localizedDescription }
+        }
+    }
+
     func edit(_ providerID: String) async {
         await withMutation {
             await editUnlocked(providerID)

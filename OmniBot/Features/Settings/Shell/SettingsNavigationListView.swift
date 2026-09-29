@@ -25,6 +25,9 @@ struct SettingsNavigationListView: View {
             }
 
             Section("系统") {
+                NavigationLink(value: SettingsCardDestination.sync) {
+                    SettingsCardRow(destination: .sync)
+                }
                 NavigationLink(value: SettingsCardDestination.permissions) {
                     SettingsCardRow(destination: .permissions)
                 }

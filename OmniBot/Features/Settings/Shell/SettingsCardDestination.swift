@@ -8,6 +8,7 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
     case skills
     case permissions
     case appearance
+    case sync
     case workspace
     case runtime
 
@@ -29,6 +30,8 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
             String(localized: "权限")
         case .appearance:
             String(localized: "外观")
+        case .sync:
+            String(localized: "备份与后台执行")
         case .workspace:
             String(localized: "工作区")
         case .runtime:
@@ -52,6 +55,8 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
             permissionSubtitle
         case .appearance:
             String(localized: "聊天背景与显示效果")
+        case .sync:
+            String(localized: "iCloud 同步、历史备份与任务保活")
         case .workspace:
             String(localized: "浏览 Agent 工作区中的文件与文件夹")
         case .runtime:
@@ -75,6 +80,8 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
             "hand.raised"
         case .appearance:
             "paintbrush"
+        case .sync:
+            "icloud"
         case .workspace:
             "folder"
         case .runtime:

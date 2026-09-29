@@ -6,7 +6,7 @@ import Foundation
 /// The async requirements let tests and alternate stores suspend at precise
 /// persistence points while `ProviderStore` continues to satisfy them through
 /// its actor-isolated methods.
-protocol ProviderStoring: Sendable {
+nonisolated protocol ProviderStoring: Sendable {
     func profiles() async -> [ProviderProfile]
     func profile(id: String) async -> ProviderProfile?
     func upsert(_ profile: ProviderProfile) async throws
@@ -68,6 +68,25 @@ public actor ProviderStore {
 
     public func profiles() -> [ProviderProfile] {
         state.profiles
+    }
+
+    func syncDocuments() throws -> [String: Data] {
+        try Dictionary(uniqueKeysWithValues: state.profiles.map { ("provider/\($0.id)", try CloudSyncCoding.encode($0)) })
+    }
+
+    func applySyncDocument(key: String, data: Data?, expectedDigest: String?) throws -> Bool {
+        let id = String(key.dropFirst("provider/".count))
+        let current = state.profiles.first { $0.id == id }
+        let currentData = try current.map(CloudSyncCoding.encode)
+        guard currentData.map(CloudSyncRevision.hash) == expectedDigest else { return false }
+        if let data {
+            let profile = try JSONDecoder().decode(ProviderProfile.self, from: data)
+            guard profile.id == id else { throw CloudSyncError.invalidData }
+            try upsert(profile)
+        } else if current != nil {
+            try remove(id: id)
+        }
+        return true
     }
 
     public func profile(id: String) -> ProviderProfile? {

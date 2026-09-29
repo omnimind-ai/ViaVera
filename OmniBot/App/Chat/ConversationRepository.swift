@@ -107,6 +107,7 @@ final class ConversationRepository {
 
     func setPinned(_ isPinned: Bool, for conversation: ConversationRecord) throws {
         conversation.isPinned = isPinned
+        conversation.updatedAt = .now
         try saveAndReload()
     }
 
@@ -114,6 +115,7 @@ final class ConversationRepository {
         let normalizedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalizedTitle.isEmpty, normalizedTitle != conversation.title else { return }
         conversation.title = normalizedTitle
+        conversation.updatedAt = .now
         try saveAndReload()
     }
 
@@ -379,6 +381,42 @@ final class ConversationRepository {
     private func saveAndReload() throws {
         try modelContext.save()
         try reload()
+    }
+
+    func syncDocuments() throws -> [String: Data] {
+        try Dictionary(uniqueKeysWithValues: conversations.filter { !$0.messages.isEmpty }.map {
+            ("conversation/\($0.id.uuidString)", try CloudSyncCoding.encode(CloudConversationSnapshot($0)))
+        })
+    }
+
+    func applySyncDocument(key: String, data: Data?, expectedDigest: String?) throws -> Bool {
+        guard let id = UUID(uuidString: String(key.dropFirst("conversation/".count))) else {
+            throw CloudSyncError.invalidData
+        }
+        let current = conversation(id: id)
+        let currentData = try current.flatMap { $0.messages.isEmpty ? nil : try CloudSyncCoding.encode(CloudConversationSnapshot($0)) }
+        guard currentData.map(CloudSyncRevision.hash) == expectedDigest else { return false }
+        do {
+            if let data {
+                let snapshot = try JSONDecoder().decode(CloudConversationSnapshot.self, from: data)
+                guard snapshot.id == id else { throw CloudSyncError.invalidData }
+                let messageIDs = Set(snapshot.messages.map(\.message.id))
+                guard !conversations.contains(where: { $0.id != id && $0.messages.contains(where: { messageIDs.contains($0.id) }) }) else {
+                    throw CloudSyncError.invalidData
+                }
+                let record = current ?? ConversationRecord(id: id, modelID: snapshot.modelID)
+                if current == nil { modelContext.insert(record) }
+                try snapshot.apply(to: record, context: modelContext)
+            } else if let current {
+                modelContext.delete(current)
+            }
+            try saveAndReload()
+            return true
+        } catch {
+            modelContext.rollback()
+            try? reload()
+            throw error
+        }
     }
 
     private static func title(from content: String?) -> String {

@@ -475,6 +475,23 @@ nonisolated struct WorkspaceDescriptorFileSystem: Sendable {
         return result.data
     }
 
+    /// Sync's compare-and-set read: missing leaves are nil, while symlinks,
+    /// unreadable files and oversized data remain errors. Parent directories
+    /// are prepared descriptor-relatively for the subsequent atomic import.
+    func readRegularFileForImport(at path: RelativePath, maximumBytes: Int) throws -> Data? {
+        let leaf = try requireLeaf(path)
+        return try withDirectoryDescriptor(components: path.parentComponents, create: true) { parent in
+            guard try metadata(at: parent, name: leaf, path: path.displayPath) != nil else { return nil }
+            let descriptor = try openRegularFile(at: parent, name: leaf, path: path.displayPath)
+            defer { Darwin.close(descriptor) }
+            let info = try metadata(descriptor: descriptor, path: path.displayPath)
+            guard info.size >= 0, info.size <= maximumBytes else {
+                throw HostWriteLimitError.sourceFileTooLarge(maximumBytes: Int64(maximumBytes))
+            }
+            return try preadData(descriptor: descriptor, offset: 0, count: Int(info.size), path: path.displayPath)
+        }
+    }
+
     /// Replaces `path` using a temporary regular file in the already-opened
     /// parent directory. A final symlink is rejected before mutation; if it is
     /// introduced after that check, `renameat` replaces the symlink itself and

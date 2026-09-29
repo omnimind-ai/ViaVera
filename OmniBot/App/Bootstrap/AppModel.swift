@@ -66,6 +66,7 @@ final class AppModel {
     let toolActivity: ChatToolActivityModel
     let browserSession: AppleBrowserSession
     let chatCoordinator: ChatCoordinator
+    let cloudSync: CloudSyncModel
 
     init(
         modelContext: ModelContext,
@@ -121,6 +122,27 @@ final class AppModel {
             toolActivity: toolActivity,
             workspacePaths: workspacePaths
         )
+        self.cloudSync = CloudSyncModel(conversations: conversations, providers: providerStore,
+                                        preferences: preferredModelStore, paths: workspacePaths)
+        cloudSync.canApplyChanges = { [weak self] in
+            guard let self else { return false }
+            return self.hasStarted && self.chatCoordinator.busyConversationID == nil
+                && !self.providerSettings.isMutating && !self.skillSettings.isMutating
+        }
+        cloudSync.didImportChanges = { [weak self] in
+            guard let self else { return }
+            await self.providerSettings.refreshAfterSync()
+            await self.soulSettings.load()
+            await self.memorySettings.load()
+            await self.skillSettings.load()
+            await self.appearanceSettings.load()
+            self.conversationPath.removeAll { self.conversations.conversation(id: $0) == nil }
+            if let id = self.lastConversationID, self.conversations.conversation(id: id) == nil {
+                self.lastConversationID = nil
+                self.destination = nil
+            }
+        }
+        chatCoordinator.onWorkFinished = { [weak cloudSync] in cloudSync?.requestSync() }
     }
 
     func start() async {
@@ -150,6 +172,7 @@ final class AppModel {
             await skillSettings.load()
             await nativeTools.load()
             await appearanceSettings.load()
+            cloudSync.start()
 
 #if os(macOS)
             if conversations.conversations.isEmpty {
