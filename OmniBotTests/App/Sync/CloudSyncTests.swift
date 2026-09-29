@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import Synchronization
 import Testing
 @testable import Via_Vera
 
@@ -252,6 +253,237 @@ struct CloudSyncTests {
         #expect(b.repository.conversation(id: conversation.id)?.messages.first?.content == "Durable")
     }
 
+    @Test("Provider keys sync, rotate, restore and delete without plaintext local copies")
+    func providerCredentialsRoundTrip() async throws {
+        let cloud = TestCloudTransport()
+        let a = try SyncFixture(cloud: cloud)
+        let b = try SyncFixture(cloud: cloud)
+        defer { a.cleanUp(); b.cleanUp() }
+        let profile = ProviderProfile(id: "credential-test", name: "Example", baseURL: URL(string: "https://example.com")!)
+        try await a.providers.upsert(profile)
+        try a.keychain.saveAPIKey("test-key-first-version", for: profile.id)
+        a.keychain.saveEndpointBinding(ProviderEndpointIdentity.canonical(for: profile), for: profile.id)
+        await a.sync.synchronize()
+        let first = try #require(a.sync.backups.first)
+        await b.sync.synchronize()
+        #expect(b.sync.errorMessage == nil)
+        #expect(b.keychain.apiKey(for: profile.id) == "test-key-first-version")
+        #expect(b.keychain.endpointBinding(for: profile.id) == ProviderEndpointIdentity.canonical(for: profile))
+
+        // Inspect only the test fixture: neither providers.json nor cached
+        // backup objects contain the synthetic key as UTF-8 or base64 JSON.
+        let enumerator = try #require(FileManager.default.enumerator(at: b.paths.controlRoot, includingPropertiesForKeys: [.isRegularFileKey]))
+        for url in enumerator.allObjects.compactMap({ $0 as? URL }) {
+            guard try url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile == true else { continue }
+            let bytes = try Data(contentsOf: url)
+            #expect(bytes.range(of: Data("test-key-first-version".utf8)) == nil)
+            #expect(bytes.range(of: Data(Data("test-key-first-version".utf8).base64EncodedString().utf8)) == nil)
+        }
+        try a.keychain.saveAPIKey("test-key-rotated-version", for: profile.id)
+        await a.sync.synchronize()
+        await b.sync.synchronize()
+        #expect(b.keychain.apiKey(for: profile.id) == "test-key-rotated-version")
+        await a.sync.restore(first)
+        #expect(a.sync.errorMessage == nil)
+        #expect(a.keychain.apiKey(for: profile.id) == "test-key-first-version")
+        await a.sync.synchronize()
+        await b.sync.synchronize()
+        #expect(b.keychain.apiKey(for: profile.id) == "test-key-first-version")
+        a.keychain.deleteAPIKey(for: profile.id)
+        a.keychain.deleteEndpointBinding(for: profile.id)
+        await a.sync.synchronize()
+        await b.sync.synchronize()
+        #expect(b.sync.errorMessage == nil)
+        #expect(b.keychain.apiKey(for: profile.id) == nil)
+        #expect(b.keychain.endpointBinding(for: profile.id) == nil)
+    }
+
+    @Test("Legacy backups preserve matching keys and reject credential endpoint substitution")
+    func legacyProviderAndInvalidBinding() async throws {
+        let a = try SyncFixture(cloud: TestCloudTransport())
+        defer { a.cleanUp() }
+        let profile = ProviderProfile(id: "legacy", name: "Original", baseURL: URL(string: "https://example.com")!)
+        try await a.providers.upsert(profile)
+        try a.keychain.saveAPIKey("test-legacy-key", for: profile.id)
+        a.keychain.saveEndpointBinding(ProviderEndpointIdentity.canonical(for: profile), for: profile.id)
+        let store = a.providers
+        let before = try #require(await store.syncDocuments(keychain: a.keychain)["provider/legacy"])
+        var renamed = profile
+        renamed.name = "Restored name"
+        #expect(try await store.applySyncDocument(key: "provider/legacy", data: CloudSyncCoding.encode(renamed),
+                                      expectedDigest: CloudSyncRevision.hash(before), keychain: a.keychain))
+        #expect(a.keychain.apiKey(for: profile.id) == "test-legacy-key")
+        let current = try #require(await store.syncDocuments(keychain: a.keychain)["provider/legacy"])
+        var wrongEndpoint = profile
+        wrongEndpoint.baseURL = URL(string: "https://different.example")!
+        let invalid = CloudSyncProviderDocument(profile: wrongEndpoint,
+            credential: .init(apiKey: "test-legacy-key", endpointBinding: ProviderEndpointIdentity.canonical(for: profile)))
+        await #expect(throws: (any Error).self) {
+            try await store.applySyncDocument(key: "provider/legacy", data: CloudSyncCoding.encode(invalid),
+                                  expectedDigest: CloudSyncRevision.hash(current), keychain: a.keychain)
+        }
+        #expect(await a.providers.profile(id: profile.id) == renamed)
+        #expect(a.keychain.apiKey(for: profile.id) == "test-legacy-key")
+    }
+
+    @Test("Keychain write failures roll back metadata and never rebind an old secret")
+    func credentialFailureRollback() async throws {
+        let a = try SyncFixture(cloud: TestCloudTransport())
+        defer { a.cleanUp() }
+        let profile = ProviderProfile(id: "failure", name: "Original", baseURL: URL(string: "https://example.com")!)
+        try await a.providers.upsert(profile)
+        try a.keychain.saveAPIKey("test-old-key", for: profile.id)
+        a.keychain.saveEndpointBinding(ProviderEndpointIdentity.canonical(for: profile), for: profile.id)
+        let store = a.providers
+        let before = try #require(await store.syncDocuments(keychain: a.keychain)["provider/failure"])
+        var changed = profile
+        changed.baseURL = URL(string: "https://new.example")!
+        let incoming = CloudSyncProviderDocument(profile: changed,
+            credential: .init(apiKey: "test-new-key", endpointBinding: ProviderEndpointIdentity.canonical(for: changed)))
+        a.keychain.failNextSave(for: profile.id)
+        await #expect(throws: (any Error).self) {
+            try await store.applySyncDocument(key: "provider/failure", data: CloudSyncCoding.encode(incoming),
+                                  expectedDigest: CloudSyncRevision.hash(before), keychain: a.keychain)
+        }
+        #expect(await a.providers.profile(id: profile.id) == profile)
+        #expect(a.keychain.apiKey(for: profile.id) == "test-old-key")
+        #expect(a.keychain.endpointBinding(for: profile.id) == ProviderEndpointIdentity.canonical(for: profile))
+    }
+
+    @Test("Retention removes old cloud payloads; offline and expired-token clients cannot resurrect them")
+    func retentionAndOfflineClient() async throws {
+        let cloud = TestCloudTransport()
+        let a = try SyncFixture(cloud: cloud)
+        let b = try SyncFixture(cloud: cloud)
+        let c = try SyncFixture(cloud: cloud)
+        defer { a.cleanUp(); b.cleanUp(); c.cleanUp() }
+        try Data("version-0".utf8).write(to: a.paths.soulFile)
+        await a.sync.synchronize()
+        await b.sync.synchronize()
+        await c.sync.synchronize()
+        for version in 1...55 {
+            try Data("version-\(version)".utf8).write(to: a.paths.soulFile)
+            await a.sync.synchronize()
+            #expect(a.sync.errorMessage == nil)
+        }
+        #expect(a.sync.backups.count == 50)
+        let records = await cloud.allRecords()
+        #expect(records.compactMap(\.backup).count == 50)
+        #expect(records.compactMap(\.revision).count == 50)
+        let cache = a.paths.controlRoot.appending(path: "CloudSync/objects")
+        #expect(try FileManager.default.contentsOfDirectory(atPath: cache.path).count == 50)
+        await b.sync.synchronize()
+        #expect(b.sync.errorMessage == nil)
+        #expect(try Data(contentsOf: b.paths.soulFile) == Data("version-55".utf8))
+        await cloud.expireNextToken()
+        await c.sync.synchronize()
+        #expect(c.sync.errorMessage == nil)
+        #expect(try Data(contentsOf: c.paths.soulFile) == Data("version-55".utf8))
+        #expect(await cloud.recordCount() == records.count)
+        // Every retained backup remains restorable after garbage collection.
+        let oldest = try #require(c.sync.backups.last)
+        await c.sync.restore(oldest)
+        #expect(c.sync.errorMessage == nil)
+        #expect(try Data(contentsOf: c.paths.soulFile) == Data("version-6".utf8))
+    }
+
+    @Test("Age retention always retains the latest backup and live deletion markers")
+    func retentionBoundaries() throws {
+        var state = CloudSyncIndex()
+        let now = Date(timeIntervalSince1970: 2_000_000_000)
+        for day in 0..<35 {
+            let date = now.addingTimeInterval(-Double(day) * 86_400)
+            let recorded = try state.recordLocal(key: "control/agent/SOUL.md", data: Data("\(day)".utf8), date: date)
+            let revision = try #require(recorded)
+            let backup = CloudSyncBackup(id: UUID().uuidString, date: date, deviceName: "Test", heads: state.localHeads)
+            state.backups[backup.id] = backup
+            state.uploaded.formUnion([backup.id, revision.id])
+        }
+        #expect(CloudSyncRetention.expiredBackups(in: state, now: now).count == 4)
+        #expect(CloudSyncRetention.expiredBackups(in: state, now: now.addingTimeInterval(100 * 86_400)).count == 34)
+        let deletion = try state.recordLocal(key: "control/agent/SOUL.md", data: nil)
+        let tombstone = try #require(deletion)
+        state.uploaded.insert(tombstone.id)
+        state.backups.removeAll()
+        #expect(!CloudSyncRetention.unusedRevisions(in: state).contains(tombstone.id))
+    }
+
+    @Test("Another device waits while a sync session is fetching")
+    func serializesCloudSessions() async throws {
+        let cloud = TestCloudTransport()
+        let a = try SyncFixture(cloud: cloud)
+        let b = try SyncFixture(cloud: cloud)
+        defer { a.cleanUp(); b.cleanUp() }
+        await cloud.pauseNextFetch()
+        let task = Task { await a.sync.synchronize() }
+        await cloud.waitUntilFetchPauses()
+        await b.sync.synchronize()
+        #expect(b.sync.statusMessage == CloudSyncError.cloudBusy.localizedDescription)
+        await cloud.resumeFetch()
+        await task.value
+        await b.sync.synchronize()
+        #expect(b.sync.errorMessage == nil)
+    }
+
+    @Test("Interrupted cleanup retries without losing the current version or retained backups")
+    func failedCleanupRetries() async throws {
+        let cloud = TestCloudTransport()
+        let a = try SyncFixture(cloud: cloud)
+        defer { a.cleanUp() }
+        for version in 0..<50 {
+            try Data("before-\(version)".utf8).write(to: a.paths.soulFile)
+            await a.sync.synchronize()
+        }
+        await cloud.setFailDeletes(true)
+        try Data("latest-after-failure".utf8).write(to: a.paths.soulFile)
+        await a.sync.synchronize()
+        #expect(a.sync.errorMessage != nil)
+        #expect(a.sync.backups.count == 51)
+        #expect(try Data(contentsOf: a.paths.soulFile) == Data("latest-after-failure".utf8))
+        await cloud.setFailDeletes(false)
+        let restarted = a.newSync(cloud: cloud)
+        await restarted.synchronize()
+        #expect(restarted.errorMessage == nil)
+        #expect(restarted.backups.count == 50)
+        let records = await cloud.allRecords()
+        let revisions = Dictionary(uniqueKeysWithValues: records.compactMap(\.revision).map { ($0.id, $0) })
+        #expect(records.compactMap(\.backup).allSatisfy { backup in
+            backup.heads.allSatisfy { revisions[$0.value]?.key == $0.key }
+        })
+        restarted.isEnabled = false
+    }
+
+    @Test("A local API key edit after capture prevents stale cloud replacement")
+    func credentialCompareAndSet() async throws {
+        let a = try SyncFixture(cloud: TestCloudTransport())
+        defer { a.cleanUp() }
+        let profile = ProviderProfile(id: "edited-key", name: "Example", baseURL: URL(string: "https://example.com")!)
+        try await a.providers.upsert(profile)
+        try a.keychain.saveAPIKey("test-before", for: profile.id)
+        a.keychain.saveEndpointBinding(ProviderEndpointIdentity.canonical(for: profile), for: profile.id)
+        let captured = try #require(await a.providers.syncDocuments(keychain: a.keychain)["provider/edited-key"])
+        try a.keychain.saveAPIKey("test-local-edit", for: profile.id)
+        #expect(try await !a.providers.applySyncDocument(key: "provider/edited-key", data: captured,
+            expectedDigest: CloudSyncRevision.hash(captured), keychain: a.keychain))
+        #expect(a.keychain.apiKey(for: profile.id) == "test-local-edit")
+    }
+
+    @Test("Encrypted provider cache survives relaunch and rejects tampering")
+    func encryptedCacheIntegrity() async throws {
+        let a = try SyncFixture(cloud: TestCloudTransport())
+        defer { a.cleanUp() }
+        let data = Data("synthetic-secret-payload".utf8)
+        let cache = CloudSyncFileStore(paths: a.paths, keychain: a.keychain)
+        let digest = try await cache.cachePayload(data, sensitive: true)
+        let reopened = CloudSyncFileStore(paths: a.paths, keychain: a.keychain)
+        #expect(try await reopened.payload(digest) == data)
+        let url = a.paths.controlRoot.appending(path: "CloudSync/objects/\(digest).sealed")
+        var sealed = try Data(contentsOf: url)
+        sealed[sealed.count - 1] ^= 0xFF
+        try sealed.write(to: url)
+        await #expect(throws: (any Error).self) { try await reopened.payload(digest) }
+    }
+
     @Test("File imports use compare-and-set and reject symlinks")
     func fileBoundary() async throws {
         let cloud = TestCloudTransport()
@@ -281,6 +513,7 @@ private final class SyncFixture {
     let defaults: UserDefaults
     let defaultsName: String
     let sync: CloudSyncModel
+    let keychain = TestSyncKeychain()
 
     init(cloud: TestCloudTransport) throws {
         root = FileManager.default.temporaryDirectory.appending(path: "OmniBotSyncTests-\(UUID().uuidString)")
@@ -295,12 +528,12 @@ private final class SyncFixture {
         defaults.set(true, forKey: "via-vera.icloud-sync")
         preferences = PreferredModelStore(defaults: defaults)
         sync = CloudSyncModel(conversations: repository, providers: providers, preferences: preferences,
-                              paths: paths, transport: cloud, defaults: defaults)
+                              paths: paths, keychain: keychain, cacheKeychain: keychain, transport: cloud, defaults: defaults)
     }
 
     func newSync(cloud: TestCloudTransport) -> CloudSyncModel {
         CloudSyncModel(conversations: repository, providers: providers, preferences: preferences,
-                       paths: paths, transport: cloud, defaults: defaults)
+                       paths: paths, keychain: keychain, cacheKeychain: keychain, transport: cloud, defaults: defaults)
     }
 
     func cleanUp() {
@@ -313,6 +546,10 @@ private final class SyncFixture {
 private actor TestCloudTransport: CloudSyncTransport {
     private var account = "first-account"
     private var records: [CloudSyncEnvelope] = []
+    private var events: [(id: String, deleted: Bool)] = []
+    private var expireToken = false
+    private var failDeletes = false
+    private var sessionActive = false
     private var failUploads = false
     private var accesses = 0
     private var shouldResetUploads = false
@@ -324,8 +561,16 @@ private actor TestCloudTransport: CloudSyncTransport {
     func accessCount() -> Int { accesses }
     func recordCount() -> Int { records.count }
     func setFailUploads(_ value: Bool) { failUploads = value }
-    func switchAccount() { account = "second-account"; records = [] }
-    func resetZone() { records = []; shouldResetUploads = true }
+    func setFailDeletes(_ value: Bool) { failDeletes = value }
+    func expireNextToken() { expireToken = true }
+    func allRecords() -> [CloudSyncEnvelope] { records }
+    func switchAccount() { account = "second-account"; records = []; events = [] }
+    func resetZone() { records = []; events = []; shouldResetUploads = true }
+    func beginSession() throws {
+        guard !sessionActive else { throw CloudSyncError.cloudBusy }
+        sessionActive = true
+    }
+    func endSession() { sessionActive = false }
     func pauseNextFetch() { shouldPauseFetch = true }
     func waitUntilFetchPauses() async {
         if pausedFetch != nil { return }
@@ -345,13 +590,49 @@ private actor TestCloudTransport: CloudSyncTransport {
         let offset = token.flatMap { Int(String(decoding: $0, as: UTF8.self)) } ?? 0
         let reset = shouldResetUploads
         shouldResetUploads = false
-        return CloudSyncPage(records: Array(records.dropFirst(reset ? 0 : offset)), token: Data(String(records.count).utf8),
-                             moreComing: false, resetUploadState: reset)
+        let full = reset || expireToken || token == nil
+        expireToken = false
+        let changes = events.dropFirst(full ? 0 : offset)
+        let changed = Set(changes.filter { !$0.deleted }.map(\.id))
+        return CloudSyncPage(records: records.filter { full || changed.contains($0.revision?.id ?? $0.backup!.id) },
+                             token: Data(String(events.count).utf8), moreComing: false, resetUploadState: reset,
+                             deletedIDs: full ? [] : changes.filter(\.deleted).map(\.id), beginsFullFetch: full)
     }
 
     func upload(_ envelope: CloudSyncEnvelope) throws {
         if failUploads { throw URLError(.notConnectedToInternet) }
-        let id = envelope.revision?.id ?? envelope.backup?.id
-        if !records.contains(where: { ($0.revision?.id ?? $0.backup?.id) == id }) { records.append(envelope) }
+        guard let id = envelope.revision?.id ?? envelope.backup?.id else { throw CloudSyncError.invalidData }
+        if !records.contains(where: { ($0.revision?.id ?? $0.backup?.id) == id }) {
+            records.append(envelope)
+            events.append((id, false))
+        }
     }
+
+    func deleteRecords(_ ids: [String]) throws {
+        if failDeletes { throw URLError(.notConnectedToInternet) }
+        let removing = Set(ids)
+        records.removeAll { removing.contains($0.revision?.id ?? $0.backup!.id) }
+        events.append(contentsOf: ids.map { ($0, true) })
+    }
+}
+
+nonisolated private final class TestSyncKeychain: APIKeyStoring, Sendable {
+    private struct State {
+        var keys: [String: String] = [:]
+        var bindings: [String: String] = [:]
+        var failedProvider: String?
+    }
+    private let state = Mutex(State())
+    func failNextSave(for id: String) { state.withLock { $0.failedProvider = id } }
+    func saveAPIKey(_ value: String, for id: String) throws {
+        try state.withLock {
+            if $0.failedProvider == id { $0.failedProvider = nil; throw CloudSyncError.credentialStorage }
+            $0.keys[id] = value
+        }
+    }
+    func apiKey(for id: String) -> String? { state.withLock { $0.keys[id] } }
+    func deleteAPIKey(for id: String) { state.withLock { $0.keys[id] = nil } }
+    func saveEndpointBinding(_ value: String, for id: String) { state.withLock { $0.bindings[id] = value } }
+    func endpointBinding(for id: String) -> String? { state.withLock { $0.bindings[id] } }
+    func deleteEndpointBinding(for id: String) { state.withLock { $0.bindings[id] = nil } }
 }

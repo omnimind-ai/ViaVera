@@ -1,6 +1,132 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "在使用同一 Apple 账户的 iPhone、iPad 和 Mac 间同步聊天、附件、模型服务配置及 API Key、默认模型、Soul、Memory、Skills 和外观。API Key 恢复到设备钥匙串，本地备份缓存加密保存。设备权限和 Alpine 环境保留在各设备。任务或设置编辑完成后再同步。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync chats, attachments, provider settings and API keys, the default model, Soul, Memory, Skills, and appearance across iPhone, iPad, and Mac using the same Apple Account. API keys are restored to the device Keychain and encrypted in the local backup cache. Device permissions and the Alpine environment stay on each device. Sync runs after tasks and settings edits finish."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在使用同一 Apple 账户的 iPhone、iPad 和 Mac 间同步聊天、附件、模型服务配置及 API Key、默认模型、Soul、Memory、Skills 和外观。API Key 恢复到设备钥匙串，本地备份缓存加密保存。设备权限和 Alpine 环境保留在各设备。任务或设置编辑完成后再同步。"
+          }
+        }
+      }
+    },
+    "保留规则" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retention"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留规则"
+          }
+        }
+      }
+    },
+    "最近 30 天，最多 50 份" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last 30 days, up to 50 backups"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近 30 天，最多 50 份"
+          }
+        }
+      }
+    },
+    "同步成功后自动清理超过 30 天或最近 50 份以外的备份，至少保留最新一份。当前数据、删除标记及保留备份引用的内容不会被清理。恢复前先保存当前版本；恢复不会删除后来新增的其他内容。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After a successful sync, backups older than 30 days or beyond the latest 50 are removed automatically. The latest backup is always kept. Current data, deletion markers, and content used by retained backups are preserved. A safety backup is saved before restoring; other content added later is kept."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同步成功后自动清理超过 30 天或最近 50 份以外的备份，至少保留最新一份。当前数据、删除标记及保留备份引用的内容不会被清理。恢复前先保存当前版本；恢复不会删除后来新增的其他内容。"
+          }
+        }
+      }
+    },
+    "备份中的聊天、配置及已备份的 API Key 将恢复到当时的版本。当前版本会先保留在历史备份中。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chats, settings, and backed-up API keys will be restored to this version. Your current version will first be saved in backup history."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "备份中的聊天、配置及已备份的 API Key 将恢复到当时的版本。当前版本会先保留在历史备份中。"
+          }
+        }
+      }
+    },
+    "另一台设备正在同步，稍后会自动重试。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Another device is syncing. Sync will retry automatically shortly."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "另一台设备正在同步，稍后会自动重试。"
+          }
+        }
+      }
+    },
+    "API Key 安全存储读写失败，已暂停同步，请解锁设备后重试。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not access secure API key storage. Sync is paused. Unlock your device and try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API Key 安全存储读写失败，已暂停同步，请解锁设备后重试。"
+          }
+        }
+      }
+    },
     "" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,

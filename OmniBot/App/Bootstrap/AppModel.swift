@@ -123,7 +123,7 @@ final class AppModel {
             workspacePaths: workspacePaths
         )
         self.cloudSync = CloudSyncModel(conversations: conversations, providers: providerStore,
-                                        preferences: preferredModelStore, paths: workspacePaths)
+                                        preferences: preferredModelStore, paths: workspacePaths, keychain: keychain)
         cloudSync.canApplyChanges = { [weak self] in
             guard let self else { return false }
             return self.hasStarted && self.chatCoordinator.busyConversationID == nil

@@ -1,7 +1,8 @@
 import Foundation
 
 /// Explicit allowlist. Never restore a cloud path into arbitrary host files,
-/// the Alpine rootfs, permission grants, Keychain, browser state or tool secrets.
+/// the Alpine rootfs, permission grants, arbitrary Keychain items, browser state
+/// or tool secrets. Provider credentials use the dedicated provider importer.
 nonisolated enum CloudSyncScope {
     static let maximumDocumentBytes = 64 * 1_024 * 1_024
 

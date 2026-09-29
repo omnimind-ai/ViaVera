@@ -41,6 +41,32 @@ nonisolated struct CloudSyncIndex: Codable, Sendable {
     var localHeads: [String: String] = [:]
     var uploaded: Set<String> = []
     var changeToken: Data?
+    /// Only kept until local compare-and-set applies a surviving winner.
+    var retiredLocalRevisions: Set<String>?
+    var fullFetchKnownIDs: Set<String>?
+    var fullFetchSeenIDs: Set<String>?
+
+    mutating func removeRemoteRecords(_ ids: some Sequence<String>) {
+        let local = Set(localHeads.values)
+        for id in ids {
+            backups.removeValue(forKey: id)
+            if local.contains(id), revisions[id] != nil {
+                retiredLocalRevisions = (retiredLocalRevisions ?? []).union([id])
+            } else {
+                revisions.removeValue(forKey: id)
+                uploaded.remove(id)
+            }
+        }
+    }
+
+    mutating func discardRetiredLocalRevisions() {
+        let local = Set(localHeads.values)
+        for id in retiredLocalRevisions ?? [] where !local.contains(id) {
+            revisions.removeValue(forKey: id)
+            uploaded.remove(id)
+            retiredLocalRevisions?.remove(id)
+        }
+    }
 
     var winningHeads: [String: CloudSyncRevision] {
         var result: [String: CloudSyncRevision] = [:]
@@ -81,7 +107,7 @@ nonisolated struct CloudSyncIndex: Codable, Sendable {
 }
 
 nonisolated enum CloudSyncError: LocalizedError {
-    case unavailable, accountChanged, invalidData, dataTooLarge, busy
+    case unavailable, accountChanged, invalidData, dataTooLarge, busy, cloudBusy, credentialStorage
 
     var errorDescription: String? {
         switch self {
@@ -90,6 +116,8 @@ nonisolated enum CloudSyncError: LocalizedError {
         case .invalidData: String(localized: "云端数据无法验证，已保留本机数据。")
         case .dataTooLarge: String(localized: "同步文件超过 64 MB，请缩小文件后重试。本机数据仍然保留。")
         case .busy: String(localized: "任务或设置编辑正在进行，结束后会自动同步。")
+        case .cloudBusy: String(localized: "另一台设备正在同步，稍后会自动重试。")
+        case .credentialStorage: String(localized: "API Key 安全存储读写失败，已暂停同步，请解锁设备后重试。")
         }
     }
 }
