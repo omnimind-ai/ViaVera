@@ -44,8 +44,8 @@ struct ToolResultContentView: View {
                         Label("还没有结果", systemImage: "hourglass")
                     } description: {
                         Text(tool.status == .running || tool.status == .pending
-                             ? "工具仍在执行。"
-                             : "工具没有返回可显示的正文。")
+                             ? String(localized: "工具仍在执行。")
+                             : String(localized: "工具没有返回可显示的正文。"))
                     }
                     .frame(minHeight: 140)
                 } else {

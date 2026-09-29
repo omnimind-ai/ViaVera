@@ -28,7 +28,7 @@ nonisolated enum NativeToolExpression {
         now: Date = .now,
         depth: Int = 0
     ) throws -> AgentValue {
-        guard depth <= 16 else { throw NativeToolError("表达式嵌套超过上限。") }
+        guard depth <= 16 else { throw NativeToolError(String(localized: "表达式嵌套超过上限。")) }
         func eval(_ value: AgentValue) throws -> AgentValue {
             try evaluate(value, state: state, item: item, now: now, depth: depth + 1)
         }
@@ -44,38 +44,38 @@ nonisolated enum NativeToolExpression {
                 return .object(try object.mapValues(eval))
             }
             guard operations.contains(operation), let arguments = object["args"]?.arrayValue else {
-                throw NativeToolError("无法识别的表达式。")
+                throw NativeToolError(String(localized: "无法识别的表达式。"))
             }
             // Conditional branches are evaluated lazily (e.g. division guarded by a condition).
             if operation == "if" {
-                guard arguments.count == 3 else { throw NativeToolError("if 需要三个参数。") }
+                guard arguments.count == 3 else { throw NativeToolError(String(localized: "if 需要三个参数。")) }
                 return try eval(arguments[truthy(try eval(arguments[0])) ? 1 : 2])
             }
             let values = try arguments.map(eval)
             func number(_ index: Int) throws -> Double {
-                guard values.indices.contains(index) else { throw NativeToolError("表达式参数不足。") }
+                guard values.indices.contains(index) else { throw NativeToolError(String(localized: "表达式参数不足。")) }
                 let result = values[index].numberValue ?? Double(display(values[index]))
-                guard let result, result.isFinite else { throw NativeToolError("请输入有效数字。") }
+                guard let result, result.isFinite else { throw NativeToolError(String(localized: "请输入有效数字。")) }
                 return result
             }
             func finite(_ number: Double) throws -> AgentValue {
-                guard number.isFinite, abs(number) <= 1e100 else { throw NativeToolError("计算结果超出范围。") }
+                guard number.isFinite, abs(number) <= 1e100 else { throw NativeToolError(String(localized: "计算结果超出范围。")) }
                 return .number(number)
             }
             switch operation {
             case "field":
-                guard values.count == 2, let key = values[1].stringValue else { throw NativeToolError("field 需要对象和字段名。") }
+                guard values.count == 2, let key = values[1].stringValue else { throw NativeToolError(String(localized: "field 需要对象和字段名。")) }
                 return values[0].objectValue?[key] ?? .null
             case "filter":
                 guard values.count == 3, let entries = values[0].arrayValue, let field = values[1].stringValue,
-                      let query = values[2].stringValue else { throw NativeToolError("filter 需要记录列表、字段和查询文本。") }
+                      let query = values[2].stringValue else { throw NativeToolError(String(localized: "filter 需要记录列表、字段和查询文本。")) }
                 return .array(entries.filter { query.isEmpty || display($0.objectValue?[field] ?? .null).localizedStandardContains(query) })
             case "add": return try finite(number(0) + number(1))
             case "subtract": return try finite(number(0) - number(1))
             case "multiply": return try finite(number(0) * number(1))
             case "divide":
                 let divisor = try number(1)
-                guard divisor != 0 else { throw NativeToolError("除数不能为零。") }
+                guard divisor != 0 else { throw NativeToolError(String(localized: "除数不能为零。")) }
                 return try finite(number(0) / divisor)
             case "round": return try finite(number(0).rounded())
             case "min": return try finite(min(number(0), number(1)))
@@ -84,7 +84,7 @@ nonisolated enum NativeToolExpression {
                 var text = ""
                 for value in values {
                     let part = display(value)
-                    guard text.utf8.count + part.utf8.count <= 32_768 else { throw NativeToolError("计算生成的文本超过 32 KB。") }
+                    guard text.utf8.count + part.utf8.count <= 32_768 else { throw NativeToolError(String(localized: "计算生成的文本超过 32 KB。")) }
                     text += part
                 }
                 return .string(text)
@@ -99,7 +99,7 @@ nonisolated enum NativeToolExpression {
                 let field = values.count > 1 ? values[1].stringValue : nil
                 return try finite(entries.reduce(0) { sum, entry in
                     let value = field.flatMap { entry.objectValue?[$0] } ?? entry
-                    guard let amount = value.numberValue else { throw NativeToolError("汇总字段必须是数字。") }
+                    guard let amount = value.numberValue else { throw NativeToolError(String(localized: "汇总字段必须是数字。")) }
                     return sum + amount
                 })
             case "equal": return .bool(values.count == 2 && values[0] == values[1])
@@ -109,9 +109,9 @@ nonisolated enum NativeToolExpression {
             case "and": return .bool(values.allSatisfy(truthy))
             case "or": return .bool(values.contains(where: truthy))
             case "contains":
-                guard values.count == 2 else { throw NativeToolError("contains 需要两个参数。") }
+                guard values.count == 2 else { throw NativeToolError(String(localized: "contains 需要两个参数。")) }
                 return .bool(display(values[0]).localizedStandardContains(display(values[1])))
-            default: throw NativeToolError("不支持的运算。")
+            default: throw NativeToolError(String(localized: "不支持的运算。"))
             }
         default: return expression
         }
@@ -133,7 +133,7 @@ nonisolated enum NativeToolExpression {
         case .null: ""
         case let .string(value): value
         case let .number(value): value.formatted(.number.precision(.fractionLength(0...8)))
-        case let .bool(value): value ? "是" : "否"
+        case let .bool(value): value ? String(localized: "是") : String(localized: "否")
         case .array, .object:
             (try? String(decoding: JSONEncoder().encode(value), as: UTF8.self)) ?? ""
         }
@@ -142,23 +142,23 @@ nonisolated enum NativeToolExpression {
     /// Account for intermediate results before encoding or persisting them.
     /// Collection references can otherwise amplify a tiny expression into huge JSON.
     private static func measure(_ value: AgentValue, remainingBytes: inout Int, depth: Int) throws {
-        guard depth <= 40, remainingBytes >= 0 else { throw NativeToolError("计算结果超过数据上限。") }
+        guard depth <= 40, remainingBytes >= 0 else { throw NativeToolError(String(localized: "计算结果超过数据上限。")) }
         remainingBytes -= 16
         switch value {
         case let .string(text):
-            guard text.utf8.count <= 32_768 else { throw NativeToolError("计算生成的文本超过 32 KB。") }
+            guard text.utf8.count <= 32_768 else { throw NativeToolError(String(localized: "计算生成的文本超过 32 KB。")) }
             remainingBytes -= text.utf8.count
         case let .array(values):
-            guard values.count <= 500 else { throw NativeToolError("计算生成的集合超过 500 项。") }
+            guard values.count <= 500 else { throw NativeToolError(String(localized: "计算生成的集合超过 500 项。")) }
             for child in values { try measure(child, remainingBytes: &remainingBytes, depth: depth + 1) }
         case let .object(values):
-            guard values.count <= 200 else { throw NativeToolError("计算生成的字段超过上限。") }
+            guard values.count <= 200 else { throw NativeToolError(String(localized: "计算生成的字段超过上限。")) }
             for (key, child) in values {
                 remainingBytes -= key.utf8.count
                 try measure(child, remainingBytes: &remainingBytes, depth: depth + 1)
             }
         default: break
         }
-        guard remainingBytes >= 0 else { throw NativeToolError("计算结果超过数据上限。") }
+        guard remainingBytes >= 0 else { throw NativeToolError(String(localized: "计算结果超过数据上限。")) }
     }
 }

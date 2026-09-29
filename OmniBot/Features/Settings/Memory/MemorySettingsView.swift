@@ -10,7 +10,7 @@ struct MemorySettingsView: View {
         SettingsPageLayout(title: "Memory") {
             Section {
                 SettingsTextEditor(
-                    prompt: "输入需要长期保留的事实、偏好或工作约定",
+                    prompt: String(localized: "输入需要长期保留的事实、偏好或工作约定"),
                     text: $settings.longTermMemory,
                     lineLimit: 9...16,
                     minimumHeight: 240

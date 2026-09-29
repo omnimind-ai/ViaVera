@@ -26,8 +26,8 @@ struct IOSPermissionSettingsRow: View {
         }
         .accessibilityHint(
             permission.isEnabled
-                ? "关闭后，Agent 将无法访问\(permission.kind.title)数据。"
-                : "打开后，Agent 可以访问\(permission.kind.title)数据；如有需要，系统会显示授权页面。"
+                ? String(localized: "关闭后，Agent 将无法访问\(permission.kind.title)数据。")
+                : String(localized: "打开后，Agent 可以访问\(permission.kind.title)数据；如有需要，系统会显示授权页面。")
         )
     }
 }

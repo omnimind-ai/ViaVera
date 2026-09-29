@@ -36,7 +36,7 @@ struct ReasoningDisclosureView: View {
             } label: {
                 HStack(spacing: AppDesign.transcriptStatusInlineSpacing) {
                     if isThinking {
-                        ShimmeringText(text: "思考中")
+                        ShimmeringText(text: String(localized: "思考中"))
                             .font(.caption)
                             .bold()
                     } else {
@@ -64,7 +64,7 @@ struct ReasoningDisclosureView: View {
             .buttonStyle(.plain)
             .padding(.vertical, AppDesign.transcriptStatusVerticalPadding)
             .accessibilityValue(
-                isThinking ? "内容正在更新" : (isExpanded ? "已展开" : "已收起")
+                isThinking ? String(localized: "内容正在更新") : (isExpanded ? String(localized: "已展开") : String(localized: "已收起"))
             )
             .accessibilityHint("双击切换思考内容")
 
@@ -135,8 +135,8 @@ struct ReasoningDisclosureView: View {
     private static func elapsedText(from start: Date, to end: Date) -> String {
         let seconds = max(0, Int(end.timeIntervalSince(start)))
         if seconds >= 60 {
-            return "\(seconds / 60)分\(seconds % 60)秒"
+            return String(localized: "\(seconds / 60)分\(seconds % 60)秒")
         }
-        return "\(seconds)秒"
+        return String(localized: "\(seconds)秒")
     }
 }

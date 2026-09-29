@@ -13,8 +13,8 @@ struct AlpineEnvironmentPackageDefinition: Identifiable, Equatable, Sendable {
         AlpineEnvironmentPackageDefinition(
             id: "nodejs",
             title: "nodejs",
-            detail: "Node.js 运行时",
-            groupTitle: "开发环境",
+            detail: String(localized: "Node.js 运行时"),
+            groupTitle: String(localized: "开发环境"),
             availabilityCommand: "command -v node >/dev/null 2>&1 && node -e 'process.cwd()' >/dev/null 2>&1",
             versionCommand: "node --version",
             installationPackages: ["nodejs", "npm"]
@@ -22,8 +22,8 @@ struct AlpineEnvironmentPackageDefinition: Identifiable, Equatable, Sendable {
         AlpineEnvironmentPackageDefinition(
             id: "npm",
             title: "npm",
-            detail: "Node.js 包管理器",
-            groupTitle: "开发环境",
+            detail: String(localized: "Node.js 包管理器"),
+            groupTitle: String(localized: "开发环境"),
             availabilityCommand: "command -v npm >/dev/null 2>&1 && npm --version >/dev/null 2>&1",
             versionCommand: "npm --version",
             installationPackages: ["npm"]
@@ -31,8 +31,8 @@ struct AlpineEnvironmentPackageDefinition: Identifiable, Equatable, Sendable {
         AlpineEnvironmentPackageDefinition(
             id: "git",
             title: "git",
-            detail: "Git 版本控制",
-            groupTitle: "开发环境",
+            detail: String(localized: "Git 版本控制"),
+            groupTitle: String(localized: "开发环境"),
             availabilityCommand: "command -v git >/dev/null 2>&1",
             versionCommand: "git --version",
             installationPackages: ["git"]
@@ -40,8 +40,8 @@ struct AlpineEnvironmentPackageDefinition: Identifiable, Equatable, Sendable {
         AlpineEnvironmentPackageDefinition(
             id: "python",
             title: "python",
-            detail: "Python 解释器",
-            groupTitle: "开发环境",
+            detail: String(localized: "Python 解释器"),
+            groupTitle: String(localized: "开发环境"),
             availabilityCommand: "command -v python3 >/dev/null 2>&1",
             versionCommand: "python3 --version",
             installationPackages: ["python3"]
@@ -49,8 +49,8 @@ struct AlpineEnvironmentPackageDefinition: Identifiable, Equatable, Sendable {
         AlpineEnvironmentPackageDefinition(
             id: "uv",
             title: "uv",
-            detail: "Python 项目与包工具",
-            groupTitle: "开发环境",
+            detail: String(localized: "Python 项目与包工具"),
+            groupTitle: String(localized: "开发环境"),
             availabilityCommand: "command -v uv >/dev/null 2>&1",
             versionCommand: "uv --version",
             installationPackages: ["python3", "py3-pip"]
@@ -58,8 +58,8 @@ struct AlpineEnvironmentPackageDefinition: Identifiable, Equatable, Sendable {
         AlpineEnvironmentPackageDefinition(
             id: "pip",
             title: "pip",
-            detail: "Python 包安装器",
-            groupTitle: "开发环境",
+            detail: String(localized: "Python 包安装器"),
+            groupTitle: String(localized: "开发环境"),
             availabilityCommand: "command -v pip3 >/dev/null 2>&1",
             versionCommand: "pip3 --version",
             installationPackages: ["py3-pip"]
@@ -67,7 +67,7 @@ struct AlpineEnvironmentPackageDefinition: Identifiable, Equatable, Sendable {
         AlpineEnvironmentPackageDefinition(
             id: "ssh_client",
             title: "ssh",
-            detail: "SSH 客户端",
+            detail: String(localized: "SSH 客户端"),
             groupTitle: "SSH",
             availabilityCommand: "command -v ssh >/dev/null 2>&1",
             versionCommand: "ssh -V",
@@ -76,7 +76,7 @@ struct AlpineEnvironmentPackageDefinition: Identifiable, Equatable, Sendable {
         AlpineEnvironmentPackageDefinition(
             id: "sshpass",
             title: "sshpass",
-            detail: "SSH 密码辅助工具",
+            detail: String(localized: "SSH 密码辅助工具"),
             groupTitle: "SSH",
             availabilityCommand: "command -v sshpass >/dev/null 2>&1",
             versionCommand: "sshpass -V",
@@ -85,7 +85,7 @@ struct AlpineEnvironmentPackageDefinition: Identifiable, Equatable, Sendable {
         AlpineEnvironmentPackageDefinition(
             id: "openssh_server",
             title: "sshd",
-            detail: "OpenSSH 服务器",
+            detail: String(localized: "OpenSSH 服务器"),
             groupTitle: "SSH",
             availabilityCommand: "command -v sshd >/dev/null 2>&1",
             versionCommand: "sshd -V",

@@ -272,7 +272,7 @@ final class ProviderSettingsModel {
                 errorMessage = saveError
             } catch {
                 hasStoredAPIKey = false
-                errorMessage = "\(saveError)\n无法确认当前钥匙串状态：\(error.localizedDescription)"
+                errorMessage = String(localized: "\(saveError)\n无法确认当前钥匙串状态：\(error.localizedDescription)")
             }
         }
     }
@@ -305,7 +305,7 @@ final class ProviderSettingsModel {
                 errorMessage = deletionError
             } catch {
                 hasStoredAPIKey = false
-                errorMessage = "\(deletionError)\n无法确认当前钥匙串状态：\(error.localizedDescription)"
+                errorMessage = String(localized: "\(deletionError)\n无法确认当前钥匙串状态：\(error.localizedDescription)")
             }
         }
     }
@@ -555,7 +555,7 @@ final class ProviderSettingsModel {
             let deletionErrors = credentialDeletionErrors(for: profile.id)
             if !deletionErrors.isEmpty {
                 var details = [
-                    "无法在更改端点前清理旧凭据：\(deletionErrors.joined(separator: "；"))"
+                    String(localized: "无法在更改端点前清理旧凭据：\(deletionErrors.joined(separator: "；"))")
                 ]
                 appendStagingCleanupErrors(stagingID, to: &details)
                 throw ProviderSettingsError.secureSaveFailed(details.joined(separator: "；"))
@@ -564,7 +564,7 @@ final class ProviderSettingsModel {
             do {
                 try await store.upsert(profile)
             } catch {
-                var details = ["新端点写入失败：\(error.localizedDescription)"]
+                var details = [String(localized: "新端点写入失败：\(error.localizedDescription)")]
                 // upsert commits actor state only after its atomic file write
                 // succeeds, so a thrown error still means the old endpoint is
                 // active and can safely receive its previously bound pair.
@@ -580,7 +580,7 @@ final class ProviderSettingsModel {
             do {
                 try await store.upsert(profile)
             } catch {
-                var details = ["服务配置写入失败：\(error.localizedDescription)"]
+                var details = [String(localized: "服务配置写入失败：\(error.localizedDescription)")]
                 appendStagingCleanupErrors(stagingID, to: &details)
                 throw ProviderSettingsError.secureSaveFailed(details.joined(separator: "；"))
             }
@@ -595,11 +595,11 @@ final class ProviderSettingsModel {
                 try keychain.saveEndpointBinding(endpointIdentity, for: profile.id)
             } catch {
                 let prefix = endpointChanged
-                    ? "新端点已保存，但新凭据写入失败"
-                    : "模型服务凭据写入失败"
+                    ? String(localized: "新端点已保存，但新凭据写入失败")
+                    : String(localized: "模型服务凭据写入失败")
                 var details = ["\(prefix)：\(error.localizedDescription)"]
                 details.append(contentsOf: credentialDeletionErrors(for: profile.id).map {
-                    "canonical 凭据清理失败：\($0)"
+                    String(localized: "canonical 凭据清理失败：\($0)")
                 })
                 if !endpointChanged {
                     details.append(contentsOf: restoreCredentialPair(
@@ -642,7 +642,7 @@ final class ProviderSettingsModel {
         do {
             try keychain.saveAPIKey(apiKey, for: stagingID)
         } catch {
-            var details = ["临时 API Key 写入失败：\(error.localizedDescription)"]
+            var details = [String(localized: "临时 API Key 写入失败：\(error.localizedDescription)")]
             appendStagingCleanupErrors(stagingID, to: &details)
             throw ProviderSettingsError.secureSaveFailed(details.joined(separator: "；"))
         }
@@ -650,7 +650,7 @@ final class ProviderSettingsModel {
         do {
             try keychain.saveEndpointBinding(endpointIdentity, for: stagingID)
         } catch {
-            var details = ["临时端点绑定写入失败：\(error.localizedDescription)"]
+            var details = [String(localized: "临时端点绑定写入失败：\(error.localizedDescription)")]
             appendStagingCleanupErrors(stagingID, to: &details)
             throw ProviderSettingsError.secureSaveFailed(details.joined(separator: "；"))
         }
@@ -659,14 +659,14 @@ final class ProviderSettingsModel {
             let stagedAPIKey = try keychain.apiKey(for: stagingID)
             let stagedBinding = try keychain.endpointBinding(for: stagingID)
             guard stagedAPIKey == apiKey, stagedBinding == endpointIdentity else {
-                var details = ["临时凭据校验不一致。"]
+                var details = [String(localized: "临时凭据校验不一致。")]
                 appendStagingCleanupErrors(stagingID, to: &details)
                 throw ProviderSettingsError.secureSaveFailed(details.joined(separator: "；"))
             }
         } catch let error as ProviderSettingsError {
             throw error
         } catch {
-            var details = ["临时凭据读取校验失败：\(error.localizedDescription)"]
+            var details = [String(localized: "临时凭据读取校验失败：\(error.localizedDescription)")]
             appendStagingCleanupErrors(stagingID, to: &details)
             throw ProviderSettingsError.secureSaveFailed(details.joined(separator: "；"))
         }
@@ -687,12 +687,12 @@ final class ProviderSettingsModel {
         do {
             try keychain.deleteAPIKey(for: providerID)
         } catch {
-            errors.append("API Key 删除失败：\(error.localizedDescription)")
+            errors.append(String(localized: "API Key 删除失败：\(error.localizedDescription)"))
         }
         do {
             try keychain.deleteEndpointBinding(for: providerID)
         } catch {
-            errors.append("端点绑定删除失败：\(error.localizedDescription)")
+            errors.append(String(localized: "端点绑定删除失败：\(error.localizedDescription)"))
         }
         return errors
     }
@@ -713,9 +713,9 @@ final class ProviderSettingsModel {
             try keychain.saveEndpointBinding(expectedEndpointIdentity, for: providerID)
             return []
         } catch {
-            var details = ["旧凭据快照恢复失败：\(error.localizedDescription)"]
+            var details = [String(localized: "旧凭据快照恢复失败：\(error.localizedDescription)")]
             details.append(contentsOf: credentialDeletionErrors(for: providerID).map {
-                "恢复失败后的凭据清理失败：\($0)"
+                String(localized: "恢复失败后的凭据清理失败：\($0)")
             })
             return details
         }
@@ -728,7 +728,7 @@ final class ProviderSettingsModel {
     private func cleanupStagingCredential(_ stagingID: String?) -> [String] {
         guard let stagingID else { return [] }
         return credentialDeletionErrors(for: stagingID).map {
-            "临时凭据清理失败：\($0)"
+            String(localized: "临时凭据清理失败：\($0)")
         }
     }
 

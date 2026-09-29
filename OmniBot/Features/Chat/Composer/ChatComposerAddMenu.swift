@@ -21,7 +21,7 @@ struct ChatComposerAddMenu: View {
                 )
             } label: {
                 ComposerIconLabel(
-                    title: "添加",
+                    title: String(localized: "添加"),
                     assetName: "ComposerAdd",
                     size: AppDesign.composerIconSize
                 )
@@ -31,7 +31,7 @@ struct ChatComposerAddMenu: View {
 #else
             Button(action: onImportAttachments) {
                 ComposerIconLabel(
-                    title: "导入附件",
+                    title: String(localized: "导入附件"),
                     assetName: "ComposerAdd",
                     size: AppDesign.composerIconSize
                 )

@@ -11,7 +11,7 @@ struct SoulSettingsView: View {
         SettingsPageLayout(title: "Soul") {
             Section {
                 SettingsTextEditor(
-                    prompt: "描述 Agent 的身份、语气、原则与边界",
+                    prompt: String(localized: "描述 Agent 的身份、语气、原则与边界"),
                     text: $settings.content,
                     lineLimit: 12...20,
                     minimumHeight: 320

@@ -9,7 +9,7 @@ struct ComposerSendButton: View {
     var body: some View {
         Button(action: performAction) {
             Label {
-                Text(isRunning ? "停止" : "发送")
+                Text(isRunning ? String(localized: "停止") : String(localized: "发送"))
             } icon: {
                 Image(systemName: isRunning ? "stop.fill" : "arrow.up")
             }
@@ -22,9 +22,9 @@ struct ComposerSendButton: View {
         .buttonStyle(.glassProminent)
         .tint(isRunning ? Color.red : Color.accentColor)
         .disabled(!isEnabled)
-        .accessibilityLabel(isRunning ? "停止" : "发送")
-        .accessibilityHint(isRunning ? "停止当前 Agent 运行" : "发送消息并启动 Agent")
-        .help(isRunning ? "停止当前 Agent 运行" : "发送消息")
+        .accessibilityLabel(isRunning ? String(localized: "停止") : String(localized: "发送"))
+        .accessibilityHint(isRunning ? String(localized: "停止当前 Agent 运行") : String(localized: "发送消息并启动 Agent"))
+        .help(isRunning ? String(localized: "停止当前 Agent 运行") : String(localized: "发送消息"))
     }
 
     private var isEnabled: Bool {

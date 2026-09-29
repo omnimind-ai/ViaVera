@@ -47,13 +47,13 @@ struct MenuBarChatHeader<Actions: View>: View {
                     .help("新建会话")
 
                 Button(
-                    isPinned ? "取消置顶" : "置顶窗口",
+                    isPinned ? String(localized: "取消置顶") : String(localized: "置顶窗口"),
                     systemImage: isPinned ? "pin.fill" : "pin",
                     action: onTogglePin
                 )
                 .foregroundStyle(isPinned ? Color.accentColor : Color.secondary)
-                .help(isPinned ? "取消窗口置顶" : "将聊天独立为置顶窗口")
-                .accessibilityValue(isPinned ? "已置顶" : "未置顶")
+                .help(isPinned ? String(localized: "取消窗口置顶") : String(localized: "将聊天独立为置顶窗口"))
+                .accessibilityValue(isPinned ? String(localized: "已置顶") : String(localized: "未置顶"))
 
                 Button("在主窗口打开", systemImage: "arrow.up.right.square", action: onOpenMainWindow)
                     .help("在主窗口打开当前会话")

@@ -96,13 +96,13 @@ struct ChatToolActivityStrip: View {
                                 .disabled(stoppingToolID == currentTool.id)
                                 .accessibilityLabel(
                                     stoppingToolID == currentTool.id
-                                        ? "正在停止当前工具"
-                                        : "停止当前工具"
+                                        ? String(localized: "正在停止当前工具")
+                                        : String(localized: "停止当前工具")
                                 )
                             } else if !history.isEmpty {
                                 Button(action: toggleExpanded) {
                                     Label(
-                                        isExpanded ? "收起历史工具调用" : "展开历史工具调用",
+                                        isExpanded ? String(localized: "收起历史工具调用") : String(localized: "展开历史工具调用"),
                                         systemImage: "chevron.up"
                                     )
                                     .labelStyle(.iconOnly)

@@ -15,7 +15,7 @@ nonisolated enum TOTPAccountImport {
                 duplicates += 1
                 continue
             }
-            guard accounts.count < 200 else { throw NativeToolError("导入后超过 200 个账户上限，未保存本次导入。") }
+            guard accounts.count < 200 else { throw NativeToolError(String(localized: "导入后超过 200 个账户上限，未保存本次导入。")) }
             accounts.append(TOTPAccount(
                 id: UUID(), issuer: account.issuer, name: account.name, secret: account.secret,
                 algorithm: account.algorithm, digits: account.digits, period: account.period

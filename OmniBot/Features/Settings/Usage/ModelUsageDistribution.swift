@@ -13,13 +13,13 @@ struct ModelUsageDistribution: View {
 
     var body: some View {
         ModelUsagePanel(
-            title: "模型使用分布",
-            subtitle: "了解常用模型，以及各模型的消耗占比。",
+            title: String(localized: "模型使用分布"),
+            subtitle: String(localized: "了解常用模型，以及各模型的消耗占比。"),
             systemImage: "cpu"
         ) {
             Picker("模型分布指标", selection: $metric) {
                 ForEach(ModelUsageRankingMetric.allCases) { metric in
-                    Text(metric.rawValue).tag(metric)
+                    Text(metric.title).tag(metric)
                 }
             }
             .pickerStyle(.segmented)
@@ -36,7 +36,7 @@ struct ModelUsageDistribution: View {
                     }
                 }
                 if models.count > 8 {
-                    Button(showAllModels ? "收起" : "查看全部 \(models.count) 个模型", action: toggleAllModels)
+                    Button(showAllModels ? String(localized: "收起") : String(localized: "查看全部 \(models.count) 个模型"), action: toggleAllModels)
                         .frame(minHeight: 44)
                         .frame(maxWidth: .infinity)
                         .tint(ModelUsageStyle.accent)

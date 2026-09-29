@@ -18,10 +18,10 @@ struct AppearanceSettingsView: View {
         @Bindable var settings = appModel.appearanceSettings
         let preferences = settings.preferences
         let backgroundSelectionTitle = settings.hasBackgroundImage
-            ? "更换背景图片"
-            : "选择背景图片"
+            ? String(localized: "更换背景图片")
+            : String(localized: "选择背景图片")
 
-        SettingsPageLayout(title: "外观") {
+        SettingsPageLayout(title: String(localized: "外观")) {
             Section("主题") {
                 Picker("主题模式", selection: $settings.themeMode) {
                     ForEach(AppearanceThemeMode.allCases) { mode in
@@ -67,7 +67,7 @@ struct AppearanceSettingsView: View {
 
             Section("显示效果") {
                 AppearanceAdjustmentRow(
-                    title: "透明度",
+                    title: String(localized: "透明度"),
                     valueText: settings.backgroundOpacity.formatted(
                         .percent.precision(.fractionLength(0))
                     ),
@@ -77,7 +77,7 @@ struct AppearanceSettingsView: View {
                 )
 
                 AppearanceAdjustmentRow(
-                    title: "亮度",
+                    title: String(localized: "亮度"),
                     valueText: settings.backgroundBrightness.formatted(
                         .percent.precision(.fractionLength(0))
                     ),
@@ -87,8 +87,8 @@ struct AppearanceSettingsView: View {
                 )
 
                 AppearanceAdjustmentRow(
-                    title: "磨砂感",
-                    valueText: "\(settings.backgroundBlur.formatted(.number.precision(.fractionLength(0)))) 点",
+                    title: String(localized: "磨砂感"),
+                    valueText: String(localized: "\(settings.backgroundBlur.formatted(.number.precision(.fractionLength(0)))) 点"),
                     value: $settings.backgroundBlur,
                     range: AppearancePreferences.blurRange,
                     step: 1

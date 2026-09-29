@@ -22,9 +22,9 @@ struct ModelUsageOverview: View {
             Divider().overlay(ModelUsageStyle.accent.opacity(0.12))
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), alignment: .leading)], spacing: AppDesign.sectionSpacing) {
-                ModelUsageMetric(title: "发送消息", value: summary.total.messageCount, systemImage: "bubble.left")
-                ModelUsageMetric(title: "活跃天数", value: summary.activeDays, systemImage: "calendar")
-                ModelUsageMetric(title: "使用模型", value: summary.knownModelCount, systemImage: "cpu")
+                ModelUsageMetric(title: String(localized: "发送消息"), value: summary.total.messageCount, systemImage: "bubble.left")
+                ModelUsageMetric(title: String(localized: "活跃天数"), value: summary.activeDays, systemImage: "calendar")
+                ModelUsageMetric(title: String(localized: "使用模型"), value: summary.knownModelCount, systemImage: "cpu")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

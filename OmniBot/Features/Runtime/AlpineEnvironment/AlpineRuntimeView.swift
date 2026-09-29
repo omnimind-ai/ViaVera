@@ -18,8 +18,7 @@ struct AlpineRuntimeView: View {
                     ProgressView("正在检测 Alpine 开发环境…")
                 } else {
                     Text(
-                        "已就绪 \(settings.readyCount)/\(AlpineEnvironmentPackageDefinition.all.count) 项。"
-                            + "缺失组件会被默认选中，可一键安装并自动复检。"
+                        "已就绪 \(settings.readyCount)/\(AlpineEnvironmentPackageDefinition.all.count) 项。缺失组件会被默认选中，可一键安装并自动复检。"
                     )
                         .foregroundStyle(.secondary)
                 }
@@ -92,11 +91,11 @@ struct AlpineRuntimeView: View {
     private var installButtonTitle: String {
         let settings = appModel.alpineEnvironmentSettings
         return if settings.operation == .installing {
-            "正在安装配置…"
+            String(localized: "正在安装配置…")
         } else if settings.selectedMissingCount == 0 {
-            settings.allPackagesAreReady ? "全部已就绪" : "请选择需要安装的组件"
+            settings.allPackagesAreReady ? String(localized: "全部已就绪") : String(localized: "请选择需要安装的组件")
         } else {
-            "一键安装配置（\(settings.selectedMissingCount) 项）"
+            String(localized: "一键安装配置（\(settings.selectedMissingCount) 项）")
         }
     }
 

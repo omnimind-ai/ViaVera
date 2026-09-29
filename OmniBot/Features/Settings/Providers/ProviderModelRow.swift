@@ -24,7 +24,7 @@ struct ProviderModelRow: View {
 
             HStack(spacing: 0) {
                 Button(
-                    model.isHidden ? "显示模型" : "隐藏模型",
+                    model.isHidden ? String(localized: "显示模型") : String(localized: "隐藏模型"),
                     systemImage: model.isHidden ? "eye.slash" : "eye",
                     action: toggleVisibility
                 )

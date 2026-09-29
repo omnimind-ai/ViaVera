@@ -25,14 +25,14 @@ struct ChatEmptyStateView: View {
     }
 
     private func selectWorkspacePrompt() {
-        onSelectPrompt("请分析 /workspace 中的项目结构，并告诉我最值得先处理的问题。")
+        onSelectPrompt(String(localized: "请分析 /workspace 中的项目结构，并告诉我最值得先处理的问题。"))
     }
 
     private func selectTerminalPrompt() {
-        onSelectPrompt("请在本地 Alpine 中执行以下任务：")
+        onSelectPrompt(String(localized: "请在本地 Alpine 中执行以下任务："))
     }
 
     private func selectMemoryPrompt() {
-        onSelectPrompt("请根据当前工作区内容整理一份可长期复用的项目记忆。")
+        onSelectPrompt(String(localized: "请根据当前工作区内容整理一份可长期复用的项目记忆。"))
     }
 }

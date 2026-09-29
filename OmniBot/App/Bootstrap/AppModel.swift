@@ -214,7 +214,7 @@ final class AppModel {
 
     func beginNativeToolConversation(editing id: UUID? = nil) throws {
         guard skillSettings.skills.contains(where: { $0.id == "native-tool-builder" && $0.enabled }) else {
-            throw NativeToolError("请先在 Skills 中启用「原生工具制作」。")
+            throw NativeToolError(String(localized: "请先在 Skills 中启用「原生工具制作」。"))
         }
         let selection = preferredModelStore.selection(in: providerSettings.profiles)
         let conversation = try conversations.createConversation(providerID: selection?.providerID, modelID: selection?.modelID ?? "")
@@ -226,7 +226,7 @@ final class AppModel {
 
     func deleteConversation(_ conversation: ConversationRecord) async {
         if chatCoordinator.pendingResendConversationID == conversation.id {
-            globalErrorMessage = "正在准备编辑或重试，暂时无法删除这个会话。"
+            globalErrorMessage = String(localized: "正在准备编辑或重试，暂时无法删除这个会话。")
             return
         }
         if chatCoordinator.isRunning(conversation) {

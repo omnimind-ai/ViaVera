@@ -16,8 +16,8 @@ struct ProviderStoreTests {
         let recovered = try AppDependencies.recoverProviderStoreIfNeeded(fileURL: file)
 
         #expect(await recovered.store.profiles().isEmpty)
-        #expect(recovered.notice?.contains("已隔离") == true)
         let quarantine = try #require(recovered.quarantineURL)
+        #expect(recovered.notice?.contains(quarantine.lastPathComponent) == true)
         #expect(FileManager.default.fileExists(atPath: quarantine.path))
         #expect(!FileManager.default.fileExists(atPath: file.path))
     }

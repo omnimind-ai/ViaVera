@@ -264,7 +264,7 @@ struct AgentChatView: View {
 
                     if conversation.status == .failed {
                         ChatErrorBanner(
-                            message: conversation.lastErrorMessage ?? "Agent 未能完成本次任务。",
+                            message: conversation.lastErrorMessage ?? String(localized: "Agent 未能完成本次任务。"),
                             onRetry: { appModel.chatCoordinator.retry(conversation) }
                         )
                         .padding(.vertical, AppDesign.compactSpacing)
@@ -568,7 +568,7 @@ struct AgentChatView: View {
                   let message = composerDraft.messageToSend else { return }
             if let reference = composerDraft.skillReference,
                !appModel.skillSettings.skills.contains(where: { $0.id == reference.id && $0.enabled }) {
-                appModel.globalErrorMessage = "请先在 Skills 中启用「\(reference.id)」，或移除输入框中的 Skill 引用。"
+                appModel.globalErrorMessage = String(localized: "请先在 Skills 中启用「\(reference.id)」，或移除输入框中的 Skill 引用。")
                 return
             }
             composerDraft.clearAfterSending()
@@ -584,7 +584,7 @@ struct AgentChatView: View {
             $0.id == editingUserMessageID
         }) else {
             self.editingUserMessageID = nil
-            appModel.globalErrorMessage = "无法找到要编辑的消息，请重试。"
+            appModel.globalErrorMessage = String(localized: "无法找到要编辑的消息，请重试。")
             return
         }
 
@@ -618,7 +618,7 @@ struct AgentChatView: View {
 
     private func appendAttachmentReferences(_ artifacts: [AgentArtifact]) {
         let references = artifacts.map { artifact in
-            "附件：\(artifact.renderMarkdown)\n工作区路径：\(artifact.workspacePath)"
+            String(localized: "附件：\(artifact.renderMarkdown)\n工作区路径：\(artifact.workspacePath)")
         }
         guard !references.isEmpty else { return }
         let block = references.joined(separator: "\n")
@@ -649,7 +649,7 @@ struct AgentChatView: View {
                     payloads.append(
                         WorkspaceAttachmentPayload(
                             data: data,
-                            preferredName: "照片-\(index + 1).\(fileExtension)"
+                            preferredName: String(localized: "照片-\(index + 1).\(fileExtension)")
                         )
                     )
                 }
@@ -713,7 +713,7 @@ struct AgentChatView: View {
     private func cancelCurrentTool(callID: String) async -> Bool {
         let didRequestStop = await appModel.chatCoordinator.cancelCurrentTool(callID: callID)
         if !didRequestStop {
-            appModel.globalErrorMessage = "停止工具调用失败，请稍后重试。"
+            appModel.globalErrorMessage = String(localized: "停止工具调用失败，请稍后重试。")
         }
         return didRequestStop
     }
@@ -873,7 +873,7 @@ struct AgentChatView: View {
             appModel.selectReasoningEffort(effort, for: conversation)
         case .invalidEffort:
             isCommandToolbarPresented = true
-            appModel.globalErrorMessage = "可用思考强度：no、low、high、xhigh、max"
+            appModel.globalErrorMessage = String(localized: "可用思考强度：no、low、high、xhigh、max")
         }
     }
 

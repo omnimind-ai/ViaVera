@@ -40,7 +40,7 @@ struct AssistantMessageView: View {
             if showsStatus,
                message.status == .failed || message.status == .interrupted {
                 Label(
-                    message.status == .failed ? "回复生成失败" : "回复已中断",
+                    message.status == .failed ? String(localized: "回复生成失败") : String(localized: "回复已中断"),
                     systemImage: message.status == .failed
                         ? "exclamationmark.circle"
                         : "stop.circle"

@@ -50,7 +50,7 @@ struct AlpineEnvironmentPackageRow: View {
         if !isDetecting || inventoryItem != nil {
             if usesCompactLayout {
                 HStack(spacing: AppDesign.compactSpacing / 2) {
-                    Text(isReady ? "已就绪" : "未安装")
+                    Text(isReady ? String(localized: "已就绪") : String(localized: "未安装"))
                         .font(.caption)
                         .foregroundStyle(isReady ? .green : .secondary)
 
@@ -64,7 +64,7 @@ struct AlpineEnvironmentPackageRow: View {
                 }
             } else {
                 VStack(alignment: .trailing, spacing: AppDesign.compactSpacing) {
-                    Text(isReady ? "已就绪" : "未安装")
+                    Text(isReady ? String(localized: "已就绪") : String(localized: "未安装"))
                         .font(.caption)
                         .foregroundStyle(isReady ? .green : .secondary)
 
@@ -91,16 +91,16 @@ struct AlpineEnvironmentPackageRow: View {
     }
 
     private var usesCompactLayout: Bool {
-        definition.groupTitle == "开发环境" || definition.groupTitle == "SSH"
+        definition.groupTitle == String(localized: "开发环境") || definition.groupTitle == "SSH"
     }
 
     private var accessibilityStatus: String {
         if isDetecting, inventoryItem == nil {
-            "正在检测"
+            String(localized: "正在检测")
         } else if isReady {
-            inventoryItem?.version.map { "已就绪，\($0)" } ?? "已就绪"
+            inventoryItem?.version.map { String(localized: "已就绪，\($0)") } ?? String(localized: "已就绪")
         } else {
-            isSelected ? "未安装，已选择" : "未安装，未选择"
+            isSelected ? String(localized: "未安装，已选择") : String(localized: "未安装，未选择")
         }
     }
 }

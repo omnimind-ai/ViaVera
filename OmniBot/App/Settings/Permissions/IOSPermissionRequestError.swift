@@ -7,9 +7,9 @@ nonisolated enum IOSPermissionRequestError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .healthDataUnavailable:
-            "此设备无法使用 HealthKit。"
+            String(localized: "此设备无法使用 HealthKit。")
         case let .unsupportedOnCurrentPlatform(permission):
-            "此平台不支持\(permission)权限。"
+            String(localized: "此平台不支持\(permission)权限。")
         }
     }
 }

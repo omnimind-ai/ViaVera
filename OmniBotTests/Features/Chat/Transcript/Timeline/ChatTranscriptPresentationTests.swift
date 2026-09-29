@@ -109,7 +109,7 @@ struct ChatTranscriptPresentationTests {
         #expect(tool.isBrowser)
         #expect(!tool.isTerminal)
         #expect(tool.symbolName == "safari")
-        #expect(tool.typeLabel == "浏览器")
+        #expect(tool.typeLabel == String(localized: "浏览器"))
         #expect(tool.browserTitle == "Example")
         #expect(tool.browserURL == "https://example.com/docs")
     }

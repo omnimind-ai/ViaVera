@@ -9,9 +9,9 @@ nonisolated enum AppearanceThemeMode: String, Codable, CaseIterable, Identifiabl
 
     var title: String {
         switch self {
-        case .system: "跟随系统"
-        case .dark: "黑夜"
-        case .light: "白天"
+        case .system: String(localized: "跟随系统")
+        case .dark: String(localized: "黑夜")
+        case .light: String(localized: "白天")
         }
     }
 

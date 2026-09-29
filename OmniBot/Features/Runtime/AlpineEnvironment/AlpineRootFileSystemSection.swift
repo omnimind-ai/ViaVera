@@ -7,7 +7,7 @@ struct AlpineRootFileSystemSection: View {
 
     var body: some View {
         Section {
-            LabeledContent("占用空间") {
+            LabeledContent(String(localized: "占用空间")) {
                 if manager.isRefreshingSize {
                     ProgressView()
                         .controlSize(.small)
@@ -20,7 +20,7 @@ struct AlpineRootFileSystemSection: View {
             }
 
             Button(
-                manager.isResetScheduled ? "Rootfs 已等待重置" : "重置 Rootfs",
+                manager.isResetScheduled ? String(localized: "Rootfs 已等待重置") : String(localized: "重置 Rootfs"),
                 systemImage: "arrow.counterclockwise",
                 role: .destructive,
                 action: requestReset

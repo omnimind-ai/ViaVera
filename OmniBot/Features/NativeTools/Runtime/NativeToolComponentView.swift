@@ -37,12 +37,12 @@ struct NativeToolComponentView: View {
         case .textField, .secureField, .numberField, .toggle, .picker:
             return AnyView(NativeToolInputView(component: component, runtime: runtime))
         case .button:
-            return AnyView(Button(component.title ?? "执行", action: perform).buttonStyle(.bordered).frame(minHeight: 44))
+            return AnyView(Button(component.title ?? String(localized: "执行"), action: perform).buttonStyle(.bordered).frame(minHeight: 44))
         case .list:
             return AnyView(NativeToolListView(component: component, runtime: runtime))
         case .progress:
             let progress = min(1, max(0, runtime.value(component.value, item: item).numberValue ?? 0))
-            return AnyView(ProgressView(component.title ?? "进度", value: progress))
+            return AnyView(ProgressView(component.title ?? String(localized: "进度"), value: progress))
         case .countdown:
             return AnyView(NativeToolCountdownView(component: component, runtime: runtime, item: item))
         case .totp:

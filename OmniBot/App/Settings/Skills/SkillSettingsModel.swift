@@ -27,7 +27,7 @@ final class SkillSettingsModel {
         do {
             skills = try await store.list()
         } catch {
-            presentError(error, title: "无法读取 Skills")
+            presentError(error, title: String(localized: "无法读取 Skills"))
         }
     }
 
@@ -44,7 +44,7 @@ final class SkillSettingsModel {
             replace(updated)
             return updated.enabled
         } catch {
-            presentError(error, title: enabled ? "无法启用 Skill" : "无法停用 Skill")
+            presentError(error, title: enabled ? String(localized: "无法启用 Skill") : String(localized: "无法停用 Skill"))
             return current.enabled
         }
     }
@@ -58,7 +58,7 @@ final class SkillSettingsModel {
             skills.append(imported)
             sortSkills()
         } catch {
-            presentError(error, title: "无法导入 Skill")
+            presentError(error, title: String(localized: "无法导入 Skill"))
         }
     }
 
@@ -72,7 +72,7 @@ final class SkillSettingsModel {
             skills.removeAll { $0.id == skillID }
             return true
         } catch {
-            presentError(error, title: "无法删除 Skill")
+            presentError(error, title: String(localized: "无法删除 Skill"))
             return false
         }
     }

@@ -20,18 +20,18 @@ struct NativeToolInputView: View {
         Group {
             switch component.type {
             case .textField:
-                TextField(component.title ?? "输入", text: $text, axis: .vertical)
+                TextField(component.title ?? String(localized: "输入"), text: $text, axis: .vertical)
                     .textFieldStyle(.roundedBorder)
             case .secureField:
-                SecureField(component.title ?? "密码", text: $text)
+                SecureField(component.title ?? String(localized: "密码"), text: $text)
                     .textFieldStyle(.roundedBorder)
                     .autocorrectionDisabled()
 #if os(iOS)
                     .textInputAutocapitalization(.never)
 #endif
             case .numberField:
-                LabeledContent(component.title ?? "数值") {
-                    TextField(component.title ?? "数值", value: $number, format: .number)
+                LabeledContent(component.title ?? String(localized: "数值")) {
+                    TextField(component.title ?? String(localized: "数值"), value: $number, format: .number)
                         .textFieldStyle(.roundedBorder)
                         .multilineTextAlignment(.trailing)
 #if os(iOS)
@@ -39,9 +39,9 @@ struct NativeToolInputView: View {
 #endif
                 }
             case .toggle:
-                Toggle(component.title ?? "开关", isOn: $flag)
+                Toggle(component.title ?? String(localized: "开关"), isOn: $flag)
             case .picker:
-                Picker(component.title ?? "选择", selection: $text) {
+                Picker(component.title ?? String(localized: "选择"), selection: $text) {
                     ForEach(component.options ?? [], id: \.self) { option in Text(option).tag(option) }
                 }
             default: EmptyView()

@@ -77,33 +77,33 @@ nonisolated enum TerminalAccessoryKey: Hashable, Identifiable, Sendable {
         case .key(.tab):
             "Tab"
         case .key(.slash):
-            "斜杠"
+            String(localized: "斜杠")
         case .key(.dash):
-            "短横线"
+            String(localized: "短横线")
         case .key(.home):
             "Home"
         case .key(.arrowUp):
-            "上方向键"
+            String(localized: "上方向键")
         case .key(.end):
             "End"
         case .key(.pageUp):
             "Page Up"
         case .key(.arrowLeft):
-            "左方向键"
+            String(localized: "左方向键")
         case .key(.arrowDown):
-            "下方向键"
+            String(localized: "下方向键")
         case .key(.arrowRight):
-            "右方向键"
+            String(localized: "右方向键")
         case .key(.pageDown):
             "Page Down"
         case .key(.enter):
-            "回车"
+            String(localized: "回车")
         case .key(.backspace):
-            "退格"
+            String(localized: "退格")
         case .control:
-            "Control 锁定键"
+            String(localized: "Control 锁定键")
         case .alternate:
-            "Alternate 锁定键"
+            String(localized: "Alternate 锁定键")
         }
     }
 }

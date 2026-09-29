@@ -28,9 +28,9 @@ struct ModelUsageModelBar: View {
                 }
             }
             Chart {
-                BarMark(x: .value("范围", max(1, maximum)), y: .value("模型", model.title))
+                BarMark(x: .value(String(localized: "范围"), max(1, maximum)), y: .value(String(localized: "模型"), model.title))
                     .foregroundStyle(.primary.opacity(0.045))
-                BarMark(x: .value(metric.rawValue, value), y: .value("模型", model.title), stacking: .unstacked)
+                BarMark(x: .value(metric.title, value), y: .value(String(localized: "模型"), model.title), stacking: .unstacked)
                     .foregroundStyle(
                         LinearGradient(
                             colors: [ModelUsageStyle.input.opacity(0.75), ModelUsageStyle.accent],
@@ -47,6 +47,6 @@ struct ModelUsageModelBar: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(model.title)
-        .accessibilityValue("\(metric.rawValue) \(value.formatted())，占比 \(fraction.formatted(.percent.precision(.fractionLength(1))))")
+        .accessibilityValue("\(metric.title) \(value.formatted())，占比 \(fraction.formatted(.percent.precision(.fractionLength(1))))")
     }
 }

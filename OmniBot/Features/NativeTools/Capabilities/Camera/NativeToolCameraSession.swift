@@ -18,11 +18,11 @@ nonisolated final class NativeToolCameraSession: NSObject, AVCaptureMetadataOutp
             do {
                 try self.configure()
                 self.session.startRunning()
-                guard self.session.isRunning else { throw NativeToolError("相机暂时无法启动，请重试。") }
+                guard self.session.isRunning else { throw NativeToolError(String(localized: "相机暂时无法启动，请重试。")) }
                 self.emit(.running)
             } catch {
                 self.acceptsCodes = false
-                self.emit(.failure((error as? NativeToolError)?.localizedDescription ?? "无法打开相机，请检查相机是否被占用后重试。"))
+                self.emit(.failure((error as? NativeToolError)?.localizedDescription ?? String(localized: "无法打开相机，请检查相机是否被占用后重试。")))
             }
         }
     }
@@ -47,15 +47,15 @@ nonisolated final class NativeToolCameraSession: NSObject, AVCaptureMetadataOutp
 #else
         let device = AVCaptureDevice.default(for: .video)
 #endif
-        guard let device else { throw NativeToolError("没有可用的相机。可以从二维码图片或 TXT 文件导入。") }
+        guard let device else { throw NativeToolError(String(localized: "没有可用的相机。可以从二维码图片或 TXT 文件导入。")) }
         let input = try AVCaptureDeviceInput(device: device)
-        guard session.canAddInput(input) else { throw NativeToolError("无法使用这台相机，请检查相机是否被占用。") }
+        guard session.canAddInput(input) else { throw NativeToolError(String(localized: "无法使用这台相机，请检查相机是否被占用。")) }
         session.addInput(input)
         let output = AVCaptureMetadataOutput()
-        guard session.canAddOutput(output) else { throw NativeToolError("相机不支持扫码，请从图片或 TXT 文件导入。") }
+        guard session.canAddOutput(output) else { throw NativeToolError(String(localized: "相机不支持扫码，请从图片或 TXT 文件导入。")) }
         session.addOutput(output)
         guard output.availableMetadataObjectTypes.contains(.qr) else {
-            throw NativeToolError("相机不支持二维码识别，请从图片或 TXT 文件导入。")
+            throw NativeToolError(String(localized: "相机不支持二维码识别，请从图片或 TXT 文件导入。"))
         }
         output.metadataObjectTypes = [.qr]
         output.setMetadataObjectsDelegate(self, queue: queue)

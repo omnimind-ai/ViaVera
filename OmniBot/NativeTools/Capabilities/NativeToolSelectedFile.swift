@@ -5,7 +5,7 @@ nonisolated enum NativeToolSelectedFile {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         let values = try url.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
-        guard values.isRegularFile == true, let size = values.fileSize, size <= maximumBytes else { throw NativeToolError("请选择不超过 1 MB 的文件。") }
+        guard values.isRegularFile == true, let size = values.fileSize, size <= maximumBytes else { throw NativeToolError(String(localized: "请选择不超过 1 MB 的文件。")) }
         let file = try FileHandle(forReadingFrom: url)
         defer { try? file.close() }
         var data = Data()
@@ -13,7 +13,7 @@ nonisolated enum NativeToolSelectedFile {
             guard let chunk = try file.read(upToCount: maximumBytes + 1 - data.count), !chunk.isEmpty else { break }
             data.append(chunk)
         }
-        guard data.count <= maximumBytes else { throw NativeToolError("文件超过大小限制。") }
+        guard data.count <= maximumBytes else { throw NativeToolError(String(localized: "文件超过大小限制。")) }
         return data
     }
 }

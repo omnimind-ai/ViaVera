@@ -73,7 +73,7 @@ final class AlpineEnvironmentSettingsModel {
             if !hasCompletedDetection {
                 selectedPackageIDs = Set(AlpineEnvironmentPackageDefinition.all.map(\.id))
             }
-            feedbackMessage = "检测 Alpine 环境失败：\(failureDetail(from: result))"
+            feedbackMessage = String(localized: "检测 Alpine 环境失败：\(failureDetail(from: result))")
             feedbackIsError = true
         }
         operation = .idle
@@ -95,7 +95,7 @@ final class AlpineEnvironmentSettingsModel {
                 && inventory[definition.id]?.isReady != true
         }
         guard !definitions.isEmpty else {
-            feedbackMessage = "没有需要安装的环境组件。"
+            feedbackMessage = String(localized: "没有需要安装的环境组件。")
             feedbackIsError = false
             return
         }
@@ -111,7 +111,7 @@ final class AlpineEnvironmentSettingsModel {
             timeout: .seconds(15 * 60)
         )
         guard result.succeeded else {
-            feedbackMessage = "环境配置失败：\(failureDetail(from: result))"
+            feedbackMessage = String(localized: "环境配置失败：\(failureDetail(from: result))")
             feedbackIsError = true
             operation = .idle
             return
@@ -124,7 +124,7 @@ final class AlpineEnvironmentSettingsModel {
         let refreshedInventory = AlpineEnvironmentInventoryItem.parse(probeResult.standardOutput)
         guard probeResult.succeeded,
               refreshedInventory.count == AlpineEnvironmentPackageDefinition.all.count else {
-            feedbackMessage = "安装已执行，但重新检测失败：\(failureDetail(from: probeResult))"
+            feedbackMessage = String(localized: "安装已执行，但重新检测失败：\(failureDetail(from: probeResult))")
             feedbackIsError = true
             operation = .idle
             return
@@ -133,10 +133,10 @@ final class AlpineEnvironmentSettingsModel {
         updateInventory(refreshedInventory, selectMissingByDefault: false)
         let remaining = definitions.filter { refreshedInventory[$0.id]?.isReady != true }
         if remaining.isEmpty {
-            feedbackMessage = "环境配置完成，所选组件均已就绪。"
+            feedbackMessage = String(localized: "环境配置完成，所选组件均已就绪。")
             feedbackIsError = false
         } else {
-            feedbackMessage = "以下组件安装后仍未通过检测：\(remaining.map(\.title).joined(separator: "、"))"
+            feedbackMessage = String(localized: "以下组件安装后仍未通过检测：\(remaining.map(\.title).joined(separator: "、"))")
             feedbackIsError = true
         }
         operation = .idle
@@ -175,7 +175,7 @@ final class AlpineEnvironmentSettingsModel {
             result.standardOutput.trimmingCharacters(in: .whitespacesAndNewlines),
         ]
         .compactMap { $0 }
-        .first { !$0.isEmpty } ?? "请稍后重试。"
+        .first { !$0.isEmpty } ?? String(localized: "请稍后重试。")
         return String(detail.suffix(500))
     }
 }

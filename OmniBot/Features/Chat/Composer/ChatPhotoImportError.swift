@@ -6,7 +6,7 @@ nonisolated enum ChatPhotoImportError: LocalizedError, Sendable {
     var errorDescription: String? {
         switch self {
         case let .unavailable(index):
-            "无法读取所选的第 \(index) 张照片，请重新选择。"
+            String(localized: "无法读取所选的第 \(index) 张照片，请重新选择。")
         }
     }
 }

@@ -49,17 +49,17 @@ struct MessageUsageCapsule: View {
 
     private var accessibilitySummary: String {
         var parts = [
-            "当前上下文 \(TokenCountFormatter.format(contextTokens))",
-            "未命中输入 \(TokenCountFormatter.format(inputTokens))",
-            "输出 \(TokenCountFormatter.format(outputTokens))",
+            String(localized: "当前上下文 \(TokenCountFormatter.format(contextTokens))"),
+            String(localized: "未命中输入 \(TokenCountFormatter.format(inputTokens))"),
+            String(localized: "输出 \(TokenCountFormatter.format(outputTokens))"),
         ]
         if let cacheHitPercentage {
             parts.append(
-                "缓存命中率 \(cacheHitPercentage)%，命中读取 \(TokenCountFormatter.format(cachedTokens))"
+                String(localized: "缓存命中率 \(cacheHitPercentage)%，命中读取 \(TokenCountFormatter.format(cachedTokens))")
             )
         }
         if cacheCreationTokens > 0 {
-            parts.append("缓存写入 \(TokenCountFormatter.format(cacheCreationTokens))")
+            parts.append(String(localized: "缓存写入 \(TokenCountFormatter.format(cacheCreationTokens))"))
         }
         return parts.joined(separator: "，")
     }

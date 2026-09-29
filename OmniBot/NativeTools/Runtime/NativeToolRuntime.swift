@@ -104,14 +104,14 @@ final class NativeToolRuntime {
     private func execute(_ action: String, item: AgentValue, token: UUID) async {
         defer { if generation == token { isPerforming = false } }
         do {
-            guard let steps = record.package.actions[action] else { throw NativeToolError("找不到此动作。") }
+            guard let steps = record.package.actions[action] else { throw NativeToolError(String(localized: "找不到此动作。")) }
             for step in steps {
                 try Task.checkCancellation()
                 guard generation == token else { return }
                 if let condition = step.when, !NativeToolExpression.truthy(value(condition, item: item)) { continue }
                 switch step.type {
                 case .invoke:
-                    guard !isPreview, let host, let operation = step.operation else { throw NativeToolError("安装工具后才能调用设备能力。") }
+                    guard !isPreview, let host, let operation = step.operation else { throw NativeToolError(String(localized: "安装工具后才能调用设备能力。")) }
                     let entry = try NativeToolCapabilityRegistry.resolve(operation, declared: record.package.capabilities)
                     let arguments = try (step.arguments ?? [:]).mapValues {
                         try NativeToolExpression.evaluate($0, state: state.merging(sessionState) { _, session in session }, item: item)
@@ -130,7 +130,7 @@ final class NativeToolRuntime {
                 case .setSession:
                     if let key = step.key, let expression = step.value {
                         let result = try NativeToolExpression.evaluate(expression, state: state.merging(sessionState) { _, session in session }, item: item)
-                        guard let initial = record.package.sessionState?[key], NativeToolActionEngine.sameType(initial, result) else { throw NativeToolError("会话状态类型不能改变。") }
+                        guard let initial = record.package.sessionState?[key], NativeToolActionEngine.sameType(initial, result) else { throw NativeToolError(String(localized: "会话状态类型不能改变。")) }
                         sessionState[key] = result
                     }
                 case .navigate:
@@ -173,7 +173,7 @@ final class NativeToolRuntime {
                 )
             } catch {
                 persistenceFailed = true
-                errorMessage = "数据尚未保存：\(error.localizedDescription)"
+                errorMessage = String(localized: "数据尚未保存：\(error.localizedDescription)")
             }
         }
     }

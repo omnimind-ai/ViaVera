@@ -12,7 +12,7 @@ struct SidebarConversationActionsModifier: ViewModifier {
         content
             .contextMenu {
                 Button(
-                    conversation.isPinned ? "取消置顶" : "置顶",
+                    conversation.isPinned ? String(localized: "取消置顶") : String(localized: "置顶"),
                     systemImage: conversation.isPinned ? "pin.slash" : "pin",
                     action: togglePinned
                 )

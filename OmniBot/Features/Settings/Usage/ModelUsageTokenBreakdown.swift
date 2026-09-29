@@ -10,11 +10,11 @@ struct ModelUsageTokenBreakdown: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), alignment: .leading)], spacing: AppDesign.standardSpacing) {
-                ModelUsageMetric(title: "非缓存输入", value: usage.inputTokens, systemImage: "arrow.up.right")
+                ModelUsageMetric(title: String(localized: "非缓存输入"), value: usage.inputTokens, systemImage: "arrow.up.right")
                     .tint(ModelUsageStyle.input)
-                ModelUsageMetric(title: "缓存读取", value: usage.cachedTokens, systemImage: "arrow.trianglehead.2.clockwise")
+                ModelUsageMetric(title: String(localized: "缓存读取"), value: usage.cachedTokens, systemImage: "arrow.trianglehead.2.clockwise")
                     .tint(ModelUsageStyle.cache)
-                ModelUsageMetric(title: "输出", value: usage.outputTokens, systemImage: "arrow.down.left")
+                ModelUsageMetric(title: String(localized: "输出"), value: usage.outputTokens, systemImage: "arrow.down.left")
                     .tint(ModelUsageStyle.output)
             }
             if usage.cacheCreationTokens > 0 {

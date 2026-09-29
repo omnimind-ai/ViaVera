@@ -23,26 +23,26 @@ nonisolated enum IOSPermissionKind: String, CaseIterable, Identifiable, Sendable
     var title: String {
         switch self {
         case .healthKit:
-            "健康"
+            String(localized: "健康")
         case .calendars:
-            "日历"
+            String(localized: "日历")
         case .contacts:
-            "通讯录"
+            String(localized: "通讯录")
         case .alarms:
-            "闹钟"
+            String(localized: "闹钟")
         }
     }
 
     var subtitle: String {
         switch self {
         case .healthKit:
-            "读取你明确授权的健康与健身数据"
+            String(localized: "读取你明确授权的健康与健身数据")
         case .calendars:
-            "读取、创建和管理日历事件"
+            String(localized: "读取、创建和管理日历事件")
         case .contacts:
-            "查找、创建和管理联系人"
+            String(localized: "查找、创建和管理联系人")
         case .alarms:
-            "创建和管理系统闹钟"
+            String(localized: "创建和管理系统闹钟")
         }
     }
 

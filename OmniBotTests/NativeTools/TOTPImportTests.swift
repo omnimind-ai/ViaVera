@@ -31,7 +31,7 @@ struct TOTPImportTests {
             _ = try TOTPTextImport.parse(Data(text.utf8))
             Issue.record("A malformed batch should not produce any accounts")
         } catch {
-            #expect(error.localizedDescription.contains("第 3 行"))
+            #expect(error.localizedDescription == String(localized: "第 \(3) 行不是有效的 TOTP 认证链接。请修正后重试，尚未导入任何账户。"))
             #expect(!error.localizedDescription.contains("PRIVATE-SECRET"))
             #expect(!error.localizedDescription.contains("private-account"))
             #expect(!error.localizedDescription.contains("otpauth"))

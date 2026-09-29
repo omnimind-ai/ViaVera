@@ -1,3 +1,5 @@
+import Foundation
+
 enum ToolCallStatus: Hashable {
     case pending
     case running
@@ -8,15 +10,15 @@ enum ToolCallStatus: Hashable {
     var label: String {
         switch self {
         case .pending:
-            "等待中"
+            String(localized: "等待中")
         case .running:
-            "执行中"
+            String(localized: "执行中")
         case .succeeded:
-            "成功"
+            String(localized: "成功")
         case .failed:
-            "失败"
+            String(localized: "失败")
         case .interrupted:
-            "已中断"
+            String(localized: "已中断")
         }
     }
 

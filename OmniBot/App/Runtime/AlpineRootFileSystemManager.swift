@@ -30,7 +30,7 @@ final class AlpineRootFileSystemManager {
         do {
             sizeInBytes = try await storage.sizeInBytes()
         } catch {
-            errorMessage = "无法读取 Rootfs 大小：\(error.localizedDescription)"
+            errorMessage = String(localized: "无法读取 Rootfs 大小：\(error.localizedDescription)")
         }
     }
 
@@ -44,7 +44,7 @@ final class AlpineRootFileSystemManager {
             try await storage.scheduleReset()
             isResetScheduled = true
         } catch {
-            errorMessage = "无法安排 Rootfs 重置：\(error.localizedDescription)"
+            errorMessage = String(localized: "无法安排 Rootfs 重置：\(error.localizedDescription)")
         }
     }
 }

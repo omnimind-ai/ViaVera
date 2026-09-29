@@ -82,7 +82,7 @@ struct ProviderModelEditorView: View {
                 }
             }
             .settingsFormStyle()
-            .navigationTitle(state.originalID == nil ? "添加自定义模型" : "模型详情")
+            .navigationTitle(state.originalID == nil ? String(localized: "添加自定义模型") : String(localized: "模型详情"))
 #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
 #endif

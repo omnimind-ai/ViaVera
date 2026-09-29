@@ -17,7 +17,7 @@ struct NativeToolLibraryView: View {
                     NativeToolLibraryRow(record: record)
                 }
                 .contextMenu {
-                    Button(record.isFavorite ? "取消收藏" : "收藏", systemImage: record.isFavorite ? "star.slash" : "star") {
+                    Button(record.isFavorite ? String(localized: "取消收藏") : String(localized: "收藏"), systemImage: record.isFavorite ? "star.slash" : "star") {
                         Task { await library.setFavorite(record) }
                     }
                     Button("删除", systemImage: "trash", role: .destructive) { requestDelete(record) }
@@ -49,7 +49,7 @@ struct NativeToolLibraryView: View {
 #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
 #endif
-        .searchable(text: $search, prompt: "搜索工具")
+        .searchable(text: $search, prompt: String(localized: "搜索工具"))
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 Menu("工具操作", systemImage: "ellipsis.circle") {
@@ -69,8 +69,8 @@ struct NativeToolLibraryView: View {
             Button("删除", role: .destructive, action: deleteSelected)
         } message: {
             Text(deleting?.package.capabilities.contains("totp") == true
-                ? "工具及验证码账户将被删除。请先在工具中导出加密备份。"
-                : "工具及它保存的数据将被删除。")
+                ? String(localized: "工具及验证码账户将被删除。请先在工具中导出加密备份。")
+                : String(localized: "工具及它保存的数据将被删除。"))
         }
         .alert(item: $library.alert) { alert in
             Alert(title: Text("工具操作失败"), message: Text(alert.message), dismissButton: .default(Text("好")))
@@ -111,7 +111,7 @@ struct NativeToolLibraryView: View {
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
             let values = try url.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey])
             guard values.isRegularFile == true, let size = values.fileSize,
-                  size <= NativeToolValidator.maximumPackageBytes else { throw NativeToolError("请选择不超过 256 KB 的 JSON 工具包。") }
+                  size <= NativeToolValidator.maximumPackageBytes else { throw NativeToolError(String(localized: "请选择不超过 256 KB 的 JSON 工具包。")) }
             importPackage = NativeToolImportRequest(package: try NativeToolValidator.decode(Data(contentsOf: url)))
         } catch { appModel.nativeTools.alert = NativeToolAlert(error.localizedDescription) }
     }

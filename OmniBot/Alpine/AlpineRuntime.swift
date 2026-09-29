@@ -72,7 +72,7 @@ final class AlpineRuntime {
             return
         }
 
-        state = .preparing(progress: 0, message: "正在校验 Alpine…")
+        state = .preparing(progress: 0, message: String(localized: "正在校验 Alpine…"))
         let archiveData = try Data(contentsOf: rootFileSystemArchiveURL, options: .mappedIfSafe)
         let archiveDigest = SHA256.hash(data: archiveData).map { byte in
             String(byte, radix: 16).leftPadded(to: 2, with: "0")
@@ -82,7 +82,7 @@ final class AlpineRuntime {
             throw AlpineRuntimeValidationError.rootFileSystemChecksumMismatch
         }
 
-        state = .preparing(progress: 0, message: "正在准备 Alpine…")
+        state = .preparing(progress: 0, message: String(localized: "正在准备 Alpine…"))
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             OmniISHRuntime.prepare(
                 withRootFileSystemArchive: rootFileSystemArchiveURL,

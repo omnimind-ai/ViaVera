@@ -7,5 +7,5 @@ nonisolated struct ModelUsageModel: Identifiable, Sendable {
     var totalTokens = 0
 
     var id: String { modelID.map { "model:\($0)" } ?? "unknown" }
-    var title: String { modelID ?? "未记录模型" }
+    var title: String { modelID ?? String(localized: "未记录模型") }
 }

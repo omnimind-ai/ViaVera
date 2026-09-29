@@ -134,7 +134,7 @@ actor AppearanceSettingsStore {
         ])
         guard values.isRegularFile == true else {
             throw AppearanceSettingsStoreError.corruptedSettings(
-                "保存的数据不是普通文件。"
+                String(localized: "保存的数据不是普通文件。")
             )
         }
         if let fileSize = values.fileSize,
@@ -142,7 +142,7 @@ actor AppearanceSettingsStore {
             if url == backgroundImageURL {
                 throw AppearanceSettingsStoreError.imageTooLarge
             }
-            throw AppearanceSettingsStoreError.corruptedSettings("保存的数据超过大小限制。")
+            throw AppearanceSettingsStoreError.corruptedSettings(String(localized: "保存的数据超过大小限制。"))
         }
 
         let handle = try FileHandle(forReadingFrom: url)
@@ -152,7 +152,7 @@ actor AppearanceSettingsStore {
             if url == backgroundImageURL {
                 throw AppearanceSettingsStoreError.imageTooLarge
             }
-            throw AppearanceSettingsStoreError.corruptedSettings("保存的数据超过大小限制。")
+            throw AppearanceSettingsStoreError.corruptedSettings(String(localized: "保存的数据超过大小限制。"))
         }
         return data
     }

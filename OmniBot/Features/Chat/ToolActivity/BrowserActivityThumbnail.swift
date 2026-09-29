@@ -139,7 +139,7 @@ struct BrowserActivityThumbnail: View {
             return host
         }
         let trimmedTitle = previewTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmedTitle.isEmpty ? "浏览器" : trimmedTitle
+        return trimmedTitle.isEmpty ? String(localized: "浏览器") : trimmedTitle
     }
 
     private func primeFromTool() {

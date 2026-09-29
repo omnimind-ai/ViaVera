@@ -4,13 +4,13 @@ struct ModelUsageHeatmap: View {
     let summary: ModelUsageSummary
     @ScaledMetric(relativeTo: .caption) private var cellSize = ModelUsageStyle.heatCell
 
-    private let weekdays = ["一", "二", "三", "四", "五", "六", "日"]
+    private let weekdays = [String(localized: "一"), String(localized: "二"), String(localized: "三"), String(localized: "四"), String(localized: "五"), String(localized: "六"), String(localized: "日")]
     private var maximum: Int { summary.peakDay?.messageCount ?? 0 }
 
     var body: some View {
         ModelUsagePanel(
-            title: "对话活跃度",
-            subtitle: "每一格是一天，颜色越深，发送的消息越多。",
+            title: String(localized: "对话活跃度"),
+            subtitle: String(localized: "每一格是一天，颜色越深，发送的消息越多。"),
             systemImage: "square.grid.3x3"
         ) {
             HStack(alignment: .top, spacing: AppDesign.compactSpacing) {

@@ -985,7 +985,7 @@ nonisolated public enum AgentSkillStoreError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
-        case .builtInSkillCannotBeDeleted: "内置 Skill 随应用提供，可以停用，不能删除。"
+        case .builtInSkillCannotBeDeleted: String(localized: "内置 Skill 随应用提供，可以停用，不能删除。")
         case .missingIdentifier: "A skill id, name, or path is required."
         case let .notFound(value): "Installed skill not found: \(value)"
         case let .ambiguousIdentifier(value): "Skill identifier is ambiguous: \(value)"
@@ -996,37 +996,37 @@ nonisolated public enum AgentSkillStoreError: LocalizedError, Sendable {
         case let .skillFileTooLarge(value, limit):
             "SKILL.md exceeds the \(limit)-byte limit: \(value)"
         case let .invalidImportSelection(value):
-            "请选择包含 SKILL.md 的目录，或直接选择 SKILL.md 文件：\(value)"
+            String(localized: "请选择包含 SKILL.md 的目录，或直接选择 SKILL.md 文件：\(value)")
         case .missingImportedSkillFile:
-            "所选目录的顶层没有 SKILL.md。"
+            String(localized: "所选目录的顶层没有 SKILL.md。")
         case let .invalidImportedItem(value):
-            "技能包包含不支持的文件类型：\(value)"
+            String(localized: "技能包包含不支持的文件类型：\(value)")
         case let .symbolicLinkNotAllowed(value):
-            "技能包不允许包含符号链接：\(value)"
+            String(localized: "技能包不允许包含符号链接：\(value)")
         case .nestedSkillFileNotAllowed:
-            "一个导入包只能包含顶层的 SKILL.md。"
+            String(localized: "一个导入包只能包含顶层的 SKILL.md。")
         case .workspaceProjectionCannotBeImported:
-            "工作区中的 Skills 投影不是权威来源，不能重新导入。"
+            String(localized: "工作区中的 Skills 投影不是权威来源，不能重新导入。")
         case .authoritativeSkillCannotBeReimported:
-            "该技能已经位于 OmniBot 的权威目录中。"
+            String(localized: "该技能已经位于 OmniBot 的权威目录中。")
         case .incompatibleSkill:
-            "该技能声明为 Android 专用，无法导入 Apple 版本。"
+            String(localized: "该技能声明为 Android 专用，无法导入 Apple 版本。")
         case .invalidImportedIdentifier:
-            "SKILL.md 未提供可用的技能名称。"
+            String(localized: "SKILL.md 未提供可用的技能名称。")
         case let .alreadyInstalled(value):
-            "技能已安装：\(value)"
+            String(localized: "技能已安装：\(value)")
         case let .installedSkillLimitExceeded(limit):
-            "已达到 \(limit) 个已安装技能的上限。"
+            String(localized: "已达到 \(limit) 个已安装技能的上限。")
         case let .importedFileTooLarge(value, limit):
-            "技能文件超过 \(limit) 字节上限：\(value)"
+            String(localized: "技能文件超过 \(limit) 字节上限：\(value)")
         case let .importFileCountExceeded(limit):
-            "技能包文件数量超过 \(limit) 个上限。"
+            String(localized: "技能包文件数量超过 \(limit) 个上限。")
         case let .importTotalBytesExceeded(limit):
-            "技能包总大小超过 \(limit) 字节上限。"
+            String(localized: "技能包总大小超过 \(limit) 字节上限。")
         case .invalidAuthoritativeSkillRoot:
-            "技能目录不在受保护的 Control 权威目录中。"
+            String(localized: "技能目录不在受保护的 Control 权威目录中。")
         case let .skillContainsNestedSkills(value):
-            "技能 \(value) 包含嵌套技能，无法单独安全删除。"
+            String(localized: "技能 \(value) 包含嵌套技能，无法单独安全删除。")
         case .projectionLimitExceeded:
             "Enabled skill projections exceed the configured file or byte limit."
         case .invalidProjectionDirectory:

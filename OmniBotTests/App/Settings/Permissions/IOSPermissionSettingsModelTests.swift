@@ -131,7 +131,7 @@ struct IOSPermissionSettingsModelTests {
         await model.setEnabled(true, for: contacts)
 
         #expect(!contacts.isEnabled)
-        #expect(model.alert?.title == "无法启用通讯录权限")
+        #expect(model.alert?.title == String(localized: "无法启用\(IOSPermissionKind.contacts.title)权限"))
         #expect(model.alert?.offersSystemSettings == true)
         let storedValue = await storage.store.isEnabled(.contacts)
         #expect(!storedValue)
@@ -156,8 +156,8 @@ struct IOSPermissionSettingsModelTests {
 
         await model.setEnabled(true, for: calendars)
 
-        #expect(model.alert?.title == "无法启用日历权限")
-        #expect(model.alert?.message == "此设备无法使用 HealthKit。")
+        #expect(model.alert?.title == String(localized: "无法启用\(IOSPermissionKind.calendars.title)权限"))
+        #expect(model.alert?.message == IOSPermissionRequestError.healthDataUnavailable.localizedDescription)
         #expect(!calendars.isEnabled)
     }
 

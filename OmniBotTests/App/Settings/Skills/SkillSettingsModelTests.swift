@@ -50,7 +50,7 @@ struct SkillSettingsModelTests {
         await model.importSkill(from: invalidFile)
 
         #expect(model.skills.isEmpty)
-        #expect(model.alert?.title == "无法导入 Skill")
+        #expect(model.alert?.title == String(localized: "无法导入 Skill"))
         #expect(model.alert?.message.isEmpty == false)
     }
 

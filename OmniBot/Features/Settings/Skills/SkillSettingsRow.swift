@@ -36,7 +36,7 @@ struct SkillSettingsRow: View {
                         .lineLimit(3)
                 }
 
-                Text(skill.isBuiltIn ? "内置 · \(skill.id)" : skill.id)
+                Text(skill.isBuiltIn ? String(localized: "内置 · \(skill.id)") : skill.id)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .textSelection(.enabled)

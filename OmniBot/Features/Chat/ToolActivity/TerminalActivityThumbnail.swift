@@ -76,7 +76,7 @@ struct TerminalActivityThumbnail: View {
     private var previewText: String {
         let normalizedOutput = tool.output.trimmingCharacters(in: .whitespacesAndNewlines)
         if normalizedOutput.isEmpty {
-            return tool.status == .running ? "正在等待输出…" : "没有输出"
+            return tool.status == .running ? String(localized: "正在等待输出…") : String(localized: "没有输出")
         }
         let lines = normalizedOutput
             .split(separator: "\n", omittingEmptySubsequences: false)

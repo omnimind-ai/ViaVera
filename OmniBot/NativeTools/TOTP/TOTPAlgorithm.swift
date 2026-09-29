@@ -6,7 +6,7 @@ nonisolated enum TOTPAlgorithm: String, Codable, CaseIterable, Sendable {
 
     func code(secret: Data, time: TimeInterval, digits: Int = 6, period: Int = 30) throws -> String {
         guard time.isFinite, time >= 0, [6, 8].contains(digits), period > 0,
-              time / Double(period) < Double(UInt64.max) else { throw NativeToolError("验证码时间或参数无效。") }
+              time / Double(period) < Double(UInt64.max) else { throw NativeToolError(String(localized: "验证码时间或参数无效。")) }
         var counter = UInt64(time / Double(period)).bigEndian
         let message = withUnsafeBytes(of: &counter) { Data($0) }
         let key = SymmetricKey(data: secret)

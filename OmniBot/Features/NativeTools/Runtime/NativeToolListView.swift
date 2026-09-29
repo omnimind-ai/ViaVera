@@ -8,7 +8,7 @@ struct NativeToolListView: View {
         let entries = (component.binding.flatMap { runtime.state[$0]?.arrayValue } ?? runtime.value(component.value).arrayValue ?? []).compactMap(NativeToolListEntry.init)
         LazyVStack(alignment: .leading, spacing: 12) {
             if entries.isEmpty {
-                Text(component.title ?? "暂无记录").foregroundStyle(.secondary).padding(.vertical)
+                Text(component.title ?? String(localized: "暂无记录")).foregroundStyle(.secondary).padding(.vertical)
             }
             ForEach(entries) { entry in
                 VStack(alignment: .leading, spacing: 8) {

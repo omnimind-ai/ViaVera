@@ -15,7 +15,7 @@ struct ProviderAPIKeyField: View {
             }
 
             Button(
-                isRevealed ? "隐藏 API Key" : "显示 API Key",
+                isRevealed ? String(localized: "隐藏 API Key") : String(localized: "显示 API Key"),
                 systemImage: isRevealed ? "eye.slash" : "eye",
                 action: toggleVisibility
             )

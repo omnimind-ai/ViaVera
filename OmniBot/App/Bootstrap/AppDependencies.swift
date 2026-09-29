@@ -8,9 +8,9 @@ enum AppBootstrapError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingBuiltInSkills:
-            "应用包中缺少内置 Skills。"
+            String(localized: "应用包中缺少内置 Skills。")
         case .missingAlpineRootFileSystem:
-            "应用包中缺少 Alpine 根文件系统。"
+            String(localized: "应用包中缺少 Alpine 根文件系统。")
         }
     }
 }
@@ -169,7 +169,7 @@ struct AppDependencies {
             try fileManager.moveItem(at: fileURL, to: quarantineURL)
             do {
                 let store = try ProviderStore(fileURL: fileURL)
-                let notice = "模型服务配置无法安全读取，已隔离为 \(quarantineURL.lastPathComponent)。请重新配置服务商和 API Key；旧钥匙串凭据不会自动复用。"
+                let notice = String(localized: "模型服务配置无法安全读取，已隔离为 \(quarantineURL.lastPathComponent)。请重新配置服务商和 API Key；旧钥匙串凭据不会自动复用。")
                 return (store, notice, quarantineURL)
             } catch {
                 // Best effort rollback retains the original evidence if even

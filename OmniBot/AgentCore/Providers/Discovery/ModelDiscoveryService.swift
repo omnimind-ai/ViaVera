@@ -73,7 +73,7 @@ nonisolated final class ModelDiscoveryService: ModelDiscovering, @unchecked Send
         return ModelDiscoveryResult(
             models: models,
             notice: catalog.error.map {
-                "模型列表已更新，但暂时无法从 models.dev 补全信息：\($0)"
+                String(localized: "模型列表已更新，但暂时无法从 models.dev 补全信息：\($0)")
             }
         )
     }
@@ -159,7 +159,7 @@ nonisolated final class ModelDiscoveryService: ModelDiscovering, @unchecked Send
         do {
             return ModelDiscoveryCatalogResult(value: try await fetchCatalog(), error: nil)
         } catch is CancellationError {
-            return ModelDiscoveryCatalogResult(value: nil, error: "请求已取消")
+            return ModelDiscoveryCatalogResult(value: nil, error: String(localized: "请求已取消"))
         } catch {
             return ModelDiscoveryCatalogResult(value: nil, error: error.localizedDescription)
         }

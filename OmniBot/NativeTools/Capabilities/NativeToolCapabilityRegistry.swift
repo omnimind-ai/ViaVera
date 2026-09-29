@@ -26,19 +26,19 @@ nonisolated enum NativeToolCapabilityRegistry {
 
     static func resolve(_ operation: String, declared: [String]) throws -> NativeToolCapability {
         guard let entry = entries.first(where: { $0.operation == operation }), declared.contains(entry.permission) else {
-            throw NativeToolError("能力未声明或操作不受支持：\(operation)")
+            throw NativeToolError(String(localized: "能力未声明或操作不受支持：\(operation)"))
         }
         return entry
     }
 
     static func validate(_ arguments: [String: AgentValue], for entry: NativeToolCapability, evaluated: Bool) throws {
         guard Set(arguments.keys).isSubset(of: Set(entry.parameters.keys)), entry.required.isSubset(of: Set(arguments.keys)) else {
-            throw NativeToolError("能力 \(entry.operation) 的参数缺失或不受支持。")
+            throw NativeToolError(String(localized: "能力 \(entry.operation) 的参数缺失或不受支持。"))
         }
         guard evaluated else { return }
         for (name, value) in arguments {
             let valid = entry.parameters[name] == "number" ? value.numberValue != nil : value.stringValue != nil
-            guard valid else { throw NativeToolError("能力参数 \(name) 的类型错误。") }
+            guard valid else { throw NativeToolError(String(localized: "能力参数 \(name) 的类型错误。")) }
         }
     }
 }

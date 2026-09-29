@@ -283,7 +283,7 @@ struct ProviderSettingsModelTests {
         model.editor.apiKey = "new-secret"
         await model.save()
 
-        #expect(model.errorMessage?.contains("临时 API Key 写入失败") == true)
+        #expect(model.errorMessage?.contains(String(localized: "临时 API Key 写入失败：\("")")) == true)
         #expect(await store.profile(id: profile.id)?.baseURL == profile.baseURL)
         #expect(try keychain.apiKey(for: profile.id) == "old-secret")
         #expect(try keychain.endpointBinding(for: profile.id) == endpointIdentity(for: profile))
@@ -306,7 +306,7 @@ struct ProviderSettingsModelTests {
         model.editor.apiKey = "new-secret"
         await model.save()
 
-        #expect(model.errorMessage?.contains("清理旧凭据") == true)
+        #expect(model.errorMessage?.contains(String(localized: "无法在更改端点前清理旧凭据：\("")")) == true)
         #expect(await store.profile(id: profile.id)?.baseURL == profile.baseURL)
         #expect(try keychain.apiKey(for: profile.id) == "old-secret")
         #expect(try keychain.endpointBinding(for: profile.id) == nil)
@@ -332,7 +332,7 @@ struct ProviderSettingsModelTests {
         model.editor.apiKey = "new-secret"
         await model.save()
 
-        #expect(model.errorMessage?.contains("新端点写入失败") == true)
+        #expect(model.errorMessage?.contains(String(localized: "新端点写入失败：\("")")) == true)
         #expect(await store.profile(id: profile.id)?.baseURL == profile.baseURL)
         #expect(try keychain.apiKey(for: profile.id) == "old-secret")
         #expect(try keychain.endpointBinding(for: profile.id) == endpointIdentity(for: profile))
@@ -355,7 +355,7 @@ struct ProviderSettingsModelTests {
         model.editor.apiKey = "new-secret"
         await model.save()
 
-        #expect(model.errorMessage?.contains("新凭据写入失败") == true)
+        #expect(model.errorMessage?.contains(String(localized: "新端点已保存，但新凭据写入失败")) == true)
         #expect(await store.profile(id: profile.id)?.baseURL.absoluteString == "https://new.example/v1")
         #expect(try keychain.apiKey(for: profile.id) == nil)
         #expect(try keychain.endpointBinding(for: profile.id) == nil)
@@ -379,7 +379,7 @@ struct ProviderSettingsModelTests {
         model.editor.apiKey = "new-secret"
         await model.save()
 
-        #expect(model.errorMessage?.contains("新凭据写入失败") == true)
+        #expect(model.errorMessage?.contains(String(localized: "新端点已保存，但新凭据写入失败")) == true)
         #expect(await store.profile(id: profile.id)?.baseURL.absoluteString == "https://new.example/v1")
         #expect(try keychain.apiKey(for: profile.id) == nil)
         #expect(try keychain.endpointBinding(for: profile.id) == nil)
@@ -404,7 +404,7 @@ struct ProviderSettingsModelTests {
         #expect(await store.profile(id: profile.id) == profile)
         #expect(try keychain.apiKey(for: profile.id) == "secret")
         #expect(try keychain.endpointBinding(for: profile.id) == nil)
-        #expect(model.errorMessage?.contains("API Key 删除失败") == true)
+        #expect(model.errorMessage?.contains(String(localized: "API Key 删除失败：\("")")) == true)
         #expect(!model.hasStoredAPIKey)
 
         await model.delete(profile.id)

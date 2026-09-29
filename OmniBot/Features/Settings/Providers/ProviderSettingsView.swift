@@ -6,7 +6,7 @@ struct ProviderSettingsView: View {
     var body: some View {
         @Bindable var settings = appModel.providerSettings
 
-        SettingsPageLayout(title: "模型服务") {
+        SettingsPageLayout(title: String(localized: "模型服务")) {
 #if os(iOS)
             EditButton()
                 .disabled(settings.profiles.isEmpty || settings.isMutating)

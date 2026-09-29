@@ -7,7 +7,7 @@ nonisolated enum ModelUsageRange: Int, CaseIterable, Identifiable, Sendable {
     case year = 365
 
     var id: Self { self }
-    var title: String { "近 \(rawValue) 天" }
+    var title: String { String(localized: "近 \(rawValue) 天") }
 
     var bucketComponent: Calendar.Component {
         switch self {
@@ -19,9 +19,9 @@ nonisolated enum ModelUsageRange: Int, CaseIterable, Identifiable, Sendable {
 
     var bucketTitle: String {
         switch self {
-        case .week, .month: "每日"
-        case .quarter: "每周"
-        case .year: "每月"
+        case .week, .month: String(localized: "每日")
+        case .quarter: String(localized: "每周")
+        case .year: String(localized: "每月")
         }
     }
 

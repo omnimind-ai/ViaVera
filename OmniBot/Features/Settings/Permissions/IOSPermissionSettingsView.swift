@@ -11,7 +11,7 @@ struct IOSPermissionSettingsView: View {
     var body: some View {
         @Bindable var model = model
 
-        SettingsPageLayout(title: "权限") {
+        SettingsPageLayout(title: String(localized: "权限")) {
             Button(
                 "刷新",
                 systemImage: "arrow.clockwise",

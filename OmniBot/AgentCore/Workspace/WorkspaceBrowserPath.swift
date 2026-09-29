@@ -14,7 +14,7 @@ nonisolated struct WorkspaceBrowserPath: Hashable, Sendable, Identifiable {
     }
 
     var title: String {
-        components.last ?? "工作区"
+        components.last ?? String(localized: "工作区")
     }
 
     var breadcrumbPaths: [WorkspaceBrowserPath] {

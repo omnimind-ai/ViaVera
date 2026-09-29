@@ -12,7 +12,7 @@ struct AppSceneLifecycleModifier: ViewModifier {
             .alert("OmniBot 出现问题", isPresented: isErrorPresented) {
                 Button("好", role: .cancel, action: dismissError)
             } message: {
-                Text(appModel.globalErrorMessage ?? "未知错误")
+                Text(appModel.globalErrorMessage ?? String(localized: "未知错误"))
             }
     }
 

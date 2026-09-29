@@ -65,7 +65,7 @@ struct ChatComposerView: View {
                     minHeight: AppDesign.composerTextLineHeight,
                     alignment: .topLeading
                 )
-                .accessibilityLabel(isEditingUserMessage ? "编辑上一条消息" : "消息")
+                .accessibilityLabel(isEditingUserMessage ? String(localized: "编辑上一条消息") : String(localized: "消息"))
                 .accessibilityHint(textFieldAccessibilityHint)
 #else
                 TextField("发送消息给 OmniBot", text: $text, axis: .vertical)
@@ -79,7 +79,7 @@ struct ChatComposerView: View {
                         alignment: .topLeading
                     )
                     .disabled(!availability.isTextEntryEnabled)
-                    .accessibilityLabel(isEditingUserMessage ? "编辑上一条消息" : "消息")
+                    .accessibilityLabel(isEditingUserMessage ? String(localized: "编辑上一条消息") : String(localized: "消息"))
                     .accessibilityHint(textFieldAccessibilityHint)
 #endif
 
@@ -92,7 +92,7 @@ struct ChatComposerView: View {
 
                     Button(action: onToggleCommandToolbar) {
                         ComposerIconLabel(
-                            title: "命令",
+                            title: String(localized: "命令"),
                             assetName: "ComposerCommand",
                             size: AppDesign.composerIconSize
                         )
@@ -103,7 +103,7 @@ struct ChatComposerView: View {
                     .composerControlFrame()
                     .buttonStyle(.borderless)
                     .accessibilityLabel("命令")
-                    .accessibilityValue(isCommandToolbarPresented ? "已展开" : "已收起")
+                    .accessibilityValue(isCommandToolbarPresented ? String(localized: "已展开") : String(localized: "已收起"))
                     .help("命令")
 
                     Spacer(minLength: AppDesign.standardSpacing)
@@ -115,7 +115,7 @@ struct ChatComposerView: View {
 
                     Button(action: onOpenTerminal) {
                         ComposerIconLabel(
-                            title: "打开本地终端",
+                            title: String(localized: "打开本地终端"),
                             assetName: "ComposerTerminal",
                             size: AppDesign.composerTerminalIconSize
                         )
@@ -202,25 +202,25 @@ struct ChatComposerView: View {
 
     private var busyMessage: String {
         if isPreparingResend {
-            return "正在准备编辑或重试…"
+            return String(localized: "正在准备编辑或重试…")
         }
-        return "另一个会话正在运行，完成后即可发送。"
+        return String(localized: "另一个会话正在运行，完成后即可发送。")
     }
 
     private var textFieldAccessibilityHint: String {
         if isBusy, !isEditingUserMessage {
-            return "可继续输入下一条消息，当前回复结束后即可发送"
+            return String(localized: "可继续输入下一条消息，当前回复结束后即可发送")
         }
 #if os(macOS)
         if isEditingUserMessage {
-            return "修改后按 Enter 重新运行，按 Shift-Enter 换行"
+            return String(localized: "修改后按 Enter 重新运行，按 Shift-Enter 换行")
         }
-        return "输入要交给本地 Agent 的任务，按 Enter 发送，按 Shift-Enter 换行"
+        return String(localized: "输入要交给本地 Agent 的任务，按 Enter 发送，按 Shift-Enter 换行")
 #else
         if isEditingUserMessage {
-            return "修改后使用右侧发送按钮重新运行"
+            return String(localized: "修改后使用右侧发送按钮重新运行")
         }
-        return "输入要交给本地 Agent 的任务，使用右侧发送按钮开始运行"
+        return String(localized: "输入要交给本地 Agent 的任务，使用右侧发送按钮开始运行")
 #endif
     }
 

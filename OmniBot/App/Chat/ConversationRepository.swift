@@ -11,9 +11,9 @@ final class ConversationRepository {
     }
 
     static let interruptedRunMessage =
-        "上次 Agent 运行因应用退出或系统中断而未完成。工具结果可能未知，请检查当前状态后再重试。"
+        String(localized: "上次 Agent 运行因应用退出或系统中断而未完成。工具结果可能未知，请检查当前状态后再重试。")
     static let interruptedToolResultMessage =
-        "工具调用已开始，但应用在结果持久化前退出或被系统中断；外部副作用是否发生未知。检查当前状态后再决定是否重试。"
+        String(localized: "工具调用已开始，但应用在结果持久化前退出或被系统中断；外部副作用是否发生未知。检查当前状态后再决定是否重试。")
 
     private(set) var conversations: [ConversationRecord] = []
 
@@ -79,7 +79,7 @@ final class ConversationRepository {
     @discardableResult
     func createConversation(providerID: String?, modelID: String) throws -> ConversationRecord {
         let conversation = ConversationRecord(
-            title: "新任务",
+            title: String(localized: "新任务"),
             providerID: providerID,
             modelID: modelID
         )
@@ -388,7 +388,7 @@ final class ConversationRepository {
             .trimmingCharacters(in: .whitespacesAndNewlines)
             ?? ""
         if value.isEmpty {
-            return "新任务"
+            return String(localized: "新任务")
         }
         return String(value.prefix(32))
     }

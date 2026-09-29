@@ -8,7 +8,7 @@ final class NativeToolSystemPresentation {
     private var result: Result<NativeToolSystemResult, any Error>?
 
     func present(_ kind: NativeToolSystemRequest.Kind) async throws -> NativeToolSystemResult {
-        guard continuation == nil else { throw NativeToolError("请先完成当前系统操作。") }
+        guard continuation == nil else { throw NativeToolError(String(localized: "请先完成当前系统操作。")) }
         return try await withCheckedThrowingContinuation { continuation in
             self.continuation = continuation
             result = nil

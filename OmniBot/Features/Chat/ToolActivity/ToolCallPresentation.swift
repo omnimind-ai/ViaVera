@@ -97,9 +97,9 @@ struct ToolCallPresentation: Identifiable, Hashable {
         if !trimmedOutput.isEmpty {
             sections.append(trimmedOutput)
         } else if status == .running || status == .pending {
-            sections.append(status == .running ? "正在等待终端输出…" : "等待执行…")
+            sections.append(status == .running ? String(localized: "正在等待终端输出…") : String(localized: "等待执行…"))
         } else {
-            sections.append("没有输出")
+            sections.append(String(localized: "没有输出"))
         }
         return sections.joined(separator: "\n")
     }
@@ -120,7 +120,7 @@ struct ToolCallPresentation: Identifiable, Hashable {
                 return normalized
             }
         }
-        return "工具调用"
+        return String(localized: "工具调用")
     }
 
     private static func firstNonEmptyOptional(_ values: String?...) -> String? {
@@ -172,20 +172,20 @@ struct ToolCallPresentation: Identifiable, Hashable {
     }
 
     private static func typeLabel(for toolName: String) -> String {
-        if toolName.hasPrefix("native_tool_") { return "原生工具" }
+        if toolName.hasPrefix("native_tool_") { return String(localized: "原生工具") }
         if toolName.hasPrefix("terminal_") {
-            return "终端"
+            return String(localized: "终端")
         }
         if toolName.hasPrefix("file_") {
-            return "文件"
+            return String(localized: "文件")
         }
         if toolName.hasPrefix("memory_") {
-            return "记忆"
+            return String(localized: "记忆")
         }
         if toolName == "browser_use" {
-            return "浏览器"
+            return String(localized: "浏览器")
         }
-        return "工具"
+        return String(localized: "工具")
     }
 }
 

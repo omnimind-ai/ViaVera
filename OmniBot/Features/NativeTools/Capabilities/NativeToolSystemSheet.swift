@@ -22,7 +22,7 @@ struct NativeToolSystemSheet: View {
             case .photo:
                 NavigationStack {
                     VStack(spacing: 20) {
-                        PhotosPicker("选择二维码图片", selection: $photo, matching: .images)
+                        PhotosPicker(String(localized: "选择二维码图片"), selection: $photo, matching: .images)
                             .disabled(isReading)
                         if isReading { ProgressView("正在识别二维码…") }
                     }
@@ -73,7 +73,7 @@ struct NativeToolSystemSheet: View {
         isReading = true
         defer { isReading = false }
         do {
-            guard let data = try await photo.loadTransferable(type: Data.self), data.count <= 20 * 1_024 * 1_024 else { throw NativeToolError("图片无法读取或超过 20 MB。") }
+            guard let data = try await photo.loadTransferable(type: Data.self), data.count <= 20 * 1_024 * 1_024 else { throw NativeToolError(String(localized: "图片无法读取或超过 20 MB。")) }
             let value = try await Task.detached {
                 let request = VNDetectBarcodesRequest()
                 request.symbologies = [.qr]

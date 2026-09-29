@@ -115,7 +115,7 @@ nonisolated struct ModelUsageSummary: Sendable {
             }
             let firstDate = cells.compactMap { $0?.date }.first ?? monday
             let month = calendar.component(.month, from: firstDate)
-            let label = previousMonth != month ? "\(month)月" : nil
+            let label = previousMonth != month ? firstDate.formatted(.dateTime.month(.abbreviated)) : nil
             previousMonth = month
             result.append(ModelUsageWeek(date: monday, days: cells, monthLabel: label))
         }

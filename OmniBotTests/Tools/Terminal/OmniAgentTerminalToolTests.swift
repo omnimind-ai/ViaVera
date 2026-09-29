@@ -351,7 +351,7 @@ struct OmniAgentTerminalToolTests {
 
         let result = try await execution.value
         #expect(result.isError)
-        #expect(result.content.contains("用户已停止当前工具调用"))
+        #expect(result.content.contains(String(localized: "用户已停止当前工具调用。")))
         #expect(result.metadata["interrupted"] == .bool(true))
         #expect(await probe.wasCancelled())
     }

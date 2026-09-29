@@ -11,7 +11,7 @@ struct NativeToolCameraScannerView: View {
     @State private var isVisible = false
     @State private var isStarting = true
     @State private var errorMessage: String?
-    @State private var hint = "将二维码放入取景框"
+    @State private var hint = String(localized: "将二维码放入取景框")
     @State private var startRequest = 0
 
     var body: some View {
@@ -52,12 +52,12 @@ struct NativeToolCameraScannerView: View {
             .onReceive(NotificationCenter.default.publisher(for: AVCaptureSession.runtimeErrorNotification, object: camera.session)) { _ in
                 camera.stop()
                 isStarting = false
-                errorMessage = "相机暂时不可用，请重试或改用图片导入。"
+                errorMessage = String(localized: "相机暂时不可用，请重试或改用图片导入。")
             }
             .onReceive(NotificationCenter.default.publisher(for: AVCaptureSession.wasInterruptedNotification, object: camera.session)) { _ in
                 camera.stop()
                 isStarting = false
-                errorMessage = "相机使用已中断，请重试。"
+                errorMessage = String(localized: "相机使用已中断，请重试。")
             }
             .privacySensitive()
         }
@@ -74,7 +74,7 @@ struct NativeToolCameraScannerView: View {
             try Task.checkCancellation()
             guard isVisible else { return }
             guard authorized else {
-                throw NativeToolError("请在系统设置中允许 Via Vera 使用相机，或返回后从图片、TXT 文件导入。")
+                throw NativeToolError(String(localized: "请在系统设置中允许 Via Vera 使用相机，或返回后从图片、TXT 文件导入。"))
             }
             camera.start { event in
                 guard isVisible else { return }

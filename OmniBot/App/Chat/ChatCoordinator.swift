@@ -72,7 +72,7 @@ final class ChatCoordinator {
         guard !trimmed.isEmpty, busyConversationID == nil else { return }
         let userMessage = AgentMessage.user(trimmed)
         runningConversationID = conversation.id
-        statusMessage = "正在准备上下文…"
+        statusMessage = String(localized: "正在准备上下文…")
         runTask = Task { [weak self, weak conversation] in
             guard let self, let conversation else { return }
             await self.performRun(
@@ -92,7 +92,7 @@ final class ChatCoordinator {
                 throw ChatCoordinatorError.missingRetryMessage
             }
             runningConversationID = conversation.id
-            statusMessage = "正在准备上下文…"
+            statusMessage = String(localized: "正在准备上下文…")
             runTask = Task { [weak self, weak conversation] in
                 guard let self, let conversation else { return }
                 await self.performRun(
@@ -105,7 +105,7 @@ final class ChatCoordinator {
         } catch {
             let description = error.localizedDescription
             errorMessage = description
-            statusMessage = "无法重试"
+            statusMessage = String(localized: "无法重试")
             do {
                 try conversations.updateRunOutcome(
                     status: .failed,
@@ -114,7 +114,7 @@ final class ChatCoordinator {
                     for: conversation
                 )
             } catch {
-                errorMessage = "\(description)\n无法保存失败状态：\(error.localizedDescription)"
+                errorMessage = String(localized: "\(description)\n无法保存失败状态：\(error.localizedDescription)")
             }
         }
     }
@@ -154,7 +154,7 @@ final class ChatCoordinator {
         }
 
         let text = replacementText ?? originalText ?? ""
-        statusMessage = "正在检查模型配置…"
+        statusMessage = String(localized: "正在检查模型配置…")
         errorMessage = nil
 
         do {
@@ -180,7 +180,7 @@ final class ChatCoordinator {
             }
 
             runningConversationID = refreshedConversation.id
-            statusMessage = "正在准备上下文…"
+            statusMessage = String(localized: "正在准备上下文…")
             errorMessage = nil
             runTask = Task { [weak self, weak refreshedConversation] in
                 guard let self, let refreshedConversation else { return }
@@ -195,7 +195,7 @@ final class ChatCoordinator {
             didStartRun = true
         } catch {
             errorMessage = error.localizedDescription
-            statusMessage = "无法重试"
+            statusMessage = String(localized: "无法重试")
             throw error
         }
     }
@@ -216,7 +216,7 @@ final class ChatCoordinator {
         lastCompactionConversationID = conversationID
         lastCompactionMessage = nil
         lastCompactionFailed = false
-        statusMessage = "正在压缩上下文…"
+        statusMessage = String(localized: "正在压缩上下文…")
         errorMessage = nil
         defer {
             if compactingConversationID == conversationID {
@@ -226,7 +226,7 @@ final class ChatCoordinator {
 
         do {
             guard try conversations.contextCompactionCandidate(for: conversation) != nil else {
-                statusMessage = "当前暂无可压缩的上下文"
+                statusMessage = String(localized: "当前暂无可压缩的上下文")
                 lastCompactionMessage = statusMessage
                 return
             }
@@ -238,19 +238,19 @@ final class ChatCoordinator {
                 conversationID: conversationID,
                 configuration: configuration
             ) else {
-                statusMessage = "当前暂无可压缩的上下文"
+                statusMessage = String(localized: "当前暂无可压缩的上下文")
                 lastCompactionMessage = statusMessage
                 return
             }
-            statusMessage = "上下文已压缩"
+            statusMessage = String(localized: "上下文已压缩")
             lastCompactionMessage = statusMessage
         } catch is CancellationError {
-            statusMessage = "上下文压缩已取消"
+            statusMessage = String(localized: "上下文压缩已取消")
             lastCompactionMessage = statusMessage
         } catch {
             let description = error.localizedDescription
-            statusMessage = "上下文压缩失败"
-            lastCompactionMessage = "上下文压缩失败：\(description)"
+            statusMessage = String(localized: "上下文压缩失败")
+            lastCompactionMessage = String(localized: "上下文压缩失败：\(description)")
             lastCompactionFailed = true
             errorMessage = description
         }
@@ -300,7 +300,7 @@ final class ChatCoordinator {
             callID: callID
         )
         if didRequestStop {
-            statusMessage = "正在停止当前工具…"
+            statusMessage = String(localized: "正在停止当前工具…")
         }
         return didRequestStop
     }
@@ -313,7 +313,7 @@ final class ChatCoordinator {
         preparedConfiguration: ProviderRuntimeConfiguration? = nil
     ) async {
         runningConversationID = conversation.id
-        statusMessage = "正在准备上下文…"
+        statusMessage = String(localized: "正在准备上下文…")
         errorMessage = nil
         latestUsage = .zero
         toolCheckpointMessageIDs.removeAll(keepingCapacity: true)
@@ -356,7 +356,7 @@ final class ChatCoordinator {
                    conversation: currentConversation,
                    configuredContextWindow: contextWindow
                ) {
-                statusMessage = "上下文接近上限，正在自动压缩…"
+                statusMessage = String(localized: "上下文接近上限，正在自动压缩…")
                 _ = try await performContextCompaction(
                     conversationID: conversation.id,
                     configuration: configuration
@@ -447,7 +447,7 @@ final class ChatCoordinator {
                     currentRunner = nil
                     currentRunID = nil
                     toolCheckpointMessageIDs.removeAll(keepingCapacity: true)
-                    statusMessage = "上下文超出模型上限，正在压缩后重试…"
+                    statusMessage = String(localized: "上下文超出模型上限，正在压缩后重试…")
                     guard try await performContextCompaction(
                         conversationID: conversationID,
                         configuration: configuration
@@ -461,11 +461,11 @@ final class ChatCoordinator {
                     }
                     history = try conversations.promptHistory(for: refreshedConversation)
                     didRecoverFromOverflow = true
-                    statusMessage = "上下文已压缩，正在重试…"
+                    statusMessage = String(localized: "上下文已压缩，正在重试…")
                 }
             }
         } catch is CancellationError {
-            statusMessage = "已取消"
+            statusMessage = String(localized: "已取消")
             do {
                 try persistInterruptedActiveTool(in: conversation)
                 conversations.finalizeStreamingAssistants(
@@ -479,12 +479,12 @@ final class ChatCoordinator {
                     for: conversation
                 )
             } catch {
-                errorMessage = "已取消，但无法保存会话状态：\(error.localizedDescription)"
+                errorMessage = String(localized: "已取消，但无法保存会话状态：\(error.localizedDescription)")
             }
         } catch {
             let runErrorDescription = error.localizedDescription
             errorMessage = runErrorDescription
-            statusMessage = "运行失败"
+            statusMessage = String(localized: "运行失败")
             do {
                 conversations.finalizeStreamingAssistants(
                     in: conversation,
@@ -497,7 +497,7 @@ final class ChatCoordinator {
                     for: conversation
                 )
             } catch {
-                errorMessage = "\(runErrorDescription)\n无法保存失败状态：\(error.localizedDescription)"
+                errorMessage = String(localized: "\(runErrorDescription)\n无法保存失败状态：\(error.localizedDescription)")
             }
         }
     }
@@ -572,9 +572,9 @@ final class ChatCoordinator {
         case let .started(runID):
             toolCheckpointMessageIDs.removeAll(keepingCapacity: true)
             toolActivity.beginRun(runID: runID, conversationID: conversationID)
-            statusMessage = "Agent 正在思考…"
+            statusMessage = String(localized: "Agent 正在思考…")
         case let .requestStarted(round, attempt):
-            statusMessage = attempt == 1 ? "第 \(round) 轮模型请求…" : "正在重试模型请求…"
+            statusMessage = attempt == 1 ? String(localized: "第 \(round) 轮模型请求…") : String(localized: "正在重试模型请求…")
         case let .assistantMessageStarted(id, _):
             try conversations.updateStreamingAssistant(
                 id: id,
@@ -625,7 +625,7 @@ final class ChatCoordinator {
             if let currentRunID {
                 toolActivity.beginTool(call, runID: currentRunID)
             }
-            statusMessage = "正在调用 \(call.name)…"
+            statusMessage = String(localized: "正在调用 \(call.name)…")
         case let .toolCompleted(call, result, _):
             let content = try result.modelContent()
             let toolMessage = AgentMessage.tool(
@@ -650,13 +650,13 @@ final class ChatCoordinator {
             if let currentRunID {
                 toolActivity.completeTool(callID: call.id, runID: currentRunID)
             }
-            statusMessage = result.isError ? "工具返回错误，Agent 正在处理…" : "工具完成，Agent 正在继续…"
+            statusMessage = result.isError ? String(localized: "工具返回错误，Agent 正在处理…") : String(localized: "工具完成，Agent 正在继续…")
         case let .retrying(_, nextAttempt, errorDescription):
-            statusMessage = "请求失败，准备第 \(nextAttempt) 次尝试…"
+            statusMessage = String(localized: "请求失败，准备第 \(nextAttempt) 次尝试…")
             errorMessage = errorDescription
         case let .completed(result):
             latestUsage = result.usage
-            statusMessage = "完成"
+            statusMessage = String(localized: "完成")
             errorMessage = nil
             try conversations.updateRunOutcome(
                 status: .completed,
@@ -665,7 +665,7 @@ final class ChatCoordinator {
                 for: conversation
             )
         case .cancelled:
-            statusMessage = "已取消"
+            statusMessage = String(localized: "已取消")
         }
     }
 }

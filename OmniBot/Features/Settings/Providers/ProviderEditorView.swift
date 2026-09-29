@@ -114,7 +114,7 @@ struct ProviderEditorView: View {
                         }
                     } else {
                         LabeledContent(
-                            "接口",
+                            String(localized: "接口"),
                             value: settings.editor.protocolType.interfaceDisplayName
                         )
                     }
@@ -149,7 +149,7 @@ struct ProviderEditorView: View {
                     ContentUnavailableView {
                         Label("无法打开服务商", systemImage: "exclamationmark.triangle")
                     } description: {
-                        Text(settings.errorMessage ?? "该服务商可能已被删除。")
+                        Text(settings.errorMessage ?? String(localized: "该服务商可能已被删除。"))
                     }
                     .frame(minHeight: 120)
                 }
@@ -179,14 +179,14 @@ struct ProviderEditorView: View {
         if isReady {
             let name = appModel.providerSettings.editor.name
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-            return name.isEmpty ? "未命名服务商" : name
+            return name.isEmpty ? String(localized: "未命名服务商") : name
         }
 
         if let providerID,
            let profile = appModel.providerSettings.profiles.first(where: { $0.id == providerID }) {
             return profile.name
         }
-        return route == .create ? "新服务商" : "模型服务"
+        return route == .create ? String(localized: "新服务商") : String(localized: "模型服务")
     }
 
     private func prepareEditor() async {

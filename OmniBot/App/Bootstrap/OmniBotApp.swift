@@ -24,7 +24,7 @@ struct OmniBotApp: App {
                     .preferredColorScheme(dependencies.appModel.appearanceSettings.themeMode.colorScheme)
             } else {
                 BootstrapFailureView(
-                    message: bootstrap.errorMessage ?? "未知启动错误",
+                    message: bootstrap.errorMessage ?? String(localized: "未知启动错误"),
                     retry: bootstrap.retry
                 )
             }
@@ -44,7 +44,7 @@ struct OmniBotApp: App {
                     .preferredColorScheme(dependencies.appModel.appearanceSettings.themeMode.colorScheme)
             } else {
                 BootstrapFailureView(
-                    message: bootstrap.errorMessage ?? "未知启动错误",
+                    message: bootstrap.errorMessage ?? String(localized: "未知启动错误"),
                     retry: bootstrap.retry
                 )
                 .frame(width: 480, height: 360)

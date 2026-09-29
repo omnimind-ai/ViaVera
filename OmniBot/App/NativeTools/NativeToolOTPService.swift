@@ -28,9 +28,9 @@ final class NativeToolOTPService {
         do {
             var error: NSError?
             guard authentication.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
-                throw NativeToolError("请先为设备设置解锁密码，再使用两步认证。")
+                throw NativeToolError(String(localized: "请先为设备设置解锁密码，再使用两步认证。"))
             }
-            let success = try await authentication.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "解锁本工具的两步认证账户")
+            let success = try await authentication.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: String(localized: "解锁本工具的两步认证账户"))
             guard success, sessionID == id else { return }
             accounts = try vault.load(context: authentication)
             expiresAt = .now.addingTimeInterval(120)
@@ -38,7 +38,7 @@ final class NativeToolOTPService {
         } catch {
             guard sessionID == id else { return }
             lock()
-            alert = NativeToolAlert("未能解锁验证码账户。请重试或检查设备的身份验证设置。")
+            alert = NativeToolAlert(String(localized: "未能解锁验证码账户。请重试或检查设备的身份验证设置。"))
         }
     }
 
@@ -84,7 +84,7 @@ final class NativeToolOTPService {
     private func authorizedContext() throws -> LAContext {
         guard isUnlocked, expiresAt > .now, let context else {
             lock()
-            throw NativeToolError("账户已锁定，请重新解锁。")
+            throw NativeToolError(String(localized: "账户已锁定，请重新解锁。"))
         }
         return context
     }

@@ -9,7 +9,7 @@ nonisolated public enum ProviderProtocolType: String, Codable, CaseIterable, Sen
     public var displayName: String {
         switch self {
         case .openAICompatible:
-            "OpenAI 兼容"
+            String(localized: "OpenAI 兼容")
         case .deepSeek:
             "DeepSeek"
         case .anthropic:

@@ -150,7 +150,7 @@ final class InteractiveTerminalModel {
         sessionGeneration = generation
         stopWasRequested = false
         shouldRestartAfterStop = false
-        state = .preparing(message: "正在准备 Alpine…")
+        state = .preparing(message: String(localized: "正在准备 Alpine…"))
         modifiers.reset()
 #if os(macOS)
         screen.reset()
@@ -167,14 +167,14 @@ final class InteractiveTerminalModel {
             guard sessionGeneration == generation else { return }
             state = .failed(message: error.localizedDescription)
 #if os(macOS)
-            screen.appendSystemMessage("[无法启动终端：\(error.localizedDescription)]")
+            screen.appendSystemMessage(String(localized: "[无法启动终端：\(error.localizedDescription)]"))
 #endif
             refreshDisplay()
             return
         }
 
         guard sessionGeneration == generation else { return }
-        state = .preparing(message: "正在启动交互式 shell…")
+        state = .preparing(message: String(localized: "正在启动交互式 shell…"))
 
         let identifier = runtime.startInteractiveTerminal(
             viewport: viewport,
@@ -222,13 +222,13 @@ final class InteractiveTerminalModel {
             sessionIdentifier = nil
             state = .failed(message: error.localizedDescription)
 #if os(macOS)
-            screen.appendSystemMessage("[无法启动终端：\(error.localizedDescription)]")
+            screen.appendSystemMessage(String(localized: "[无法启动终端：\(error.localizedDescription)]"))
 #endif
         } else {
 #if os(iOS)
             guard let sessionIdentifier,
                   let terminalView = runtime.viewForInteractiveTerminal(sessionIdentifier) else {
-                state = .failed(message: "iSH 终端视图创建失败。")
+                state = .failed(message: String(localized: "iSH 终端视图创建失败。"))
                 if let sessionIdentifier {
                     runtime.stopInteractiveTerminal(sessionIdentifier)
                 }
@@ -254,12 +254,12 @@ final class InteractiveTerminalModel {
         if let error, !stopWasRequested {
             state = .failed(message: error.localizedDescription)
 #if os(macOS)
-            screen.appendSystemMessage("[终端异常结束：\(error.localizedDescription)]")
+            screen.appendSystemMessage(String(localized: "[终端异常结束：\(error.localizedDescription)]"))
 #endif
         } else {
             state = .stopped(exitCode: exitCode)
 #if os(macOS)
-            screen.appendSystemMessage("[终端进程已结束，退出码 \(exitCode)]")
+            screen.appendSystemMessage(String(localized: "[终端进程已结束，退出码 \(exitCode)]"))
 #endif
         }
         stopWasRequested = false

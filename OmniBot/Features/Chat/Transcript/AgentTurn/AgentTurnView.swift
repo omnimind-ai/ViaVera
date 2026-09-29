@@ -35,7 +35,7 @@ struct AgentTurnView: View {
                     .buttonStyle(.plain)
                     .padding(.vertical, AppDesign.transcriptStatusVerticalPadding)
                     .accessibilityLabel(
-                        isManuallyExpanded ? "收起 Agent 执行过程" : "展开 Agent 执行过程"
+                        isManuallyExpanded ? String(localized: "收起 Agent 执行过程") : String(localized: "展开 Agent 执行过程")
                     )
 
                     AgentTurnProcessRevealView(
@@ -72,6 +72,6 @@ struct AgentTurnView: View {
     }
 
     private var summaryTitle: String {
-        turn.elapsedLabel.isEmpty ? "已处理" : "已处理  \(turn.elapsedLabel)"
+        turn.elapsedLabel.isEmpty ? String(localized: "已处理") : String(localized: "已处理  \(turn.elapsedLabel)")
     }
 }

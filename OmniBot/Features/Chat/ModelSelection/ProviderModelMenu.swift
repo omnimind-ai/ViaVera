@@ -146,25 +146,25 @@ struct ProviderModelMenu: View {
     private var currentUnavailableReason: String {
         switch currentAvailability {
         case .providerMissing:
-            "服务商不可用"
+            String(localized: "服务商不可用")
         case .providerDisabled:
-            "服务商已停用"
+            String(localized: "服务商已停用")
         case .modelMissing:
-            "模型不可用"
+            String(localized: "模型不可用")
         case .modelHidden:
-            "模型已隐藏"
+            String(localized: "模型已隐藏")
         case .none, .available:
-            "当前"
+            String(localized: "当前")
         }
     }
 
     private var selectedModelName: String {
         guard let selectedProvider else {
-            return conversation.modelID.isEmpty ? "选择模型" : conversation.modelID
+            return conversation.modelID.isEmpty ? String(localized: "选择模型") : conversation.modelID
         }
 
         return selectedProvider.models.first(where: { $0.id == conversation.modelID })?.displayName
-            ?? (conversation.modelID.isEmpty ? "选择模型" : conversation.modelID)
+            ?? (conversation.modelID.isEmpty ? String(localized: "选择模型") : conversation.modelID)
     }
 
     private var selectedProvider: ProviderProfile? {
@@ -182,7 +182,7 @@ struct ProviderModelMenu: View {
                 return providerID
             }
         }
-        return "未知服务商"
+        return String(localized: "未知服务商")
     }
 
     private var selectedModel: ModelOption? {

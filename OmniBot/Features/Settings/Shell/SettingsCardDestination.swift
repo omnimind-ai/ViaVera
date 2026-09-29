@@ -16,9 +16,9 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
     var title: String {
         switch self {
         case .providers:
-            "模型服务"
+            String(localized: "模型服务")
         case .usage:
-            "模型用量"
+            String(localized: "模型用量")
         case .soul:
             "Soul"
         case .memory:
@@ -26,11 +26,11 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
         case .skills:
             "Skills"
         case .permissions:
-            "权限"
+            String(localized: "权限")
         case .appearance:
-            "外观"
+            String(localized: "外观")
         case .workspace:
-            "工作区"
+            String(localized: "工作区")
         case .runtime:
             "Alpine Linux"
         }
@@ -39,23 +39,23 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
     var subtitle: String {
         switch self {
         case .providers:
-            "服务地址、密钥与默认模型"
+            String(localized: "服务地址、密钥与默认模型")
         case .usage:
-            "消息活跃度、Token 消耗与模型分布"
+            String(localized: "消息活跃度、Token 消耗与模型分布")
         case .soul:
-            "Agent 的身份与工作边界"
+            String(localized: "Agent 的身份与工作边界")
         case .memory:
-            "长期记忆、每日记忆与检索"
+            String(localized: "长期记忆、每日记忆与检索")
         case .skills:
-            "导入、启用与管理 Agent 技能"
+            String(localized: "导入、启用与管理 Agent 技能")
         case .permissions:
             permissionSubtitle
         case .appearance:
-            "聊天背景与显示效果"
+            String(localized: "聊天背景与显示效果")
         case .workspace:
-            "浏览 Agent 工作区中的文件与文件夹"
+            String(localized: "浏览 Agent 工作区中的文件与文件夹")
         case .runtime:
-            "环境检测、组件安装与软件源"
+            String(localized: "环境检测、组件安装与软件源")
         }
     }
 
@@ -84,9 +84,9 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
 
     private var permissionSubtitle: String {
 #if os(macOS)
-        "管理健康、日历与通讯录授权"
+        String(localized: "管理健康、日历与通讯录授权")
 #else
-        "管理健康、日历、通讯录与闹钟授权"
+        String(localized: "管理健康、日历、通讯录与闹钟授权")
 #endif
     }
 }

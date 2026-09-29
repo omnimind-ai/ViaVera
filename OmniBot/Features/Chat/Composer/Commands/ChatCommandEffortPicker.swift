@@ -34,7 +34,7 @@ struct ChatCommandEffortPicker: View {
                 .padding(.vertical, -(AppDesign.minimumTouchTarget - 18) / 2)
                 .disabled(isDisabled)
                 .accessibilityLabel("思考强度 \(effort.rawValue)")
-                .accessibilityValue(isSelected ? "已选择" : "")
+                .accessibilityValue(isSelected ? String(localized: "已选择") : "")
                 .accessibilityAddTraits(isSelected ? .isSelected : [])
             }
         }

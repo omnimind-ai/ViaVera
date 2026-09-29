@@ -9,9 +9,9 @@ enum AlpinePackageMirror: String, CaseIterable, Identifiable, Sendable {
     var title: String {
         switch self {
         case .official:
-            "Alpine 官方源"
+            String(localized: "Alpine 官方源")
         case .tsinghua:
-            "清华大学镜像源"
+            String(localized: "清华大学镜像源")
         }
     }
 

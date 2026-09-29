@@ -46,7 +46,7 @@ struct SidebarConversationRow: View {
         )
         .contentShape(.rect)
         .accessibilityElement(children: .combine)
-        .accessibilityValue(conversation.isPinned ? "已置顶" : "")
+        .accessibilityValue(conversation.isPinned ? String(localized: "已置顶") : "")
 #else
         HStack(alignment: .center, spacing: AppDesign.standardSpacing) {
             SidebarConversationAvatar(
@@ -86,7 +86,7 @@ struct SidebarConversationRow: View {
         .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
         .contentShape(.rect)
         .accessibilityElement(children: .combine)
-        .accessibilityValue(conversation.isPinned ? "已置顶" : "")
+        .accessibilityValue(conversation.isPinned ? String(localized: "已置顶") : "")
 #endif
     }
 
@@ -95,15 +95,13 @@ struct SidebarConversationRow: View {
         let updatedAt = conversation.updatedAt
 
         if calendar.isDateInToday(updatedAt) {
-            return "今天"
+            return String(localized: "今天")
         }
         if calendar.isDateInYesterday(updatedAt) {
-            return "昨天"
+            return String(localized: "昨天")
         }
 
-        let month = calendar.component(.month, from: updatedAt)
-        let day = calendar.component(.day, from: updatedAt)
-        return "\(month)月\(day)日"
+        return updatedAt.formatted(.dateTime.month(.abbreviated).day())
     }
 
     private var previewText: String {
@@ -115,7 +113,7 @@ struct SidebarConversationRow: View {
             guard message.role != .tool, let content = message.content else { return false }
             return !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         })?.content else {
-            return "等待你描述任务"
+            return String(localized: "等待你描述任务")
         }
 
         return content.replacing("\n", with: " ")
@@ -124,15 +122,15 @@ struct SidebarConversationRow: View {
     private var statusTitle: String {
         switch conversation.status {
         case .idle:
-            "待处理"
+            String(localized: "待处理")
         case .running:
-            "运行中"
+            String(localized: "运行中")
         case .completed:
-            "已完成"
+            String(localized: "已完成")
         case .failed:
-            "失败"
+            String(localized: "失败")
         case .cancelled:
-            "已取消"
+            String(localized: "已取消")
         }
     }
 

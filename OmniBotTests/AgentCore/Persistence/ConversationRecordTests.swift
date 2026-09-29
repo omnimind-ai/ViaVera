@@ -192,7 +192,7 @@ struct ConversationRecordTests {
         )
         #expect(checkpoint.status == .interrupted)
         #expect(checkpoint.toolCallID == call.id)
-        #expect(checkpoint.content?.contains("外部副作用是否发生未知") == true)
+        #expect(checkpoint.content?.contains(String(localized: "工具调用已开始，但应用在结果持久化前退出或被系统中断；外部副作用是否发生未知。检查当前状态后再决定是否重试。")) == true)
         #expect(checkpoint.content?.contains("outcomeUnknown") == true)
     }
 

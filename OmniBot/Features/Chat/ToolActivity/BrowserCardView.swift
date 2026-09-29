@@ -36,7 +36,7 @@ struct BrowserCardView: View {
                 browserContent
             }
             .background(.background)
-            .navigationTitle(snapshot.title.isEmpty ? "浏览器" : snapshot.title)
+            .navigationTitle(snapshot.title.isEmpty ? String(localized: "浏览器") : snapshot.title)
 #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
 #endif
@@ -72,7 +72,7 @@ struct BrowserCardView: View {
     private var browserChrome: some View {
         HStack(spacing: 4) {
             browserControl(
-                "后退",
+                String(localized: "后退"),
                 systemImage: "chevron.left",
                 isEnabled: snapshot.canGoBack
             ) {
@@ -84,7 +84,7 @@ struct BrowserCardView: View {
             }
 
             browserControl(
-                "前进",
+                String(localized: "前进"),
                 systemImage: "chevron.right",
                 isEnabled: snapshot.canGoForward
             ) {
@@ -118,7 +118,7 @@ struct BrowserCardView: View {
             .background(.quaternary, in: .rect(cornerRadius: 10))
 
             browserControl(
-                snapshot.isLoading ? "停止载入" : "重新载入",
+                snapshot.isLoading ? String(localized: "停止载入") : String(localized: "重新载入"),
                 systemImage: snapshot.isLoading ? "xmark" : "arrow.clockwise",
                 isEnabled: snapshot.activeTab != nil
             ) {

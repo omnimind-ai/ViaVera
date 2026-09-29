@@ -24,7 +24,7 @@ final class ModelUsageViewModel {
             return
         } catch {
             guard latestRequest == request, !Task.isCancelled else { return }
-            errorMessage = "无法读取本地用量记录：\(error.localizedDescription)"
+            errorMessage = String(localized: "无法读取本地用量记录：\(error.localizedDescription)")
         }
     }
 }

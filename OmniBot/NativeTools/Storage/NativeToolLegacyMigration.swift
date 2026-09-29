@@ -64,7 +64,7 @@ nonisolated enum NativeToolLegacyMigration {
                 addedScreens += template.screens.map { NativeToolScreen(id: namespace + $0.id, title: $0.title, components: $0.components.map(component)) }
                 let action = namespace + "open"
                 actions[action] = [NativeToolAction(type: .navigate, screen: namespace + template.screens[0].id)]
-                return NativeToolComponent(id: node.id, type: .button, title: node.title ?? "打开验证码", action: action, visibleWhen: node.visibleWhen)
+                return NativeToolComponent(id: node.id, type: .button, title: node.title ?? String(localized: "打开验证码"), action: action, visibleWhen: node.visibleWhen)
             }
         }
         let screens = package.screens.map { NativeToolScreen(id: $0.id, title: $0.title, components: replace($0.components)) }

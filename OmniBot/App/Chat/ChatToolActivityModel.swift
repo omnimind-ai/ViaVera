@@ -5,7 +5,7 @@ import Observation
 @Observable
 final class ChatToolActivityModel {
     private static let maximumOutputCharacters = 12_000
-    private static let truncationMarker = "\n…更早的终端输出已省略\n"
+    private static let truncationMarker = String(localized: "\n…更早的终端输出已省略\n")
     private static let outputPublishInterval = Duration.milliseconds(70)
 
     private(set) var snapshot: ChatToolLiveSnapshot?

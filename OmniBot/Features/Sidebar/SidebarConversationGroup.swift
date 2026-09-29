@@ -13,17 +13,17 @@ enum SidebarConversationGroup: Int, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .pinned:
-            "置顶"
+            String(localized: "置顶")
         case .today:
-            "今天"
+            String(localized: "今天")
         case .yesterday:
-            "昨天"
+            String(localized: "昨天")
         case .thisWeek:
-            "这周"
+            String(localized: "这周")
         case .thisMonth:
-            "这个月"
+            String(localized: "这个月")
         case .older:
-            "更久以前"
+            String(localized: "更久以前")
         }
     }
 

@@ -28,6 +28,6 @@ struct ModelUsageHeatmapCell: View {
             .accessibilityLabel(day?.date.formatted(.dateTime.year().month().day().weekday()) ?? "")
             .accessibilityValue("\(day?.messageCount ?? 0) 条消息")
             .accessibilityHidden(day == nil)
-            .help(day.map { "\($0.date.formatted(date: .abbreviated, time: .omitted)) · \($0.messageCount) 条消息" } ?? "")
+            .help(day.map { String(localized: "\($0.date.formatted(date: .abbreviated, time: .omitted)) · \($0.messageCount) 条消息") } ?? "")
     }
 }

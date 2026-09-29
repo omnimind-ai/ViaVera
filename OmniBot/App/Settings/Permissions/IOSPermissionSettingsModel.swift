@@ -1,3 +1,5 @@
+import Foundation
+
 import Observation
 
 @MainActor
@@ -80,18 +82,18 @@ final class IOSPermissionSettingsModel {
         case .denied:
             await rejectEnable(
                 permission,
-                message: "请先在系统设置中允许 Via Vera 访问\(permission.kind.title)。",
+                message: String(localized: "请先在系统设置中允许 Via Vera 访问\(permission.kind.title)。"),
                 offersSystemSettings: true
             )
         case .restricted:
             await rejectEnable(
                 permission,
-                message: "此设备限制了\(permission.kind.title)权限，当前无法启用。"
+                message: String(localized: "此设备限制了\(permission.kind.title)权限，当前无法启用。")
             )
         case .unavailable:
             await rejectEnable(
                 permission,
-                message: "此设备当前无法使用\(permission.kind.title)权限。"
+                message: String(localized: "此设备当前无法使用\(permission.kind.title)权限。")
             )
         case .authorized, .limited, .requested:
             break
@@ -130,7 +132,7 @@ final class IOSPermissionSettingsModel {
             await permissionStore.setEnabled(false, for: permission.kind)
             permission.isEnabled = false
             alert = IOSPermissionSettingsAlert(
-                title: "无法启用\(permission.kind.title)权限",
+                title: String(localized: "无法启用\(permission.kind.title)权限"),
                 message: error.localizedDescription
             )
         }
@@ -144,7 +146,7 @@ final class IOSPermissionSettingsModel {
         await permissionStore.setEnabled(false, for: permission.kind)
         permission.isEnabled = false
         alert = IOSPermissionSettingsAlert(
-            title: "无法启用\(permission.kind.title)权限",
+            title: String(localized: "无法启用\(permission.kind.title)权限"),
             message: message,
             offersSystemSettings: offersSystemSettings
         )
@@ -166,13 +168,13 @@ final class IOSPermissionSettingsModel {
     ) -> String {
         switch authorization {
         case .denied, .writeOnly:
-            "系统未允许 Via Vera 完整访问\(permission.title)，可前往系统设置修改。"
+            String(localized: "系统未允许 Via Vera 完整访问\(permission.title)，可前往系统设置修改。")
         case .restricted:
-            "此设备限制了\(permission.title)权限，当前无法启用。"
+            String(localized: "此设备限制了\(permission.title)权限，当前无法启用。")
         case .unavailable:
-            "此设备当前无法使用\(permission.title)权限。"
+            String(localized: "此设备当前无法使用\(permission.title)权限。")
         case .notDetermined, .unknown:
-            "系统没有完成\(permission.title)授权，请稍后重试。"
+            String(localized: "系统没有完成\(permission.title)授权，请稍后重试。")
         case .authorized, .limited, .requested:
             ""
         }

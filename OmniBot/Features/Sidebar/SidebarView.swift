@@ -27,15 +27,29 @@ struct SidebarView: View {
 #if os(macOS)
         .navigationTitle("OmniBot")
         .background(.bar)
+        .toolbar(removing: isSettingsPresented ? .sidebarToggle : nil)
         .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
-                Button("设置", systemImage: "gearshape", action: showSettings)
-                    .help("设置")
-                    .disabled(appModel.presentedSettingsDestination != nil)
+            if isSettingsPresented {
+                // Recreate the group because updating its visibility in place leaves
+                // the old glass container behind on macOS.
+                ToolbarItemGroup(placement: .primaryAction) {
+                    settingsToolbarActions
+                }
+                .sharedBackgroundVisibility(.hidden)
 
-                Button("新建会话", systemImage: "square.and.pencil", action: appModel.newConversation)
-                    .help("新建会话")
-                    .disabled(appModel.presentedSettingsDestination != nil)
+                // Navigation is blocked by the modal. Keep only the subdued symbol;
+                // the real system sidebar toggle returns when settings closes.
+                ToolbarItem(placement: .primaryAction) {
+                    Image(systemName: "sidebar.left")
+                        .imageScale(.large)
+                        .foregroundStyle(.quaternary)
+                        .accessibilityHidden(true)
+                }
+                .sharedBackgroundVisibility(.hidden)
+            } else {
+                ToolbarItemGroup(placement: .primaryAction) {
+                    settingsToolbarActions
+                }
             }
         }
 #else
@@ -44,7 +58,7 @@ struct SidebarView: View {
         .searchable(
             text: $searchText,
             placement: .navigationBarDrawer(displayMode: .always),
-            prompt: "搜索会话"
+            prompt: String(localized: "搜索会话")
         )
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -64,6 +78,23 @@ struct SidebarView: View {
         }
 #endif
     }
+
+#if os(macOS)
+    private var isSettingsPresented: Bool {
+        appModel.presentedSettingsDestination != nil
+    }
+
+    @ViewBuilder
+    private var settingsToolbarActions: some View {
+        Button("设置", systemImage: "gearshape", action: showSettings)
+            .help("设置")
+            .disabled(appModel.presentedSettingsDestination != nil)
+
+        Button("新建会话", systemImage: "square.and.pencil", action: appModel.newConversation)
+            .help("新建会话")
+            .disabled(appModel.presentedSettingsDestination != nil)
+    }
+#endif
 
     private func showSettings() {
 #if os(macOS)

@@ -8,11 +8,11 @@ nonisolated enum AppearanceSettingsStoreError: LocalizedError, Sendable {
     var errorDescription: String? {
         switch self {
         case .invalidImage:
-            "请选择有效的图片文件。"
+            String(localized: "请选择有效的图片文件。")
         case .imageTooLarge:
-            "背景图片不能超过 64 MB。"
+            String(localized: "背景图片不能超过 64 MB。")
         case let .corruptedSettings(message):
-            "外观设置无法读取：\(message)"
+            String(localized: "外观设置无法读取：\(message)")
         }
     }
 }

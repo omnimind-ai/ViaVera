@@ -47,11 +47,11 @@ struct ChatCommandCompactRow: View {
 
     private var detailText: String {
         if isCompacting {
-            "正在压缩上下文…"
+            String(localized: "正在压缩上下文…")
         } else if let compactionMessage, !compactionMessage.isEmpty {
             compactionMessage
         } else {
-            "手动压缩当前对话上下文"
+            String(localized: "手动压缩当前对话上下文")
         }
     }
 

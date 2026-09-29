@@ -218,7 +218,7 @@ public actor OmniAgentToolExecutor: AgentToolExecuting {
             )
         } catch is CancellationError where userCancelledTools.remove(cancellationKey) != nil {
             return AgentToolExecutionResult(
-                content: "用户已停止当前工具调用。",
+                content: String(localized: "用户已停止当前工具调用。"),
                 isError: true,
                 metadata: Self.baseToolMetadata(name: call.name).merging([
                     "interrupted": .bool(true),
@@ -288,13 +288,13 @@ public actor OmniAgentToolExecutor: AgentToolExecuting {
         }
         guard await agentPermissionStore.isEnabled(permission) else {
             throw ApplePersonalToolError(
-                "已在 Via Vera 设置中关闭\(permission.title)权限，Agent 无法调用此工具。",
+                String(localized: "已在 Via Vera 设置中关闭\(permission.title)权限，Agent 无法调用此工具。"),
                 code: "permission_disabled_in_app",
                 permission: permission.rawValue,
                 authorizationStatus: "disabled_in_app",
                 backend: "via_vera_permissions",
                 requiresUserInteraction: true,
-                guidance: "请先在 Via Vera 的“设置 > 系统 > 权限”中打开\(permission.title)开关。"
+                guidance: String(localized: "请先在 Via Vera 的“设置 > 系统 > 权限”中打开\(permission.title)开关。")
             )
         }
     }
@@ -305,11 +305,11 @@ public actor OmniAgentToolExecutor: AgentToolExecuting {
             forAgentToolName: toolName
         ) else { return }
         throw ApplePersonalToolError(
-            "此平台不支持\(permission.title)工具。",
+            String(localized: "此平台不支持\(permission.title)工具。"),
             code: "unsupported_platform",
             permission: permission.rawValue,
             backend: "platform_capabilities",
-            guidance: "请改用当前平台已公开的工具。"
+            guidance: String(localized: "请改用当前平台已公开的工具。")
         )
     }
 

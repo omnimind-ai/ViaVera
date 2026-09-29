@@ -33,6 +33,6 @@ struct TerminalAccessoryKeyButton: View {
         .frame(minWidth: AppDesign.minimumTouchTarget)
         .frame(height: AppDesign.terminalAccessoryKeyHeight)
         .accessibilityLabel(item.accessibilityLabel)
-        .accessibilityValue(isSelected ? "已锁定" : "")
+        .accessibilityValue(isSelected ? String(localized: "已锁定") : "")
     }
 }
