@@ -46,6 +46,9 @@ struct NativeToolLibraryView: View {
             }
         }
         .navigationTitle("")
+#if os(macOS)
+        .scrollContentBackground(.hidden)
+#endif
 #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
 #endif

@@ -15,7 +15,15 @@ final class AppModel {
 #endif
         }
     }
-    var nativeToolPath: [UUID] = []
+    var nativeToolPath: [UUID] = [] {
+        didSet {
+#if os(macOS)
+            guard nativeToolPath != oldValue else { return }
+            nativeToolScreenID = nil
+            recordNavigationVisit()
+#endif
+        }
+    }
     var destination: AppDestination? {
         didSet {
             if case let .conversation(identifier) = destination {
@@ -25,8 +33,18 @@ final class AppModel {
                 if conversationPath.last != identifier { conversationPath = [identifier] }
 #endif
             }
+#if os(macOS)
+            recordNavigationVisit()
+#endif
         }
     }
+#if os(macOS)
+    var nativeToolScreenID: String? {
+        didSet { recordNavigationVisit() }
+    }
+    var navigationHistory = AppNavigationHistory()
+    @ObservationIgnored var isRestoringNavigation = false
+#endif
     var globalErrorMessage: String?
     var presentedSettingsDestination: SettingsCardDestination?
     var isTerminalPresented = false

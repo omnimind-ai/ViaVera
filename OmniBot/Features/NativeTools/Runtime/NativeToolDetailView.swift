@@ -59,6 +59,11 @@ struct NativeToolDetailView: View {
             if let host { NativeToolCapabilityPresentation(host: host) }
         }
         .onDisappear { runtime?.suspend() }
+#if os(macOS)
+        .onChange(of: appModel.nativeToolScreenID) { _, _ in
+            if let runtime { restoreScreen(in: runtime) }
+        }
+#endif
         .onChange(of: host?.isCredentialSessionUnlocked) { previous, current in
             if previous == true, current == false { runtime?.suspend() }
         }
@@ -78,13 +83,32 @@ struct NativeToolDetailView: View {
             runtime?.suspend()
             let host = NativeToolHostCapabilities(toolID: toolID, permissions: document.record.package.capabilities)
             self.host = host
-            runtime = NativeToolRuntime(document: document, store: appModel.nativeTools.store, host: host)
+            let runtime = NativeToolRuntime(document: document, store: appModel.nativeTools.store, host: host)
+#if os(macOS)
+            restoreScreen(in: runtime)
+            let firstScreenID = document.record.package.screens[0].id
+            runtime.onScreenChange = { [weak appModel] screenID in
+                guard let appModel, appModel.destination == .tools,
+                      appModel.nativeToolPath.last == toolID else { return }
+                appModel.nativeToolScreenID = screenID == firstScreenID ? nil : screenID
+            }
+#endif
+            self.runtime = runtime
             loadError = nil
         } catch {
             if runtime == nil { loadError = error.localizedDescription }
             else { alert = NativeToolAlert(error.localizedDescription) }
         }
     }
+
+#if os(macOS)
+    private func restoreScreen(in runtime: NativeToolRuntime) {
+        guard appModel.destination == .tools, appModel.nativeToolPath.last == toolID else { return }
+        let screens = runtime.record.package.screens
+        let screenID = appModel.nativeToolScreenID ?? screens[0].id
+        runtime.screenID = screens.first(where: { $0.id == screenID })?.id ?? screens[0].id
+    }
+#endif
 
     private func export() {
         guard let runtime else { return }

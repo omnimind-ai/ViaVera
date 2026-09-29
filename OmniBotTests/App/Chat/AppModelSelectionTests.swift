@@ -135,6 +135,95 @@ struct AppModelSelectionTests {
         #expect(reloaded.globalErrorMessage == nil)
     }
 
+#if os(macOS)
+    @Test("Window history restores tool screens and drafts while excluding the settings card")
+    func windowNavigationHistory() async throws {
+        let suiteName = "WindowNavigationTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        let directory = FileManager.default.temporaryDirectory.appending(path: suiteName)
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+            try? FileManager.default.removeItem(at: directory)
+        }
+        let (model, container) = try await makeModel(directory: directory, defaults: defaults)
+        defer { withExtendedLifetime(container) {} }
+        await model.nativeTools.load()
+        let tool = try #require(model.nativeTools.records.first)
+        model.newConversation()
+        let conversation = try #require(model.selectedConversation)
+        let draft = model.chatDraft(for: conversation.id)
+        draft.text = "Keep my unsent message"
+        #expect(!model.canGoBack)
+
+        model.openNativeToolLibrary()
+        model.openNativeTool(tool.id)
+        let detail = model.navigationHistory.current
+        if let screen = tool.package.screens.dropFirst().first {
+            model.nativeToolScreenID = screen.id
+            model.goBack()
+            #expect(model.nativeToolScreenID == nil)
+            model.goForward()
+            #expect(model.nativeToolScreenID == screen.id)
+            model.goBack()
+        }
+        model.goBack()
+        #expect(model.destination == .tools)
+        #expect(model.nativeToolPath.isEmpty)
+        model.goForward()
+        #expect(model.navigationHistory.current == detail)
+        #expect(model.nativeToolPath == [tool.id])
+
+        model.presentSettings(.appearance)
+        #expect(!model.canGoBack)
+        #expect(!model.canGoForward)
+        model.goBack()
+        #expect(model.navigationHistory.current == detail)
+        model.dismissSettings()
+        model.goBack()
+        model.goBack()
+        #expect(model.destination == .conversation(conversation.id))
+        #expect(model.chatDraft(for: conversation.id) === draft)
+        #expect(draft.text == "Keep my unsent message")
+        #expect(!model.canGoBack)
+        model.goForward()
+        #expect(model.destination == .tools)
+        #expect(model.nativeToolPath.isEmpty)
+    }
+
+    @Test("Deleted conversations and tools are unavailable to window history")
+    func deletedNavigationDestinations() async throws {
+        let suiteName = "DeletedNavigationTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        let directory = FileManager.default.temporaryDirectory.appending(path: suiteName)
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+            try? FileManager.default.removeItem(at: directory)
+        }
+        let (model, container) = try await makeModel(directory: directory, defaults: defaults)
+        defer { withExtendedLifetime(container) {} }
+        model.newConversation()
+        let first = try #require(model.selectedConversation)
+        try model.conversations.append(.user("History"), to: first)
+        model.newConversation()
+        let second = try #require(model.selectedConversation)
+        model.openNativeToolLibrary()
+        await model.deleteConversation(second)
+        model.goBack()
+        #expect(model.destination == .conversation(first.id))
+        model.goForward()
+        #expect(model.destination == .tools)
+        await model.nativeTools.load()
+        let tool = try #require(model.nativeTools.records.first)
+        model.openNativeTool(tool.id)
+        model.destination = .conversation(first.id)
+        try await model.nativeTools.store.delete(tool.id)
+        await model.nativeTools.load()
+        model.goBack()
+        #expect(model.destination == .tools)
+        #expect(model.nativeToolPath.isEmpty)
+    }
+#endif
+
     private func makeModel(
         directory: URL,
         defaults: UserDefaults,
