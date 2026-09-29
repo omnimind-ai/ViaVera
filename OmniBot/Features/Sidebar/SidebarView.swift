@@ -15,7 +15,10 @@ struct SidebarView: View {
                 isSearching: !searchText.isEmpty
             )
             .safeAreaBar(edge: .top, spacing: 0) {
-                SidebarHeaderView(searchText: $searchText)
+                VStack(spacing: 0) {
+                    SidebarHeaderView(searchText: $searchText)
+                    SidebarToolsButton()
+                }
             }
 #else
             SidebarMobileConversationListView(
@@ -92,12 +95,10 @@ struct SidebarView: View {
 
         Button("后退", systemImage: "chevron.left", action: appModel.goBack)
             .help("后退")
-            .keyboardShortcut("[", modifiers: .command)
             .disabled(!appModel.canGoBack)
 
         Button("前进", systemImage: "chevron.right", action: appModel.goForward)
             .help("前进")
-            .keyboardShortcut("]", modifiers: .command)
             .disabled(!appModel.canGoForward)
 
         Button("新建会话", systemImage: "square.and.pencil", action: appModel.newConversation)

@@ -8,11 +8,8 @@ struct UserMessageContentView: View {
         Text(content)
             .font(.body)
             .foregroundStyle(.primary)
-            .underline(
-                showsEditAffordance,
-                pattern: .dash,
-                color: .secondary
-            )
+            .lineSpacing(4)
+            .textRenderer(UserMessageUnderlineRenderer(isEnabled: showsEditAffordance))
             .padding(.horizontal, AppDesign.userMessageHorizontalPadding)
             .padding(.vertical, AppDesign.userMessageVerticalPadding)
             .background(

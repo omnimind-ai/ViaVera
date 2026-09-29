@@ -42,6 +42,10 @@ struct SettingsDestinationView: View {
             IOSPermissionSettingsView()
         case .appearance:
             AppearanceSettingsView()
+#if os(macOS)
+        case .keyboardShortcuts:
+            KeyboardShortcutSettingsView()
+#endif
         case .sync:
             CloudSyncSettingsView()
         case .workspace:

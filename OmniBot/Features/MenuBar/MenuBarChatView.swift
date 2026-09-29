@@ -38,6 +38,7 @@ struct MenuBarChatView: View {
                 .ignoresSafeArea()
         }
         .symbolRenderingMode(.hierarchical)
+        .modifier(MacShortcutScope(isMainWindow: false))
         .modifier(AppSceneLifecycleModifier())
         .background {
             MenuBarWindowAccessor(

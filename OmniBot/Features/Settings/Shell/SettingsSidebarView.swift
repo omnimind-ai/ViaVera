@@ -28,6 +28,10 @@ struct SettingsSidebarView: View {
                     .tag(SettingsCardDestination.permissions)
                 SettingsCardRow(destination: .appearance)
                     .tag(SettingsCardDestination.appearance)
+#if os(macOS)
+                SettingsCardRow(destination: .keyboardShortcuts)
+                    .tag(SettingsCardDestination.keyboardShortcuts)
+#endif
                 SettingsCardRow(destination: .workspace)
                     .tag(SettingsCardDestination.workspace)
                 SettingsCardRow(destination: .runtime)

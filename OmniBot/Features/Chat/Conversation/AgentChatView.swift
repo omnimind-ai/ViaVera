@@ -273,7 +273,7 @@ struct AgentChatView: View {
                         )
                     }
 
-                    if isCommandToolbarPresented {
+                    if isCommandToolbarPresented, editingUserMessageID == nil {
                         ChatCommandToolbar(
                             selectedEffort: conversation.reasoningEffort,
                             isBusy: isBusy,
@@ -314,6 +314,7 @@ struct AgentChatView: View {
                             : nil,
                         onInteraction: handleComposerInteraction,
                         onToggleCommandToolbar: toggleCommandToolbar,
+                        onCancelEditing: cancelEditing,
                         onSend: {
                             submitDraft(in: conversation)
                         },
@@ -473,6 +474,7 @@ struct AgentChatView: View {
 #endif
 #if os(macOS)
             .navigationTitle(conversation.title)
+            .focusedSceneValue(\.macChatShortcutActions, chatShortcutActions(isPreparingResend: isPreparingResend))
             .toolbar {
                 if onOpenMainWindow == nil {
                     ToolbarItem(placement: .primaryAction) {
@@ -543,6 +545,19 @@ struct AgentChatView: View {
         }
     }
 
+#if os(macOS)
+    private func chatShortcutActions(isPreparingResend: Bool) -> MacChatShortcutActions? {
+        guard !isPreparingResend else { return nil }
+        let toggleTerminal: (() -> Void)? = editingUserMessageID == nil ? { openTerminal() } : nil
+        let toggleCommands: (() -> Void)? = editingUserMessageID == nil ? { toggleCommandToolbar() } : nil
+        return MacChatShortcutActions(
+            focusComposer: { composerFocusRequestID &+= 1 },
+            toggleTerminal: toggleTerminal,
+            toggleCommands: toggleCommands
+        )
+    }
+#endif
+
     private func beginEditing(_ message: MessageRecord) {
         guard let content = message.content,
               !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -552,6 +567,14 @@ struct AgentChatView: View {
         composerDraft.skillReference = nil
         editingUserMessageID = message.id
         composerFocusRequestID &+= 1
+        collapseChatPanels()
+    }
+
+    private func cancelEditing() {
+        draft = ""
+        editingUserMessageID = nil
+        composerDraft.skillReference = nil
+        composerDraft.requestsFocus = false
         collapseChatPanels()
     }
 

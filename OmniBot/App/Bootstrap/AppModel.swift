@@ -39,6 +39,8 @@ final class AppModel {
         }
     }
 #if os(macOS)
+    let keyboardShortcuts = KeyboardShortcutSettingsModel()
+    var sidebarSearchRequestID = 0
     var nativeToolScreenID: String? {
         didSet { recordNavigationVisit() }
     }

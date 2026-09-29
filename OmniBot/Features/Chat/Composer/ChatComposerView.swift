@@ -24,6 +24,7 @@ struct ChatComposerView: View {
     let busyStatusMessage: String?
     let onInteraction: () -> Void
     let onToggleCommandToolbar: () -> Void
+    let onCancelEditing: () -> Void
     let onSend: () -> Void
     let onCancel: () -> Void
     let onOpenTerminal: () -> Void
@@ -33,7 +34,7 @@ struct ChatComposerView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppDesign.compactSpacing) {
             VStack(alignment: .leading, spacing: AppDesign.compactSpacing) {
-                if let skillReference {
+                if !isEditingUserMessage, let skillReference {
                     ChatComposerSkillCapsule(reference: skillReference) {
                         self.skillReference = nil
                     }
@@ -86,52 +87,51 @@ struct ChatComposerView: View {
                 HStack(spacing: AppDesign.composerControlSpacing) {
                     ChatComposerAddMenu(
                         isDisabled: isBusy,
+                        isEditingUserMessage: isEditingUserMessage,
+                        onCancelEditing: onCancelEditing,
                         onImportAttachments: onImportAttachments,
                         onAddPhotos: onAddPhotos
                     )
 
-                    Button(action: onToggleCommandToolbar) {
-                        ComposerIconLabel(
-                            title: String(localized: "命令"),
-                            assetName: "ComposerCommand",
-                            size: AppDesign.composerIconSize
+                    if !isEditingUserMessage {
+                        Button(action: onToggleCommandToolbar) {
+                            ComposerIconLabel(
+                                title: String(localized: "命令"),
+                                assetName: "ComposerCommand",
+                                size: AppDesign.composerIconSize
+                            )
+                        }
+                        .foregroundStyle(
+                            isCommandToolbarPresented ? Color.accentColor : Color.secondary
                         )
+                        .composerControlFrame()
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel("命令")
+                        .accessibilityValue(isCommandToolbarPresented ? String(localized: "已展开") : String(localized: "已收起"))
+                        .help("命令")
                     }
-                    .foregroundStyle(
-                        isCommandToolbarPresented ? Color.accentColor : Color.secondary
-                    )
-                    .composerControlFrame()
-                    .buttonStyle(.borderless)
-                    .accessibilityLabel("命令")
-                    .accessibilityValue(isCommandToolbarPresented ? String(localized: "已展开") : String(localized: "已收起"))
-                    .help("命令")
 
                     Spacer(minLength: AppDesign.standardSpacing)
 
-                    ProviderModelMenu(
-                        conversation: conversation,
-                        isDisabled: isBusy
-                    )
-
-                    Button(action: onOpenTerminal) {
-                        ComposerIconLabel(
-                            title: String(localized: "打开本地终端"),
-                            assetName: "ComposerTerminal",
-                            size: AppDesign.composerTerminalIconSize
+                    if !isEditingUserMessage {
+                        ProviderModelMenu(
+                            conversation: conversation,
+                            isDisabled: isBusy
                         )
+
+                        Button(action: onOpenTerminal) {
+                            ComposerIconLabel(
+                                title: String(localized: "打开本地终端"),
+                                assetName: "ComposerTerminal",
+                                size: AppDesign.composerTerminalIconSize
+                            )
+                        }
+                        .foregroundStyle(.secondary)
+                        .composerControlFrame()
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel("打开本地终端")
+                        .help("本地终端")
                     }
-#if os(macOS)
-                    .keyboardShortcut("j", modifiers: .command)
-#endif
-                    .foregroundStyle(.secondary)
-                    .composerControlFrame()
-                    .buttonStyle(.borderless)
-                    .accessibilityLabel("打开本地终端")
-#if os(macOS)
-                    .help("本地终端（⌘J）")
-#else
-                    .help("本地终端")
-#endif
 
                     ComposerSendButton(
                         isRunning: isRunning && !isEditingUserMessage,

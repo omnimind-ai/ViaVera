@@ -33,6 +33,7 @@ struct OmniBotApp: App {
         }
 #if os(macOS)
         .defaultSize(width: 1_180, height: 780)
+        .commands { MacAppCommands() }
 #endif
 
 #if os(macOS)

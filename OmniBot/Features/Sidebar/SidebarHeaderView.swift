@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct SidebarHeaderView: View {
+    @Environment(AppModel.self) private var appModel
+    @FocusState private var isSearchFocused: Bool
     @Binding var searchText: String
 
     var body: some View {
@@ -11,6 +13,7 @@ struct SidebarHeaderView: View {
 
             TextField("搜索会话", text: $searchText)
                 .textFieldStyle(.plain)
+                .focused($isSearchFocused)
 
             if !searchText.isEmpty {
                 Button("清除搜索", systemImage: "xmark.circle.fill", action: clearSearch)
@@ -26,6 +29,11 @@ struct SidebarHeaderView: View {
         .padding(.horizontal, AppDesign.sidebarHorizontalInset)
         .padding(.top, AppDesign.compactSpacing)
         .padding(.bottom, AppDesign.compactSpacing)
+#if os(macOS)
+        .task(id: appModel.sidebarSearchRequestID) {
+            if appModel.sidebarSearchRequestID > 0 { isSearchFocused = true }
+        }
+#endif
     }
 
     private func clearSearch() {

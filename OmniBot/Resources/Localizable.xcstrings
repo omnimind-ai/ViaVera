@@ -1,6 +1,518 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "会话命令" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat Commands"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会话命令"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "前往下一个浏览的页面" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to the next page"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前往下一个浏览的页面"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "取消编辑" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel Editing"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消编辑"
+          }
+        }
+      }
+    },
+    "在侧边栏中搜索历史会话" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search conversation history in the sidebar"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在侧边栏中搜索历史会话"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "在当前会话中开始输入" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start typing in the current conversation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在当前会话中开始输入"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "导航" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navigation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导航"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "展开或收起会话命令栏" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show or hide chat commands"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展开或收起会话命令栏"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "展开或收起当前会话的终端" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show or hide the terminal in the current conversation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展开或收起当前会话的终端"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "常用快捷键" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Common Shortcuts"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "常用快捷键"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "开始新的会话" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start a new conversation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始新的会话"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "录制、修改或停用常用快捷键" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record, change, or disable common keyboard shortcuts"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "录制、修改或停用常用快捷键"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "录制快捷键" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record Shortcut"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "录制快捷键"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "快捷键" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keyboard Shortcuts"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快捷键"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "快速聊天" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quick Chat"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速聊天"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "打开工具列表" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the tool library"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开工具列表"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "打开独立的快捷聊天窗口" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open a separate quick chat window"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开独立的快捷聊天窗口"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "打开软件设置" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open app settings"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开软件设置"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "无法使用这个按键，请录制其他组合。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This key cannot be used. Please record another combination."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法使用这个按键，请录制其他组合。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "未分配" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Assigned"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未分配"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "正在录制快捷键" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording Shortcut"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在录制快捷键"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "此快捷键已用于「%@」。请先清除原绑定，或使用其他组合。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This shortcut is already assigned to “%@”. Clear that binding first, or use another combination."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此快捷键已用于「%@」。请先清除原绑定，或使用其他组合。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "清空%@的快捷键%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear the shortcut %2$@ for %1$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空%@的快捷键%@"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "清空快捷键" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Shortcut"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空快捷键"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "清空输入框并退出编辑状态" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear the message field and exit editing"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空输入框并退出编辑状态"
+          }
+        }
+      }
+    },
+    "点击铅笔后按下组合键。Esc 取消，Delete 清空；留空即停用。快捷键仅在软件内生效。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click the pencil, then press a key combination. Esc cancels; Delete clears. Leave a shortcut empty to disable it. Shortcuts work only inside the app."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点击铅笔后按下组合键。Esc 取消，Delete 清空；留空即停用。快捷键仅在软件内生效。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "聚焦输入框" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus Message Input"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "聚焦输入框"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "请包含 Command 或 Control 键，避免影响正常输入。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include Command or Control to avoid interfering with normal typing."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请包含 Command 或 Control 键，避免影响正常输入。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "请按下快捷键…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press a shortcut…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请按下快捷键…"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "返回上一个浏览的页面" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Return to the previous page"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返回上一个浏览的页面"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "这个组合用于系统或文本编辑，请使用其他快捷键。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This combination is used by the system or for text editing. Please choose another shortcut."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个组合用于系统或文本编辑，请使用其他快捷键。"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
     "在使用同一 Apple 账户的 iPhone、iPad 和 Mac 间同步聊天、附件、模型服务配置及 API Key、默认模型、Soul、Memory、Skills 和外观。API Key 恢复到设备钥匙串，本地备份缓存加密保存。设备权限和 Alpine 环境保留在各设备。任务或设置编辑完成后再同步。" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,

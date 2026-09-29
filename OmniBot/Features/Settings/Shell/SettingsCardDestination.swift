@@ -8,6 +8,9 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
     case skills
     case permissions
     case appearance
+#if os(macOS)
+    case keyboardShortcuts
+#endif
     case sync
     case workspace
     case runtime
@@ -30,6 +33,10 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
             String(localized: "权限")
         case .appearance:
             String(localized: "外观")
+#if os(macOS)
+        case .keyboardShortcuts:
+            String(localized: "快捷键")
+#endif
         case .sync:
             String(localized: "备份与后台执行")
         case .workspace:
@@ -55,6 +62,10 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
             permissionSubtitle
         case .appearance:
             String(localized: "聊天背景与显示效果")
+#if os(macOS)
+        case .keyboardShortcuts:
+            String(localized: "录制、修改或停用常用快捷键")
+#endif
         case .sync:
             String(localized: "iCloud 同步、历史备份与任务保活")
         case .workspace:
@@ -80,6 +91,10 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
             "hand.raised"
         case .appearance:
             "paintbrush"
+#if os(macOS)
+        case .keyboardShortcuts:
+            "keyboard"
+#endif
         case .sync:
             "icloud"
         case .workspace:

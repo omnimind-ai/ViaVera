@@ -3,6 +3,9 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(AppModel.self) private var appModel
+#if os(macOS)
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
+#endif
 
     var body: some View {
         @Bindable var appModel = appModel
@@ -11,7 +14,7 @@ struct ContentView: View {
 #if os(iOS)
             MobileAppRootView()
 #else
-            NavigationSplitView {
+            NavigationSplitView(columnVisibility: $columnVisibility) {
                 SidebarView()
                     .navigationSplitViewColumnWidth(
                         min: AppDesign.sidebarMinimumWidth,
@@ -25,6 +28,10 @@ struct ContentView: View {
 #endif
         }
 #if os(macOS)
+        .modifier(MacShortcutScope())
+        .onChange(of: appModel.sidebarSearchRequestID) { _, _ in
+            columnVisibility = .all
+        }
         .background {
             if isConversationDestination {
                 ChatBackgroundView(settings: appModel.appearanceSettings)
