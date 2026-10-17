@@ -60,6 +60,7 @@ nonisolated public struct WorkspacePaths: Hashable, Sendable {
     }
 
     public var soulFile: URL { agentDirectory.appending(path: "SOUL.md") }
+    public var chatSoulFile: URL { agentDirectory.appending(path: "CHAT_SOUL.md") }
     public var providerConfigFile: URL { agentDirectory.appending(path: "providers.json") }
     public var agentConfigFile: URL { agentDirectory.appending(path: "config.json") }
     public var longTermMemoryFile: URL { memoryDirectory.appending(path: "MEMORY.md") }
@@ -162,6 +163,34 @@ nonisolated public struct WorkspacePaths: Hashable, Sendable {
                 relativePath,
                 workspaceFileSystem: workspaceFileSystem
             )
+        }
+    }
+
+    /// Prepares host-only configuration without creating a shared workspace or
+    /// Alpine resources. Chat preferences do not depend on workspace access.
+    public func prepareHostConfiguration(fileManager: FileManager = .default) throws {
+        try prepareHostDirectories([hostOmniBotDirectory, agentDirectory], fileManager: fileManager)
+    }
+
+    /// Memory belongs to the application, shared by task and chat modes. It is
+    /// available even when the optional task workspace cannot be initialized.
+    public func prepareHostMemory(fileManager: FileManager = .default) throws {
+        try prepareHostDirectories(
+            [hostOmniBotDirectory, memoryDirectory, shortMemoryDirectory],
+            fileManager: fileManager
+        )
+    }
+
+    private func prepareHostDirectories(_ directories: [URL], fileManager: FileManager) throws {
+        let canonicalRoot = root.resolvingSymlinksInPath().standardizedFileURL
+        let canonicalControlRoot = controlRoot.resolvingSymlinksInPath().standardizedFileURL
+        guard !canonicalControlRoot.pathComponents.starts(with: canonicalRoot.pathComponents) else {
+            throw WorkspacePathError.controlDirectoryInsideWorkspace
+        }
+        try rejectSymbolicLink(controlRoot)
+        try fileManager.createDirectory(at: controlRoot, withIntermediateDirectories: true)
+        for directory in directories {
+            try createManagedDirectory(directory, base: controlRoot, fileManager: fileManager)
         }
     }
 

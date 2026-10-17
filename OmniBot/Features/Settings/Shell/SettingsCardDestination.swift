@@ -17,6 +17,13 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
 
     var id: Self { self }
 
+    var isTaskOnly: Bool {
+        switch self {
+        case .skills, .permissions, .workspace, .runtime: true
+        default: false
+        }
+    }
+
     var title: String {
         switch self {
         case .providers:
@@ -53,7 +60,7 @@ enum SettingsCardDestination: String, CaseIterable, Hashable, Identifiable {
         case .usage:
             String(localized: "消息活跃度、Token 消耗与模型分布")
         case .soul:
-            String(localized: "Agent 的身份与工作边界")
+            String(localized: "任务与聊天的独立系统提示")
         case .memory:
             String(localized: "长期记忆、每日记忆与检索")
         case .skills:

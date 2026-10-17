@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct MarkdownBlockView: View {
+    @Environment(\.allowsChatWorkspaceResources) private var allowsWorkspaceResources
+
     let block: MarkdownBlock
 
     var body: some View {
@@ -64,7 +66,12 @@ struct MarkdownBlockView: View {
             MarkdownTableView(table: table)
 
         case let .resourceImage(title, url):
-            AgentResourceImageView(title: title, resourceURL: url)
+            if allowsWorkspaceResources {
+                AgentResourceImageView(title: title, resourceURL: url)
+            } else {
+                Text(title)
+                    .font(.body)
+            }
 
         case .thematicBreak:
             Divider()

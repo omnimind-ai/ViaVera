@@ -2,7 +2,6 @@ import SwiftUI
 
 struct MemorySettingsView: View {
     @Environment(AppModel.self) private var appModel
-    @State private var lastPersistedContent: String?
 
     var body: some View {
         @Bindable var settings = appModel.memorySettings
@@ -18,7 +17,26 @@ struct MemorySettingsView: View {
             } header: {
                 Text("长期记忆")
             } footer: {
-                Text("长期记忆会在不同会话之间持续生效。")
+                Text("任务与聊天共享这份记忆。聊天结束后会自动整理值得保留的信息。")
+            }
+
+            if appModel.chatCoordinator.sharedMemory.isUpdating {
+                Section {
+                    HStack(spacing: AppDesign.compactSpacing) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text("正在整理共享记忆…")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
+            if let errorMessage = appModel.chatCoordinator.sharedMemory.errorMessage {
+                Section {
+                    Label(errorMessage, systemImage: "exclamationmark.triangle")
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                }
             }
 
             Section("今日记忆") {
@@ -42,10 +60,10 @@ struct MemorySettingsView: View {
                 }
             }
         }
-        .task {
-            lastPersistedContent = settings.longTermMemory
+        .task(id: appModel.chatCoordinator.sharedMemory.isUpdating) {
+            await settings.load()
         }
-        .task(id: settings.longTermMemory) {
+        .task(id: [settings.longTermMemory, settings.persistedLongTermMemory]) {
             await autoSave(settings.longTermMemory)
         }
         .onDisappear(perform: savePendingChanges)
@@ -56,7 +74,7 @@ struct MemorySettingsView: View {
     }
 
     private func autoSave(_ content: String) async {
-        guard let persistedContent = lastPersistedContent,
+        guard let persistedContent = appModel.memorySettings.persistedLongTermMemory,
               content != persistedContent else {
             return
         }
@@ -68,22 +86,19 @@ struct MemorySettingsView: View {
         }
 
         guard !Task.isCancelled,
-              appModel.memorySettings.longTermMemory == content else {
+              appModel.memorySettings.longTermMemory == content,
+              appModel.memorySettings.persistedLongTermMemory != content else {
             return
         }
 
         await appModel.memorySettings.save(content)
-        guard !Task.isCancelled,
-              appModel.memorySettings.errorMessage == nil else {
-            return
-        }
-        lastPersistedContent = appModel.memorySettings.longTermMemory
     }
 
     private func savePendingChanges() {
-        guard let persistedContent = lastPersistedContent else { return }
         let content = appModel.memorySettings.longTermMemory
-        guard content != persistedContent else { return }
+        let hasUnsavedChanges = appModel.memorySettings.persistedLongTermMemory
+            .map { content != $0 } ?? !content.isEmpty
+        guard hasUnsavedChanges else { return }
 
         Task {
             await appModel.memorySettings.save(content)

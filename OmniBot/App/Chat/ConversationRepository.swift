@@ -77,11 +77,16 @@ final class ConversationRepository {
     }
 
     @discardableResult
-    func createConversation(providerID: String?, modelID: String) throws -> ConversationRecord {
+    func createConversation(
+        providerID: String?,
+        modelID: String,
+        mode: ConversationMode = .task
+    ) throws -> ConversationRecord {
         let conversation = ConversationRecord(
-            title: String(localized: "新任务"),
+            title: mode.newConversationTitle,
             providerID: providerID,
-            modelID: modelID
+            modelID: modelID,
+            mode: mode
         )
         modelContext.insert(conversation)
         try saveAndReload()
@@ -150,7 +155,7 @@ final class ConversationRepository {
         )
         modelContext.insert(record)
         if message.role == .user, conversation.messages.count(where: { $0.role == .user }) == 1 {
-            conversation.title = Self.title(from: message.content)
+            conversation.title = Self.title(from: message.content, mode: conversation.mode)
         }
         try saveAndReload()
         return record
@@ -197,6 +202,7 @@ final class ConversationRepository {
             if Self.hasVisibleText(message.content) || Self.hasVisibleText(reasoningContent) {
                 message.status = status
                 message.updatedAt = .now
+                message.responseCompletedAt = message.updatedAt
             } else {
                 // Keep the in-memory relationship consistent immediately. SwiftData
                 // does not guarantee that `delete` alone updates this collection
@@ -229,6 +235,35 @@ final class ConversationRepository {
         conversation.usage = usage
         conversation.updatedAt = .now
         try saveAndReload()
+    }
+
+    /// Keep auxiliary model usage separate from the assistant turn's context
+    /// counters. A deleted response must not be recreated just to record usage.
+    @discardableResult
+    func appendMemoryUsage(
+        _ usage: AgentUsage,
+        toMessageID messageID: UUID,
+        in conversationID: UUID
+    ) throws -> Bool {
+        guard usage != .zero,
+              let conversation = conversation(id: conversationID),
+              let message = conversation.messages.first(where: { $0.id == messageID }) else { return false }
+        let previousData = message.memoryUsageData
+        let previousDate = message.updatedAt
+        message.memoryUsage = message.memoryUsage + usage
+        message.updatedAt = .now
+        do {
+            try modelContext.save()
+        } catch {
+            // Preserve unrelated in-flight streaming mutations in this context.
+            message.memoryUsageData = previousData
+            message.updatedAt = previousDate
+            throw error
+        }
+        // A fetch failure after a successful commit must not cause accounting
+        // to be retried and added twice.
+        try? reload()
+        return true
     }
 
     func updateModel(providerID: String?, modelID: String, for conversation: ConversationRecord) throws {
@@ -322,7 +357,7 @@ final class ConversationRepository {
         if orderedMessages.prefix(while: { $0.id != latestUser.id }).allSatisfy({
             $0.role != .user
         }) {
-            conversation.title = Self.title(from: normalizedContent)
+            conversation.title = Self.title(from: normalizedContent, mode: conversation.mode)
         }
 
         try Self.commitLatestUserTurnReplacement(
@@ -419,14 +454,14 @@ final class ConversationRepository {
         }
     }
 
-    private static func title(from content: String?) -> String {
+    private static func title(from content: String?, mode: ConversationMode) -> String {
         let value = content?
             .split(whereSeparator: \Character.isNewline)
             .first?
             .trimmingCharacters(in: .whitespacesAndNewlines)
             ?? ""
         if value.isEmpty {
-            return String(localized: "新任务")
+            return mode.newConversationTitle
         }
         return String(value.prefix(32))
     }

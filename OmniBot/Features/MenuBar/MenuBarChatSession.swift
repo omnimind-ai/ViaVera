@@ -5,6 +5,5 @@ import Observation
 @Observable
 final class MenuBarChatSession {
     var isPinned = true
-    let composerDraft = ChatComposerDraft()
 }
 #endif

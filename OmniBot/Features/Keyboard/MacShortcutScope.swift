@@ -43,6 +43,7 @@ struct MacShortcutScope: ViewModifier {
         case .focusComposer: return chatActions != nil
         case .terminal: return chatActions?.toggleTerminal != nil
         case .commands: return chatActions?.toggleCommands != nil
+        case .openTools: return appModel.conversationMode == .task
         default: return true
         }
     }

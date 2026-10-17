@@ -10,21 +10,34 @@ struct SidebarView: View {
     var body: some View {
         Group {
 #if os(macOS)
-            SidebarMacConversationListView(
-                conversations: filteredConversations,
-                isSearching: !searchText.isEmpty
-            )
-            .safeAreaBar(edge: .top, spacing: 0) {
+            VStack(spacing: 0) {
                 VStack(spacing: 0) {
+                    ConversationModePicker()
+                        .padding(.horizontal, AppDesign.sidebarHorizontalInset)
+                        .padding(.top, AppDesign.compactSpacing)
                     SidebarHeaderView(searchText: $searchText)
-                    SidebarToolsButton()
+                    if appModel.conversationMode == .task {
+                        SidebarToolsButton()
+                            .transition(.opacity)
+                    }
                 }
+                SidebarMacConversationListView(
+                    conversations: filteredConversations,
+                    isSearching: !searchText.isEmpty
+                )
+                .id(appModel.conversationMode)
+                .transition(.opacity)
             }
 #else
             SidebarMobileConversationListView(
                 conversations: filteredConversations,
                 isSearching: !searchText.isEmpty
             )
+            .safeAreaBar(edge: .top, spacing: 0) {
+                ConversationModePicker()
+                    .padding(.horizontal, AppDesign.mobileSidebarHorizontalInset)
+                    .padding(.vertical, AppDesign.compactSpacing)
+            }
 #endif
         }
 #if os(macOS)
@@ -116,7 +129,7 @@ struct SidebarView: View {
     }
 
     private var filteredConversations: [ConversationRecord] {
-        let historyConversations = appModel.conversations.historyConversations
+        let historyConversations = appModel.modeConversations.filter { !$0.messages.isEmpty }
         guard !searchText.isEmpty else {
             return historyConversations
         }

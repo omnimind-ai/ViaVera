@@ -6,6 +6,7 @@ nonisolated struct CloudConversationSnapshot: Codable, Sendable {
     var title: String
     var providerID: String?
     var modelID: String
+    var modeRawValue: String?
     var status: String
     var contextSummary: String?
     var contextCutoffSequence: Int?
@@ -22,6 +23,7 @@ nonisolated struct CloudConversationSnapshot: Codable, Sendable {
         title = conversation.title
         providerID = conversation.providerID
         modelID = conversation.modelID
+        modeRawValue = conversation.modeRawValue
         status = conversation.statusRawValue
         contextSummary = conversation.contextSummary
         contextCutoffSequence = conversation.contextCutoffSequence
@@ -44,6 +46,7 @@ nonisolated struct CloudConversationSnapshot: Codable, Sendable {
         conversation.title = title
         conversation.providerID = providerID
         conversation.modelID = modelID
+        conversation.modeRawValue = modeRawValue
         conversation.statusRawValue = status == ConversationStatus.running.rawValue
             ? ConversationStatus.failed.rawValue : status
         conversation.contextSummary = contextSummary
@@ -72,6 +75,8 @@ nonisolated struct CloudConversationSnapshot: Codable, Sendable {
             old.cachedTokens = record.cachedTokens
             old.cacheCreationTokens = record.cacheCreationTokens
             old.reportsCacheUsage = record.reportsCacheUsage
+            old.memoryUsageData = record.memoryUsageData
+            old.responseCompletedAt = record.responseCompletedAt
             old.modelID = record.modelID
             old.providerID = record.providerID
             old.createdAt = record.createdAt
@@ -86,10 +91,12 @@ nonisolated struct CloudMessageSnapshot: Codable, Sendable {
     var status: String
     var contextWindow: Int?
     var usage: AgentUsage
+    var memoryUsage: AgentUsage?
     var modelID: String?
     var providerID: String?
     var createdAt: Date
     var updatedAt: Date
+    var responseCompletedAt: Date?
 
     @MainActor init(_ record: MessageRecord) throws {
         message = try record.decodeMessage()
@@ -99,10 +106,12 @@ nonisolated struct CloudMessageSnapshot: Codable, Sendable {
         usage = AgentUsage(promptTokens: record.promptTokens, completionTokens: record.completionTokens,
                            totalTokens: 0, cachedTokens: record.cachedTokens,
                            cacheCreationTokens: record.cacheCreationTokens, reportsCacheUsage: record.reportsCacheUsage)
+        memoryUsage = record.memoryUsage == .zero ? nil : record.memoryUsage
         modelID = record.modelID
         providerID = record.providerID
         createdAt = record.createdAt
         updatedAt = record.updatedAt
+        responseCompletedAt = record.responseCompletedAt
     }
 
     @MainActor func record() throws -> MessageRecord {
@@ -112,6 +121,8 @@ nonisolated struct CloudMessageSnapshot: Codable, Sendable {
                                        createdAt: createdAt, updatedAt: updatedAt)
         record.modelID = modelID
         record.providerID = providerID
+        record.memoryUsage = memoryUsage ?? .zero
+        record.responseCompletedAt = responseCompletedAt
         if record.status == .streaming || record.status == .pending { record.status = .interrupted }
         return record
     }

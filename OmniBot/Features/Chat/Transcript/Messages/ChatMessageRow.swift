@@ -25,7 +25,7 @@ struct ChatMessageRow: View {
                 reasoningContent: presentation.reasoningContent,
                 isReasoningStreaming: presentation.isReasoningStreaming,
                 toolCalls: presentation.toolCalls,
-                turnUsage: presentation.turnUsage,
+                completion: presentation.completion,
                 showsStatus: presentation.showsStatus
             )
         case .tool:

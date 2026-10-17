@@ -18,13 +18,16 @@ struct MenuBarChatView: View {
                     onOpenMainWindow: openMainWindow,
                     onTogglePin: togglePin,
                     isPinned: isDetached && session.isPinned,
-                    composerDraft: session.composerDraft
+                    composerDraft: appModel.chatDraft(for: conversation.id)
                 )
+                .id(conversation.id)
             } else {
                 ContentUnavailableView {
                     Label("OmniBot", systemImage: "sparkles")
                 } description: {
-                    Text("正在准备本地 Agent…")
+                    Text(appModel.conversationMode == .chat
+                         ? String(localized: "正在准备聊天…")
+                         : String(localized: "正在准备本地 Agent…"))
                 } actions: {
                     Button("新建会话", systemImage: "square.and.pencil", action: appModel.newConversation)
                         .disabled(!appModel.hasStarted)

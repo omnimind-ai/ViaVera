@@ -16,7 +16,9 @@ struct SidebarMobileConversationListView: View {
                 ContentUnavailableView {
                     Label("还没有会话", systemImage: "bubble.left")
                 } description: {
-                    Text("新建会话后即可把任务交给 Agent。")
+                    Text(appModel.conversationMode == .chat
+                         ? String(localized: "新建聊天，聊聊想法、问题或今天的生活。")
+                         : String(localized: "新建会话后即可把任务交给 Agent。"))
                 }
                 .listRowSeparator(.hidden)
             } else {

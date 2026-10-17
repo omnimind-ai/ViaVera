@@ -34,7 +34,7 @@ struct ChatComposerView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppDesign.compactSpacing) {
             VStack(alignment: .leading, spacing: AppDesign.compactSpacing) {
-                if !isEditingUserMessage, let skillReference {
+                if conversation.mode == .task, !isEditingUserMessage, let skillReference {
                     ChatComposerSkillCapsule(reference: skillReference) {
                         self.skillReference = nil
                     }
@@ -54,7 +54,7 @@ struct ChatComposerView: View {
                     .frame(height: macTextHeight)
 
                     if text.isEmpty && !macTextHasVisibleContent {
-                        Text("发送消息给 OmniBot")
+                        Text(placeholder)
                             .font(AppDesign.composerTextFont)
                             .foregroundStyle(.tertiary)
                             .padding(.top, 2)
@@ -69,7 +69,7 @@ struct ChatComposerView: View {
                 .accessibilityLabel(isEditingUserMessage ? String(localized: "编辑上一条消息") : String(localized: "消息"))
                 .accessibilityHint(textFieldAccessibilityHint)
 #else
-                TextField("发送消息给 OmniBot", text: $text, axis: .vertical)
+                TextField(placeholder, text: $text, axis: .vertical)
                     .lineLimit(1...AppDesign.composerMaximumLines)
                     .focused(isFocused)
                     .textFieldStyle(.plain)
@@ -85,13 +85,15 @@ struct ChatComposerView: View {
 #endif
 
                 HStack(spacing: AppDesign.composerControlSpacing) {
-                    ChatComposerAddMenu(
-                        isDisabled: isBusy,
-                        isEditingUserMessage: isEditingUserMessage,
-                        onCancelEditing: onCancelEditing,
-                        onImportAttachments: onImportAttachments,
-                        onAddPhotos: onAddPhotos
-                    )
+                    if conversation.mode == .task || isEditingUserMessage {
+                        ChatComposerAddMenu(
+                            isDisabled: isBusy,
+                            isEditingUserMessage: isEditingUserMessage,
+                            onCancelEditing: onCancelEditing,
+                            onImportAttachments: onImportAttachments,
+                            onAddPhotos: onAddPhotos
+                        )
+                    }
 
                     if !isEditingUserMessage {
                         Button(action: onToggleCommandToolbar) {
@@ -119,18 +121,20 @@ struct ChatComposerView: View {
                             isDisabled: isBusy
                         )
 
-                        Button(action: onOpenTerminal) {
-                            ComposerIconLabel(
-                                title: String(localized: "打开本地终端"),
-                                assetName: "ComposerTerminal",
-                                size: AppDesign.composerTerminalIconSize
-                            )
+                        if conversation.mode == .task {
+                            Button(action: onOpenTerminal) {
+                                ComposerIconLabel(
+                                    title: String(localized: "打开本地终端"),
+                                    assetName: "ComposerTerminal",
+                                    size: AppDesign.composerTerminalIconSize
+                                )
+                            }
+                            .foregroundStyle(.secondary)
+                            .composerControlFrame()
+                            .buttonStyle(.borderless)
+                            .accessibilityLabel("打开本地终端")
+                            .help("本地终端")
                         }
-                        .foregroundStyle(.secondary)
-                        .composerControlFrame()
-                        .buttonStyle(.borderless)
-                        .accessibilityLabel("打开本地终端")
-                        .help("本地终端")
                     }
 
                     ComposerSendButton(
@@ -207,6 +211,12 @@ struct ChatComposerView: View {
         return String(localized: "另一个会话正在运行，完成后即可发送。")
     }
 
+    private var placeholder: String {
+        conversation.mode == .chat
+            ? String(localized: "和 OmniBot 聊聊…")
+            : String(localized: "发送消息给 OmniBot")
+    }
+
     private var textFieldAccessibilityHint: String {
         if isBusy, !isEditingUserMessage {
             return String(localized: "可继续输入下一条消息，当前回复结束后即可发送")
@@ -215,10 +225,16 @@ struct ChatComposerView: View {
         if isEditingUserMessage {
             return String(localized: "修改后按 Enter 重新运行，按 Shift-Enter 换行")
         }
+        if conversation.mode == .chat {
+            return String(localized: "输入想聊的内容，按 Enter 发送，按 Shift-Enter 换行")
+        }
         return String(localized: "输入要交给本地 Agent 的任务，按 Enter 发送，按 Shift-Enter 换行")
 #else
         if isEditingUserMessage {
             return String(localized: "修改后使用右侧发送按钮重新运行")
+        }
+        if conversation.mode == .chat {
+            return String(localized: "输入想聊的内容，使用右侧发送按钮发送")
         }
         return String(localized: "输入要交给本地 Agent 的任务，使用右侧发送按钮开始运行")
 #endif

@@ -18,6 +18,7 @@ public actor AgentRunner {
     private let maxToolCallsPerRun: Int
     private let retryPolicy: AgentRetryPolicy
     private var activeRuns: [UUID: Task<AgentRunResult, Error>] = [:]
+    private var toolEnabledRuns: Set<UUID> = []
 
     public init(
         client: any AgentChatCompleting,
@@ -52,7 +53,11 @@ public actor AgentRunner {
             try await execute(input, onEvent: onEvent)
         }
         activeRuns[input.runID] = task
-        defer { activeRuns[input.runID] = nil }
+        if input.allowsToolCalls { toolEnabledRuns.insert(input.runID) }
+        defer {
+            activeRuns[input.runID] = nil
+            toolEnabledRuns.remove(input.runID)
+        }
         do {
             return try await withTaskCancellationHandler {
                 try await task.value
@@ -70,14 +75,14 @@ public actor AgentRunner {
         guard let task = activeRuns[runID] else { return }
         task.cancel()
         await client.cancel(runID: runID)
-        await toolExecutor.cancel(runID: runID)
+        if toolEnabledRuns.contains(runID) { await toolExecutor.cancel(runID: runID) }
     }
 
     /// Stops only the currently executing tool. The tool executor converts the
     /// interruption into a normal error result so the model can inspect it and
     /// continue the same Agent run.
     public func cancelCurrentTool(runID: UUID, callID: String) async -> Bool {
-        guard activeRuns[runID] != nil else { return false }
+        guard activeRuns[runID] != nil, toolEnabledRuns.contains(runID) else { return false }
         return await toolExecutor.cancelCurrentTool(runID: runID, callID: callID)
     }
 
@@ -145,9 +150,9 @@ public actor AgentRunner {
             continueMode: input.continueMode
         )
         let knownTools = Set(tools.map(\.name))
-        let modelToolResultBudget = Self.modelToolResultBudget(
+        let modelToolResultBudget = input.allowsToolCalls ? Self.modelToolResultBudget(
             contextWindow: input.contextWindow
-        )
+        ) : 0
         let effectiveMaxToolCallsPerRun = min(
             maxToolCallsPerRun,
             max(1, modelToolResultBudget / Self.minimumReservedModelToolResultBytes)
@@ -215,6 +220,12 @@ public actor AgentRunner {
                 onEvent: onEvent
             )
             try Task.checkCancellation()
+
+            // Providers may return unsolicited calls even without a tools schema.
+            // Reject them before emitting assistant/tool events or creating context.
+            guard input.allowsToolCalls || response.message.toolCalls.isEmpty else {
+                throw AgentRunnerError.toolCallsDisabled
+            }
 
             let normalizedFinishReason = response.finishReason?
                 .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -342,10 +353,13 @@ public actor AgentRunner {
                 continue
             }
 
+            guard let workspaceURL = input.workspaceURL else {
+                throw AgentRunnerError.missingWorkspace
+            }
             let context = AgentToolExecutionContext(
                 runID: input.runID,
                 conversationID: input.conversationID,
-                workspaceURL: input.workspaceURL
+                workspaceURL: workspaceURL
             )
 
             for (callIndex, call) in assistant.toolCalls.enumerated() {

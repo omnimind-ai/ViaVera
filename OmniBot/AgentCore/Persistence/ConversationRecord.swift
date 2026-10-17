@@ -7,6 +7,7 @@ public final class ConversationRecord {
     public var title: String
     public var providerID: String?
     public var modelID: String
+    public var modeRawValue: String?
     public var statusRawValue: String
     public var contextSummary: String?
     public var contextCutoffSequence: Int?
@@ -39,12 +40,14 @@ public final class ConversationRecord {
         isPinned: Bool = false,
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
-        messages: [MessageRecord] = []
+        messages: [MessageRecord] = [],
+        mode: ConversationMode = .task
     ) {
         self.id = id
         self.title = title
         self.providerID = providerID
         self.modelID = modelID
+        self.modeRawValue = mode.rawValue
         self.statusRawValue = status.rawValue
         self.contextSummary = contextSummary
         self.contextCutoffSequence = contextCutoffSequence
@@ -65,6 +68,11 @@ public final class ConversationRecord {
     public var status: ConversationStatus {
         get { ConversationStatus(rawValue: statusRawValue) ?? .idle }
         set { statusRawValue = newValue.rawValue }
+    }
+
+    public var mode: ConversationMode {
+        get { modeRawValue.flatMap(ConversationMode.init(rawValue:)) ?? .task }
+        set { modeRawValue = newValue.rawValue }
     }
 
     public var reasoningEffort: AgentReasoningEffort? {

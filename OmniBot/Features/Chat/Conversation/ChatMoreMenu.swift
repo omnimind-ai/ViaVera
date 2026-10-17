@@ -1,14 +1,17 @@
 import SwiftUI
 
 struct ChatMoreMenu: View {
+    let mode: ConversationMode
     let openBrowser: () -> Void
     let openWorkspace: () -> Void
     let openSettings: () -> Void
 
     var body: some View {
         Menu {
-            Button("浏览器", systemImage: "safari", action: openBrowser)
-            Button("工作区", systemImage: "folder", action: openWorkspace)
+            if mode == .task {
+                Button("浏览器", systemImage: "safari", action: openBrowser)
+                Button("工作区", systemImage: "folder", action: openWorkspace)
+            }
             Button("设置", systemImage: "gearshape", action: openSettings)
         } label: {
             Label("更多", systemImage: "ellipsis")

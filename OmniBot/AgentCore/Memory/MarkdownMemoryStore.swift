@@ -58,6 +58,28 @@ public actor MarkdownMemoryStore {
         )
     }
 
+    /// Keeps additions accumulated after an editor loaded its baseline, while
+    /// honoring the user's edits and deletions of the lines they actually saw.
+    /// There are no suspension points between reading and writing the merge.
+    public func saveEditedLongTermMemory(_ markdown: String, baseline: String?) throws -> String {
+        let latest = try loadLongTermMemory()
+        let baselineKeys = Set(promptEntries(in: baseline ?? "").map(normalizedForComparison))
+        var draftKeys = Set(promptEntries(in: markdown).map(normalizedForComparison))
+        let additions = latest.split(whereSeparator: \Character.isNewline).compactMap { rawLine -> String? in
+            let line = rawLine.trimmingCharacters(in: .whitespaces)
+            guard !line.isEmpty, !line.hasPrefix("#") else { return nil }
+            let entry = line.hasPrefix("- ") ? String(line.dropFirst(2)) : line
+            let key = normalizedForComparison(stripDailyTimestamp(from: entry))
+            guard !baselineKeys.contains(key), draftKeys.insert(key).inserted else { return nil }
+            return String(rawLine)
+        }
+        var merged = normalizedDocument(markdown)
+        if !additions.isEmpty { merged += additions.joined(separator: "\n") + "\n" }
+        let document = normalizedDocument(merged)
+        try saveLongTermMemory(document)
+        return document
+    }
+
     @discardableResult
     public func appendDailyMemory(_ text: String, at date: Date = Date()) throws -> Bool {
         try prepare()
@@ -149,7 +171,7 @@ public actor MarkdownMemoryStore {
     }
 
     public func loadHarnessFailures() throws -> String {
-        try prepare()
+        try prepare(includeHarnessFailures: true)
         return try readIfPresent(
             paths.harnessFailuresFile,
             maximumBytes: limits.maximumHarnessFailureFileBytes
@@ -165,7 +187,7 @@ public actor MarkdownMemoryStore {
         runID: UUID,
         at date: Date = Date()
     ) throws -> Bool {
-        try prepare()
+        try prepare(includeHarnessFailures: true)
         let tool = sanitizedToolName(toolName)
         let failure = redactedFailureSummary(summary)
         guard !failure.isEmpty else { return false }
@@ -209,8 +231,90 @@ public actor MarkdownMemoryStore {
         )
     }
 
-    public func search(_ query: String, limit: Int = 4) throws -> [MemorySearchHit] {
+    /// A small, shared personal-memory context for both conversation modes.
+    /// Tool failure lessons remain available to task search, but are never
+    /// included here. Each source gets space so a large long-term document
+    /// cannot crowd out today's context or a relevant earlier conversation.
+    public func sharedPromptMemory(
+        query: String,
+        at date: Date = Date(),
+        maximumUTF8Bytes: Int = 6_000
+    ) throws -> String {
+        let budget = max(0, min(maximumUTF8Bytes, 32_000))
+        guard budget > 0 else { return "" }
         try prepare()
+        let normalizedQuery = normalizedForComparison(query)
+        // Retrieval must work without a memory-search tool in chat mode. Prefer
+        // matching facts anywhere in the document, then the newest additions.
+        let longTerm = promptEntries(in: try loadLongTermMemory())
+            .enumerated()
+            .map { offset, text in
+                (
+                    text: text,
+                    offset: offset,
+                    score: normalizedQuery.isEmpty ? 0 : lexicalScore(query: normalizedQuery, candidate: text)
+                )
+            }
+            .sorted {
+                if $0.score != $1.score { return $0.score > $1.score }
+                return $0.offset > $1.offset
+            }
+            .map(\.text)
+        let today = Array(promptEntries(in: try loadDailyMemory(at: date)).reversed())
+        let todayName = dayString(for: date)
+        let history = try search(query, limit: 32, includeHarnessFailures: false)
+            .filter {
+                guard case let .daily(day) = $0.source else { return false }
+                return day != todayName
+            }
+            .map(\.text)
+
+        var seen: Set<String> = []
+        var groups: [(title: String, entries: [String])] = []
+        for (title, entries) in [
+            ("Long-term memory", longTerm),
+            ("Today's memory", today),
+            ("Related past memory", history),
+        ] {
+            let unique = entries.filter { text in
+                let key = normalizedForComparison(text)
+                return !key.isEmpty && seen.insert(key).inserted
+            }
+            if !unique.isEmpty { groups.append((title, unique)) }
+        }
+
+        var result = ""
+        for (index, group) in groups.enumerated() {
+            let separator = result.isEmpty ? "" : "\n\n"
+            let remaining = budget - result.utf8.count - separator.utf8.count
+            guard remaining > 0 else { break }
+            let groupBudget = remaining / (groups.count - index)
+            var block = "### \(group.title)\n"
+            guard block.utf8.count < groupBudget else { continue }
+            let headerBytes = block.utf8.count
+            for entry in group.entries {
+                let available = groupBudget - block.utf8.count - 3 // bullet + newline
+                guard available > 0 else { break }
+                let snippet = utf8Prefix(entry, maximumBytes: available)
+                guard !snippet.isEmpty else { continue }
+                block += "- \(snippet)\n"
+                if snippet.utf8.count < entry.utf8.count { break }
+            }
+            if block.utf8.count > headerBytes { result += separator + block }
+        }
+        return result
+    }
+
+    public func search(_ query: String, limit: Int = 4) throws -> [MemorySearchHit] {
+        try search(query, limit: limit, includeHarnessFailures: true)
+    }
+
+    private func search(
+        _ query: String,
+        limit: Int,
+        includeHarnessFailures: Bool
+    ) throws -> [MemorySearchHit] {
+        try prepare(includeHarnessFailures: includeHarnessFailures)
         // Validate the complete persistent daily inventory before reading any
         // candidate. This prevents a pre-existing oversized inventory from
         // turning search into an unbounded series of allocations.
@@ -235,10 +339,12 @@ public actor MarkdownMemoryStore {
             })
         }
 
-        candidates.append(contentsOf: entries(in: try readIfPresent(
-            paths.harnessFailuresFile,
-            maximumBytes: limits.maximumHarnessFailureFileBytes
-        )).map { ($0, .harnessFailure) })
+        if includeHarnessFailures {
+            candidates.append(contentsOf: entries(in: try readIfPresent(
+                paths.harnessFailuresFile,
+                maximumBytes: limits.maximumHarnessFailureFileBytes
+            )).map { ($0, .harnessFailure) })
+        }
 
         return candidates.compactMap { text, source in
             let score = lexicalScore(query: normalizedQuery, candidate: text)
@@ -258,8 +364,8 @@ public actor MarkdownMemoryStore {
         .map { $0 }
     }
 
-    private func prepare() throws {
-        try paths.prepare()
+    private func prepare(includeHarnessFailures: Bool = false) throws {
+        try paths.prepareHostMemory()
         try validateDirectory(paths.memoryDirectory)
         try validateDirectory(paths.shortMemoryDirectory)
         if try inspectRegularFileIfPresent(
@@ -272,7 +378,7 @@ public actor MarkdownMemoryStore {
                 maximumBytes: limits.maximumLongTermFileBytes
             )
         }
-        if try inspectRegularFileIfPresent(
+        if includeHarnessFailures, try inspectRegularFileIfPresent(
             paths.harnessFailuresFile,
             maximumBytes: limits.maximumHarnessFailureFileBytes
         ) == nil {
@@ -582,6 +688,27 @@ public actor MarkdownMemoryStore {
             guard line.hasPrefix("- ") else { return nil }
             return String(line.dropFirst(2)).trimmingCharacters(in: .whitespaces)
         }
+    }
+
+    private func promptEntries(in markdown: String) -> [String] {
+        markdown.split(whereSeparator: \Character.isNewline).compactMap { rawLine in
+            let line = rawLine.trimmingCharacters(in: .whitespaces)
+            guard !line.isEmpty, !line.hasPrefix("#") else { return nil }
+            let entry = line.hasPrefix("- ") ? String(line.dropFirst(2)) : line
+            return stripDailyTimestamp(from: entry)
+        }
+    }
+
+    private func utf8Prefix(_ text: String, maximumBytes: Int) -> String {
+        var result = ""
+        var byteCount = 0
+        for character in text {
+            let nextBytes = String(character).utf8.count
+            guard nextBytes <= maximumBytes - byteCount else { break }
+            result.append(character)
+            byteCount += nextBytes
+        }
+        return result
     }
 
     private func stripDailyTimestamp(from text: String) -> String {

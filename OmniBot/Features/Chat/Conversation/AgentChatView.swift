@@ -110,6 +110,7 @@ struct AgentChatView: View {
                     ) {
                         MacChatMoreMenu(
                             conversationID: conversation.id,
+                            mode: conversation.mode,
                             isPresentingBrowser: $isPresentingBrowser,
                             openBrowser: openBrowser,
                             openWorkspace: openWorkspace,
@@ -121,7 +122,7 @@ struct AgentChatView: View {
 #endif
                 Group {
                     if transcript.messages.isEmpty {
-                        ChatEmptyStateView { prompt in
+                        ChatEmptyStateView(mode: conversation.mode) { prompt in
                             draft = prompt
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -246,7 +247,7 @@ struct AgentChatView: View {
 #endif
 
                 VStack(spacing: 0) {
-                    if !isCommandToolbarPresented,
+                    if conversation.mode == .task, !isCommandToolbarPresented,
                        let toolActivityTurn,
                        !toolActivityTurn.activityTools.isEmpty {
                         ChatToolActivityStrip(
@@ -264,7 +265,10 @@ struct AgentChatView: View {
 
                     if conversation.status == .failed {
                         ChatErrorBanner(
-                            message: conversation.lastErrorMessage ?? String(localized: "Agent 未能完成本次任务。"),
+                            message: conversation.lastErrorMessage
+                                ?? (conversation.mode == .chat
+                                    ? String(localized: "暂时无法完成回复，请重试。")
+                                    : String(localized: "Agent 未能完成本次任务。")),
                             onRetry: { appModel.chatCoordinator.retry(conversation) }
                         )
                         .padding(.vertical, AppDesign.compactSpacing)
@@ -331,7 +335,7 @@ struct AgentChatView: View {
                     )
 
 #if os(macOS)
-                    if isPresentingTerminal {
+                    if conversation.mode == .task, isPresentingTerminal {
                         MacInlineTerminalView(onDismiss: closeTerminal)
                             .transition(
                                 reduceMotion
@@ -413,19 +417,25 @@ struct AgentChatView: View {
 #endif
             }
             .task(id: conversationID) {
+                if conversation.mode == .chat {
+                    composerDraft.skillReference = nil
+                }
                 if composerDraft.requestsFocus {
                     composerDraft.requestsFocus = false
                     composerFocusRequestID &+= 1
                 }
             }
+            .environment(\.allowsChatWorkspaceResources, conversation.mode == .task)
             .environment(\.openURL, OpenURLAction { url in
                 if let id = NativeToolRecord.identifier(from: url) {
+                    guard conversation.mode == .task else { return .discarded }
                     appModel.openNativeTool(id)
                     return .handled
                 }
                 guard url.scheme?.lowercased() == AgentResourceProtocol.scheme else {
                     return .systemAction(url)
                 }
+                guard conversation.mode == .task else { return .discarded }
                 beginResourcePreview(for: url)
                 return .handled
             })
@@ -480,6 +490,7 @@ struct AgentChatView: View {
                     ToolbarItem(placement: .primaryAction) {
                         MacChatMoreMenu(
                             conversationID: conversation.id,
+                            mode: conversation.mode,
                             isPresentingBrowser: $isPresentingBrowser,
                             openBrowser: openBrowser,
                             openWorkspace: openWorkspace,
@@ -501,6 +512,7 @@ struct AgentChatView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     ChatMoreMenu(
+                        mode: conversation.mode,
                         openBrowser: openBrowser,
                         openWorkspace: openWorkspace,
                         openSettings: openSettings
@@ -548,7 +560,8 @@ struct AgentChatView: View {
 #if os(macOS)
     private func chatShortcutActions(isPreparingResend: Bool) -> MacChatShortcutActions? {
         guard !isPreparingResend else { return nil }
-        let toggleTerminal: (() -> Void)? = editingUserMessageID == nil ? { openTerminal() } : nil
+        let toggleTerminal: (() -> Void)? = isTaskConversation && editingUserMessageID == nil
+            ? { openTerminal() } : nil
         let toggleCommands: (() -> Void)? = editingUserMessageID == nil ? { toggleCommandToolbar() } : nil
         return MacChatShortcutActions(
             focusComposer: { composerFocusRequestID &+= 1 },
@@ -589,7 +602,7 @@ struct AgentChatView: View {
             }
             guard appModel.chatCoordinator.busyConversationID == nil,
                   let message = composerDraft.messageToSend else { return }
-            if let reference = composerDraft.skillReference,
+            if conversation.mode == .task, let reference = composerDraft.skillReference,
                !appModel.skillSettings.skills.contains(where: { $0.id == reference.id && $0.enabled }) {
                 appModel.globalErrorMessage = String(localized: "请先在 Skills 中启用「\(reference.id)」，或移除输入框中的 Skill 引用。")
                 return
@@ -599,7 +612,10 @@ struct AgentChatView: View {
             // The user just submitted; follow the new turn as it streams in
             // even if they had been scrolled up reading earlier output.
             isPinnedToBottom = true
-            appModel.chatCoordinator.send(message, in: conversation)
+            appModel.chatCoordinator.send(
+                conversation.mode == .chat ? replacement : message,
+                in: conversation
+            )
             return
         }
 
@@ -628,6 +644,7 @@ struct AgentChatView: View {
     }
 
     private func importAttachments(_ result: Result<[URL], any Error>) {
+        guard isTaskConversation else { return }
         Task {
             do {
                 let sourceURLs = try result.get()
@@ -649,6 +666,7 @@ struct AgentChatView: View {
     }
 
     private func presentPhotoPicker() {
+        guard isTaskConversation else { return }
 #if os(iOS)
         isPresentingPhotoPicker = true
 #endif
@@ -656,6 +674,7 @@ struct AgentChatView: View {
 
 #if os(iOS)
     private func importPhotos(_ items: [PhotosPickerItem]) {
+        guard isTaskConversation else { return }
         Task {
             do {
                 var payloads: [WorkspaceAttachmentPayload] = []
@@ -901,6 +920,7 @@ struct AgentChatView: View {
     }
 
     private func openTerminal() {
+        guard isTaskConversation else { return }
 #if os(iOS)
         appModel.presentTerminal()
 #else
@@ -911,11 +931,13 @@ struct AgentChatView: View {
     }
 
     private func openBrowser() {
+        guard isTaskConversation else { return }
         collapseChatPanels()
         isPresentingBrowser = true
     }
 
     private func openWorkspace() {
+        guard isTaskConversation else { return }
         collapseChatPanels()
 #if os(macOS)
         appModel.presentSettings(.workspace)
@@ -940,6 +962,9 @@ struct AgentChatView: View {
 #if os(macOS)
     private func newMenuBarConversation() {
         appModel.newConversation()
+        if let conversation = appModel.selectedConversation {
+            appModel.chatDraft(for: conversation.id).requestsFocus = true
+        }
         isComposerFocused = true
         composerFocusRequestID &+= 1
     }
@@ -954,6 +979,10 @@ struct AgentChatView: View {
     private var isAutoScrollSuppressed: Bool {
         guard let autoScrollSuppressedUntil else { return false }
         return Date.now < autoScrollSuppressedUntil
+    }
+
+    private var isTaskConversation: Bool {
+        appModel.conversations.conversation(id: conversationID)?.mode == .task
     }
 
     private static let transcriptBottomAnchor = "chat-transcript-bottom"

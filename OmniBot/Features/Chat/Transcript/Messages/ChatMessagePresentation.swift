@@ -6,8 +6,8 @@ struct ChatMessagePresentation: Identifiable {
     let reasoningContent: String?
     let isReasoningStreaming: Bool
     let toolCalls: [ToolCallPresentation]
-    let turnUsage: TurnUsagePresentation?
     let showsStatus: Bool
+    var completion: ResponseCompletionPresentation? = nil
 
     var id: UUID {
         message.id

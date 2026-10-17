@@ -8,7 +8,7 @@ nonisolated public struct AgentRunInput: Sendable {
     public let systemMessages: [AgentMessage]
     public let history: [AgentMessage]
     public let currentUserMessage: AgentMessage
-    public let workspaceURL: URL
+    public let workspaceURL: URL?
     public let continueMode: Bool
     public let temperature: Double?
     public let maxTokens: Int?
@@ -24,7 +24,7 @@ nonisolated public struct AgentRunInput: Sendable {
         systemMessages: [AgentMessage],
         history: [AgentMessage],
         currentUserMessage: AgentMessage,
-        workspaceURL: URL,
+        workspaceURL: URL?,
         continueMode: Bool = false,
         temperature: Double? = nil,
         maxTokens: Int? = nil,

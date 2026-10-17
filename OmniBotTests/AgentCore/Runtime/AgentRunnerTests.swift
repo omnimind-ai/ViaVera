@@ -9,9 +9,10 @@ struct AgentRunnerTests {
         let client = ScriptedChatClient(responses: [
             AgentChatResponse(message: .assistant("No tools requested")),
         ])
+        let tools = RecordingToolExecutor()
         let runner = AgentRunner(
             client: client,
-            toolExecutor: RecordingToolExecutor(),
+            toolExecutor: tools,
             retryPolicy: AgentRetryPolicy(maxAttempts: 1)
         )
         let base = makeInput(currentUserMessage: .user("Answer directly"))
@@ -23,7 +24,7 @@ struct AgentRunnerTests {
             systemMessages: base.systemMessages,
             history: base.history,
             currentUserMessage: base.currentUserMessage,
-            workspaceURL: base.workspaceURL,
+            workspaceURL: nil,
             allowsToolCalls: false
         )
 
@@ -32,6 +33,30 @@ struct AgentRunnerTests {
         let requests = await client.requests()
         #expect(requests.count == 1)
         #expect(requests[0].tools.isEmpty)
+        #expect(await tools.discoveryCount() == 0)
+        #expect(await tools.calls().isEmpty)
+    }
+
+    @Test("Chat rejects unsolicited tool calls without discovering or executing tools")
+    func chatRejectsUnsolicitedTools() async throws {
+        let client = ScriptedChatClient(responses: [
+            AgentChatResponse(message: .assistant(toolCalls: [
+                AgentToolCall(id: "unexpected", name: "terminal_execute", arguments: "{}"),
+            ])),
+        ])
+        let tools = RecordingToolExecutor()
+        let runner = AgentRunner(client: client, toolExecutor: tools)
+        let input = AgentRunInput(
+            conversationID: UUID(), model: "chat-model", apiKey: "test-key",
+            systemMessages: [.system("Be conversational.")], history: [],
+            currentUserMessage: .user("Hello"), workspaceURL: nil, allowsToolCalls: false
+        )
+        await #expect(throws: AgentRunnerError.toolCallsDisabled) {
+            try await runner.run(input)
+        }
+        #expect(await tools.discoveryCount() == 0)
+        #expect(await tools.calls().isEmpty)
+        #expect(await client.requests().count == 1)
     }
 
     @Test("Executes tool calls, feeds role=tool results back, and finishes")
@@ -776,6 +801,7 @@ private actor ScriptedChatClient: AgentChatCompleting {
 
 private actor RecordingToolExecutor: AgentToolExecuting {
     private var recordedCalls: [AgentToolCall] = []
+    private var discoveries = 0
     private let resultContent: String
     private let artifacts: [AgentArtifact]
 
@@ -788,7 +814,8 @@ private actor RecordingToolExecutor: AgentToolExecuting {
     }
 
     func availableTools() async -> [AgentToolDefinition] {
-        [AgentToolDefinition(
+        discoveries += 1
+        return [AgentToolDefinition(
             name: "terminal_execute",
             description: "Execute a command",
             parameters: .object([
@@ -815,6 +842,8 @@ private actor RecordingToolExecutor: AgentToolExecuting {
     func calls() -> [AgentToolCall] {
         recordedCalls
     }
+
+    func discoveryCount() -> Int { discoveries }
 }
 
 private actor StoppableToolExecutor: AgentToolExecuting {

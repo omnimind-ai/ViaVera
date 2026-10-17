@@ -5,6 +5,9 @@ import SwiftData
 @MainActor
 @Observable
 final class AppModel {
+    private(set) var conversationMode: ConversationMode = .task {
+        didSet { modeDefaults.set(conversationMode.rawValue, forKey: "conversationMode") }
+    }
     var selectedTab: AppTab = .conversations
     var conversationPath: [UUID] = [] {
         didSet {
@@ -28,11 +31,16 @@ final class AppModel {
         didSet {
             if case let .conversation(identifier) = destination {
                 lastConversationID = identifier
+                if let conversation = conversations.conversation(id: identifier) {
+                    conversationMode = conversation.mode
+                    lastConversationIDs[conversation.mode] = identifier
+                }
 #if os(iOS)
                 selectedTab = .conversations
                 if conversationPath.last != identifier { conversationPath = [identifier] }
 #endif
             }
+            if destination == .tools { conversationMode = .task }
 #if os(macOS)
             recordNavigationVisit()
 #endif
@@ -52,15 +60,22 @@ final class AppModel {
     var isTerminalPresented = false
     private(set) var hasStarted = false
     private var lastConversationID: UUID?
+    @ObservationIgnored private var lastConversationIDs: [ConversationMode: UUID] = [:]
+    @ObservationIgnored private let modeDefaults: UserDefaults
     @ObservationIgnored private var startupTask: Task<Void, Never>?
     @ObservationIgnored private var chatDrafts: [UUID: ChatComposerDraft] = [:]
 
     var selectedConversation: ConversationRecord? {
         if let lastConversationID,
-           let conversation = conversations.conversation(id: lastConversationID) {
+           let conversation = conversations.conversation(id: lastConversationID),
+           conversation.mode == conversationMode {
             return conversation
         }
-        return conversations.conversations.first
+        return modeConversations.first
+    }
+
+    var modeConversations: [ConversationRecord] {
+        conversations.conversations.filter { $0.mode == conversationMode }
     }
 
     private let bootstrapNotice: String?
@@ -104,8 +119,12 @@ final class AppModel {
         appearanceStore: AppearanceSettingsStore,
         bootstrapNotice: String? = nil,
         preferredModelStore: PreferredModelStore = PreferredModelStore(),
-        nativeToolStore: NativeToolStore? = nil
+        nativeToolStore: NativeToolStore? = nil,
+        modeDefaults: UserDefaults = .standard
     ) {
+        self.modeDefaults = modeDefaults
+        self.conversationMode = modeDefaults.string(forKey: "conversationMode")
+            .flatMap(ConversationMode.init(rawValue:)) ?? .task
         self.bootstrapNotice = bootstrapNotice
         self.preferredModelStore = preferredModelStore
         self.workspacePaths = workspacePaths
@@ -147,6 +166,7 @@ final class AppModel {
         cloudSync.canApplyChanges = { [weak self] in
             guard let self else { return false }
             return self.hasStarted && self.chatCoordinator.busyConversationID == nil
+                && !self.chatCoordinator.sharedMemory.isUpdating
                 && !self.providerSettings.isMutating && !self.skillSettings.isMutating
         }
         cloudSync.didImportChanges = { [weak self] in
@@ -163,6 +183,10 @@ final class AppModel {
             }
         }
         chatCoordinator.onWorkFinished = { [weak cloudSync] in cloudSync?.requestSync() }
+        chatCoordinator.sharedMemory.onWorkFinished = { [weak cloudSync] in cloudSync?.requestSync() }
+        chatCoordinator.sharedMemory.onMemoryUpdated = { [weak memorySettings] in
+            await memorySettings?.load()
+        }
     }
 
     func start() async {
@@ -195,14 +219,15 @@ final class AppModel {
             cloudSync.start()
 
 #if os(macOS)
-            if conversations.conversations.isEmpty {
+            if modeConversations.isEmpty {
                 newConversation()
-            } else if destination == nil, let first = conversations.conversations.first {
+            } else if destination == nil, let first = modeConversations.first {
                 destination = .conversation(first.id)
             }
 #endif
 
-            try await alpineRuntime.prepare()
+            // Alpine prepares lazily when a task actually uses it. A chat must
+            // remain usable even when the task runtime is unavailable.
             if let bootstrapNotice {
                 globalErrorMessage = bootstrapNotice
             }
@@ -215,7 +240,7 @@ final class AppModel {
     func newConversation() {
         do {
             let selection = preferredModelStore.selection(in: providerSettings.profiles)
-            if let draftConversation = conversations.conversations.first(where: {
+            if let draftConversation = modeConversations.first(where: {
                 $0.status == .idle && $0.messages.isEmpty && chatDrafts[$0.id]?.skillReference == nil
             }) {
                 if draftConversation.providerID != selection?.providerID
@@ -232,7 +257,8 @@ final class AppModel {
 
             let conversation = try conversations.createConversation(
                 providerID: selection?.providerID,
-                modelID: selection?.modelID ?? ""
+                modelID: selection?.modelID ?? "",
+                mode: conversationMode
             )
             destination = .conversation(conversation.id)
         } catch {
@@ -240,7 +266,28 @@ final class AppModel {
         }
     }
 
+    func selectConversationMode(_ mode: ConversationMode) {
+        guard mode != conversationMode else { return }
+        conversationMode = mode
+        selectedTab = .conversations
+        isTerminalPresented = false
+        let remembered = lastConversationIDs[mode].flatMap { conversations.conversation(id: $0) }
+        let conversation = remembered?.mode == mode ? remembered : modeConversations.first
+        lastConversationID = conversation?.id
+#if os(iOS)
+        conversationPath = []
+        destination = nil
+#else
+        if let conversation {
+            destination = .conversation(conversation.id)
+        } else {
+            newConversation()
+        }
+#endif
+    }
+
     func openNativeTool(_ id: UUID) {
+        conversationMode = .task
         selectedTab = .tools
         nativeToolPath = [id]
 #if os(macOS)
@@ -282,11 +329,12 @@ final class AppModel {
             conversationPath.removeAll { $0 == conversation.id }
             if lastConversationID == conversation.id { lastConversationID = nil }
 #else
-            if conversations.conversations.isEmpty {
-                newConversation()
-            } else if destination == .conversation(conversation.id),
-                      let first = conversations.conversations.first {
-                destination = .conversation(first.id)
+            if destination == .conversation(conversation.id) {
+                if let first = modeConversations.first {
+                    destination = .conversation(first.id)
+                } else {
+                    newConversation()
+                }
             }
 #endif
         } catch {
@@ -345,6 +393,7 @@ final class AppModel {
     }
 
     func presentTerminal() {
+        guard conversationMode == .task else { return }
         isTerminalPresented = true
     }
 

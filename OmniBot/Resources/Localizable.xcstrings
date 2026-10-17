@@ -1,640 +1,20 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "会话命令" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chat Commands"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "会话命令"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "前往下一个浏览的页面" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Go to the next page"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "前往下一个浏览的页面"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "取消编辑" : {
+    "回复信息" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cancel Editing"
+            "value" : "Response details"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "取消编辑"
-          }
-        }
-      }
-    },
-    "在侧边栏中搜索历史会话" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search conversation history in the sidebar"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在侧边栏中搜索历史会话"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "在当前会话中开始输入" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start typing in the current conversation"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在当前会话中开始输入"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "导航" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Navigation"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "导航"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "展开或收起会话命令栏" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show or hide chat commands"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "展开或收起会话命令栏"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "展开或收起当前会话的终端" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show or hide the terminal in the current conversation"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "展开或收起当前会话的终端"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "常用快捷键" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Common Shortcuts"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "常用快捷键"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "开始新的会话" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start a new conversation"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "开始新的会话"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "录制、修改或停用常用快捷键" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Record, change, or disable common keyboard shortcuts"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "录制、修改或停用常用快捷键"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "录制快捷键" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Record Shortcut"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "录制快捷键"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "快捷键" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keyboard Shortcuts"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "快捷键"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "快速聊天" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quick Chat"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "快速聊天"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "打开工具列表" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open the tool library"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开工具列表"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "打开独立的快捷聊天窗口" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open a separate quick chat window"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开独立的快捷聊天窗口"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "打开软件设置" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open app settings"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开软件设置"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "无法使用这个按键，请录制其他组合。" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This key cannot be used. Please record another combination."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "无法使用这个按键，请录制其他组合。"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "未分配" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not Assigned"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未分配"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "正在录制快捷键" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recording Shortcut"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在录制快捷键"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "此快捷键已用于「%@」。请先清除原绑定，或使用其他组合。" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This shortcut is already assigned to “%@”. Clear that binding first, or use another combination."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此快捷键已用于「%@」。请先清除原绑定，或使用其他组合。"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "清空%@的快捷键%@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear the shortcut %2$@ for %1$@"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "清空%@的快捷键%@"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "清空快捷键" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear Shortcut"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "清空快捷键"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "清空输入框并退出编辑状态" : {
-      "extractionState" : "manual",
-      "generatesSymbol" : false,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear the message field and exit editing"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "清空输入框并退出编辑状态"
-          }
-        }
-      }
-    },
-    "点击铅笔后按下组合键。Esc 取消，Delete 清空；留空即停用。快捷键仅在软件内生效。" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Click the pencil, then press a key combination. Esc cancels; Delete clears. Leave a shortcut empty to disable it. Shortcuts work only inside the app."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "点击铅笔后按下组合键。Esc 取消，Delete 清空；留空即停用。快捷键仅在软件内生效。"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "聚焦输入框" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Focus Message Input"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "聚焦输入框"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "请包含 Command 或 Control 键，避免影响正常输入。" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Include Command or Control to avoid interfering with normal typing."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "请包含 Command 或 Control 键，避免影响正常输入。"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "请按下快捷键…" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Press a shortcut…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "请按下快捷键…"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "返回上一个浏览的页面" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Return to the previous page"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "返回上一个浏览的页面"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "这个组合用于系统或文本编辑，请使用其他快捷键。" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This combination is used by the system or for text editing. Please choose another shortcut."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "这个组合用于系统或文本编辑，请使用其他快捷键。"
-          }
-        }
-      },
-      "extractionState" : "manual"
-    },
-    "在使用同一 Apple 账户的 iPhone、iPad 和 Mac 间同步聊天、附件、模型服务配置及 API Key、默认模型、Soul、Memory、Skills 和外观。API Key 恢复到设备钥匙串，本地备份缓存加密保存。设备权限和 Alpine 环境保留在各设备。任务或设置编辑完成后再同步。" : {
-      "extractionState" : "manual",
-      "generatesSymbol" : false,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sync chats, attachments, provider settings and API keys, the default model, Soul, Memory, Skills, and appearance across iPhone, iPad, and Mac using the same Apple Account. API keys are restored to the device Keychain and encrypted in the local backup cache. Device permissions and the Alpine environment stay on each device. Sync runs after tasks and settings edits finish."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在使用同一 Apple 账户的 iPhone、iPad 和 Mac 间同步聊天、附件、模型服务配置及 API Key、默认模型、Soul、Memory、Skills 和外观。API Key 恢复到设备钥匙串，本地备份缓存加密保存。设备权限和 Alpine 环境保留在各设备。任务或设置编辑完成后再同步。"
-          }
-        }
-      }
-    },
-    "保留规则" : {
-      "extractionState" : "manual",
-      "generatesSymbol" : false,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retention"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "保留规则"
-          }
-        }
-      }
-    },
-    "最近 30 天，最多 50 份" : {
-      "extractionState" : "manual",
-      "generatesSymbol" : false,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Last 30 days, up to 50 backups"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "最近 30 天，最多 50 份"
-          }
-        }
-      }
-    },
-    "同步成功后自动清理超过 30 天或最近 50 份以外的备份，至少保留最新一份。当前数据、删除标记及保留备份引用的内容不会被清理。恢复前先保存当前版本；恢复不会删除后来新增的其他内容。" : {
-      "extractionState" : "manual",
-      "generatesSymbol" : false,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "After a successful sync, backups older than 30 days or beyond the latest 50 are removed automatically. The latest backup is always kept. Current data, deletion markers, and content used by retained backups are preserved. A safety backup is saved before restoring; other content added later is kept."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "同步成功后自动清理超过 30 天或最近 50 份以外的备份，至少保留最新一份。当前数据、删除标记及保留备份引用的内容不会被清理。恢复前先保存当前版本；恢复不会删除后来新增的其他内容。"
-          }
-        }
-      }
-    },
-    "备份中的聊天、配置及已备份的 API Key 将恢复到当时的版本。当前版本会先保留在历史备份中。" : {
-      "extractionState" : "manual",
-      "generatesSymbol" : false,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chats, settings, and backed-up API keys will be restored to this version. Your current version will first be saved in backup history."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "备份中的聊天、配置及已备份的 API Key 将恢复到当时的版本。当前版本会先保留在历史备份中。"
-          }
-        }
-      }
-    },
-    "另一台设备正在同步，稍后会自动重试。" : {
-      "extractionState" : "manual",
-      "generatesSymbol" : false,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Another device is syncing. Sync will retry automatically shortly."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "另一台设备正在同步，稍后会自动重试。"
-          }
-        }
-      }
-    },
-    "API Key 安全存储读写失败，已暂停同步，请解锁设备后重试。" : {
-      "extractionState" : "manual",
-      "generatesSymbol" : false,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Could not access secure API key storage. Sync is paused. Unlock your device and try again."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "API Key 安全存储读写失败，已暂停同步，请解锁设备后重试。"
+            "value" : "回复信息"
           }
         }
       }
@@ -1395,6 +775,24 @@
         }
       }
     },
+    "API Key 安全存储读写失败，已暂停同步，请解锁设备后重试。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not access secure API key storage. Sync is paused. Unlock your device and try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API Key 安全存储读写失败，已暂停同步，请解锁设备后重试。"
+          }
+        }
+      }
+    },
     "Base URL" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -1589,6 +987,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Git 版本控制"
+          }
+        }
+      }
+    },
+    "Hi，今天想聊些什么？" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hi, what would you like to talk about?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hi，今天想聊些什么？"
+          }
+        }
+      }
+    },
+    "Hi，有什么可以帮你完成的？" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hi, what can I help you get done?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hi，有什么可以帮你完成的？"
           }
         }
       }
@@ -2463,6 +1897,24 @@
         }
       }
     },
+    "一起想点子" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brainstorm together"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一起想点子"
+          }
+        }
+      }
+    },
     "一键安装配置（%lld 项）" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -2697,6 +2149,42 @@
         }
       }
     },
+    "上行 token：%lld" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Input tokens: %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上行 token：%lld"
+          }
+        }
+      }
+    },
+    "上行 token（含缓存读取）" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Input tokens (including cache reads)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上行 token（含缓存读取）"
+          }
+        }
+      }
+    },
     "下方向键" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -2711,6 +2199,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "下方向键"
+          }
+        }
+      }
+    },
+    "下行 token" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Output tokens"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下行 token"
+          }
+        }
+      }
+    },
+    "下行 token：%lld" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Output tokens: %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下行 token：%lld"
           }
         }
       }
@@ -3075,6 +2599,42 @@
         }
       }
     },
+    "仅用于聊天，与任务模式独立。聊天不会调用工具，也不会读取工作空间或记忆。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Used only for chat, independently of task mode. Chat does not call tools or access the workspace or memory."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅用于聊天，与任务模式独立。聊天不会调用工具，也不会读取工作空间或记忆。"
+          }
+        }
+      }
+    },
+    "仅用于聊天，与任务模式独立。聊天共享记忆，但不会调用工具或访问工作空间。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Used only for chat, independently of task mode. Chat shares memory but does not call tools or access the workspace."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅用于聊天，与任务模式独立。聊天共享记忆，但不会调用工具或访问工作空间。"
+          }
+        }
+      }
+    },
     "今天" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -3147,6 +2707,60 @@
         }
       }
     },
+    "任务" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务"
+          }
+        }
+      }
+    },
+    "任务与聊天共享这份记忆。聊天结束后会自动整理值得保留的信息。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasks and chat share this memory. Useful information is saved automatically after a chat response."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务与聊天共享这份记忆。聊天结束后会自动整理值得保留的信息。"
+          }
+        }
+      }
+    },
+    "任务与聊天的独立系统提示" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Separate system prompts for tasks and chat"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务与聊天的独立系统提示"
+          }
+        }
+      }
+    },
     "任务或设置编辑正在进行，结束后会自动同步。" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -3183,6 +2797,42 @@
         }
       }
     },
+    "任务模式" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task mode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务模式"
+          }
+        }
+      }
+    },
+    "任务模式系统提示" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task mode system prompt"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务模式系统提示"
+          }
+        }
+      }
+    },
     "会话" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -3215,6 +2865,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "会话名称"
+          }
+        }
+      }
+    },
+    "会话命令" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat Commands"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会话命令"
+          }
+        }
+      }
+    },
+    "会话模式" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conversation mode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会话模式"
           }
         }
       }
@@ -3395,6 +3080,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "保存的数据超过大小限制。"
+          }
+        }
+      }
+    },
+    "保留规则" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retention"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留规则"
           }
         }
       }
@@ -3593,6 +3296,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "六"
+          }
+        }
+      }
+    },
+    "共享记忆整理已中断，本次回复不受影响。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memory updating was interrupted. Your reply is unaffected."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "共享记忆整理已中断，本次回复不受影响。"
+          }
+        }
+      }
+    },
+    "共享记忆暂不可用：%@" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared memory is temporarily unavailable: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "共享记忆暂不可用：%@"
           }
         }
       }
@@ -3849,6 +3588,24 @@
         }
       }
     },
+    "最近 30 天，最多 50 份" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last 30 days, up to 50 backups"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近 30 天，最多 50 份"
+          }
+        }
+      }
+    },
     "最近会话" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -3899,6 +3656,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "分析工作区"
+          }
+        }
+      }
+    },
+    "切换任务和聊天，分别保留各自的会话" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch between tasks and chat while keeping their conversations separate"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换任务和聊天，分别保留各自的会话"
           }
         }
       }
@@ -4223,6 +3998,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "刷新用量"
+          }
+        }
+      }
+    },
+    "前往下一个浏览的页面" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to the next page"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前往下一个浏览的页面"
           }
         }
       }
@@ -4641,6 +4433,24 @@
         }
       }
     },
+    "取消编辑" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel Editing"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消编辑"
+          }
+        }
+      }
+    },
     "取消置顶" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -4691,6 +4501,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "另一个会话正在运行，请等待其完成后再重试。"
+          }
+        }
+      }
+    },
+    "另一台设备正在同步，稍后会自动重试。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Another device is syncing. Sync will retry automatically shortly."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "另一台设备正在同步，稍后会自动重试。"
           }
         }
       }
@@ -4817,6 +4645,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "同步已暂停，稍后会自动重试。"
+          }
+        }
+      }
+    },
+    "同步成功后自动清理超过 30 天或最近 50 份以外的备份，至少保留最新一份。当前数据、删除标记及保留备份引用的内容不会被清理。恢复前先保存当前版本；恢复不会删除后来新增的其他内容。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After a successful sync, backups older than 30 days or beyond the latest 50 are removed automatically. The latest backup is always kept. Current data, deletion markers, and content used by retained backups are preserved. A safety backup is saved before restoring; other content added later is kept."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同步成功后自动清理超过 30 天或最近 50 份以外的备份，至少保留最新一份。当前数据、删除标记及保留备份引用的内容不会被清理。恢复前先保存当前版本；恢复不会删除后来新增的其他内容。"
           }
         }
       }
@@ -5001,6 +4847,24 @@
         }
       }
     },
+    "和 OmniBot 聊聊…" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat with OmniBot…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "和 OmniBot 聊聊…"
+          }
+        }
+      }
+    },
     "响应次数" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -5015,6 +4879,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "响应次数"
+          }
+        }
+      }
+    },
+    "响应耗时" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Response duration"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "响应耗时"
+          }
+        }
+      }
+    },
+    "响应耗时：%@" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Response duration: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "响应耗时：%@"
           }
         }
       }
@@ -5217,6 +5117,58 @@
         }
       }
     },
+    "在使用同一 Apple 账户的 iPhone、iPad 和 Mac 间同步聊天、附件、模型服务配置及 API Key、默认模型、Soul、Memory、Skills 和外观。API Key 恢复到设备钥匙串，本地备份缓存加密保存。设备权限和 Alpine 环境保留在各设备。任务或设置编辑完成后再同步。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync chats, attachments, provider settings and API keys, the default model, Soul, Memory, Skills, and appearance across iPhone, iPad, and Mac using the same Apple Account. API keys are restored to the device Keychain and encrypted in the local backup cache. Device permissions and the Alpine environment stay on each device. Sync runs after tasks and settings edits finish."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在使用同一 Apple 账户的 iPhone、iPad 和 Mac 间同步聊天、附件、模型服务配置及 API Key、默认模型、Soul、Memory、Skills 和外观。API Key 恢复到设备钥匙串，本地备份缓存加密保存。设备权限和 Alpine 环境保留在各设备。任务或设置编辑完成后再同步。"
+          }
+        }
+      }
+    },
+    "在侧边栏中搜索历史会话" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search conversation history in the sidebar"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在侧边栏中搜索历史会话"
+          }
+        }
+      }
+    },
+    "在当前会话中开始输入" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start typing in the current conversation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在当前会话中开始输入"
+          }
+        }
+      }
+    },
     "在输入框中重新编辑并发送这条消息" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -5249,6 +5201,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "备份与后台执行"
+          }
+        }
+      }
+    },
+    "备份中的聊天、配置及已备份的 API Key 将恢复到当时的版本。当前版本会先保留在历史备份中。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chats, settings, and backed-up API keys will be restored to this version. Your current version will first be saved in backup history."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "备份中的聊天、配置及已备份的 API Key 将恢复到当时的版本。当前版本会先保留在历史备份中。"
           }
         }
       }
@@ -5541,6 +5511,42 @@
         }
       }
     },
+    "完成时间" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed at"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成时间"
+          }
+        }
+      }
+    },
+    "完成时间：%@" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed at: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成时间：%@"
+          }
+        }
+      }
+    },
     "密码" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -5739,6 +5745,23 @@
         }
       }
     },
+    "导航" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navigation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导航"
+          }
+        }
+      }
+    },
     "将二维码放入取景框" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -5843,6 +5866,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "展开历史工具调用"
+          }
+        }
+      }
+    },
+    "展开或收起会话命令栏" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show or hide chat commands"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展开或收起会话命令栏"
+          }
+        }
+      }
+    },
+    "展开或收起当前会话的终端" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show or hide the terminal in the current conversation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展开或收起当前会话的终端"
           }
         }
       }
@@ -6747,6 +6804,41 @@
         }
       }
     },
+    "帮我理清思路" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Help me think it through"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帮我理清思路"
+          }
+        }
+      }
+    },
+    "常用快捷键" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Common Shortcuts"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "常用快捷键"
+          }
+        }
+      }
+    },
     "应用包中缺少 Alpine 根文件系统。" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -6851,6 +6943,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "开启后，在使用应用时自动备份和同步。"
+          }
+        }
+      }
+    },
+    "开始新的会话" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start a new conversation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始新的会话"
           }
         }
       }
@@ -6963,6 +7072,24 @@
         }
       }
     },
+    "当前会话未启用工具调用，请重试以获取文本回复。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tools are disabled for this conversation. Please retry for a text response."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前会话未启用工具调用，请重试以获取文本回复。"
+          }
+        }
+      }
+    },
     "当前已配置的服务商" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -7053,6 +7180,40 @@
         }
       }
     },
+    "录制、修改或停用常用快捷键" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record, change, or disable common keyboard shortcuts"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "录制、修改或停用常用快捷键"
+          }
+        }
+      }
+    },
+    "录制快捷键" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record Shortcut"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "录制快捷键"
+          }
+        }
+      }
+    },
     "待处理" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -7085,6 +7246,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "快捷聊天"
+          }
+        }
+      }
+    },
+    "快捷键" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keyboard Shortcuts"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快捷键"
+          }
+        }
+      }
+    },
+    "快速聊天" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quick Chat"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速聊天"
           }
         }
       }
@@ -7287,6 +7482,60 @@
         }
       }
     },
+    "我想和你聊聊今天发生的事。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I would like to talk about my day."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我想和你聊聊今天发生的事。"
+          }
+        }
+      }
+    },
+    "我想理清一件事，可以陪我一步步想想吗？" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I would like to think something through. Could you help me work through it step by step?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我想理清一件事，可以陪我一步步想想吗？"
+          }
+        }
+      }
+    },
+    "我有一个想法，想和你一起聊聊：" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I have an idea I would like to explore with you:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我有一个想法，想和你一起聊聊："
+          }
+        }
+      }
+    },
     "我的工具" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -7431,6 +7680,23 @@
         }
       }
     },
+    "打开工具列表" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the tool library"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开工具列表"
+          }
+        }
+      }
+    },
     "打开工具调用结果" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -7503,6 +7769,23 @@
         }
       }
     },
+    "打开独立的快捷聊天窗口" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open a separate quick chat window"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开独立的快捷聊天窗口"
+          }
+        }
+      }
+    },
     "打开资源预览" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -7517,6 +7800,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "打开资源预览"
+          }
+        }
+      }
+    },
+    "打开软件设置" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open app settings"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开软件设置"
           }
         }
       }
@@ -7841,6 +8141,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "描述 Agent 的身份、语气、原则与边界"
+          }
+        }
+      }
+    },
+    "描述聊天伙伴的身份、语气与交流方式" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Describe your chat companion’s identity, tone, and conversational style"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "描述聊天伙伴的身份、语气与交流方式"
           }
         }
       }
@@ -8331,6 +8649,24 @@
         }
       }
     },
+    "新建聊天，聊聊想法、问题或今天的生活。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start a chat about ideas, questions, or your day."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建聊天，聊聊想法、问题或今天的生活。"
+          }
+        }
+      }
+    },
     "新服务商" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -8381,6 +8717,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "新端点已保存，但新凭据写入失败"
+          }
+        }
+      }
+    },
+    "新聊天" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New chat"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新聊天"
+          }
+        }
+      }
+    },
+    "无法使用这个按键，请录制其他组合。" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This key cannot be used. Please record another combination."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法使用这个按键，请录制其他组合。"
           }
         }
       }
@@ -9213,6 +9584,24 @@
         }
       }
     },
+    "暂时无法完成回复，请重试。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to finish the reply. Please try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂时无法完成回复，请重试。"
+          }
+        }
+      }
+    },
     "更久以前" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -9407,6 +9796,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "服务配置写入失败：%@"
+          }
+        }
+      }
+    },
+    "未分配" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Assigned"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未分配"
           }
         }
       }
@@ -10041,6 +10447,42 @@
         }
       }
     },
+    "模型未提供缓存用量" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The model did not report cache usage"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模型未提供缓存用量"
+          }
+        }
+      }
+    },
+    "模型未返回有效的记忆整理结果。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The model did not return a valid memory update."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模型未返回有效的记忆整理结果。"
+          }
+        }
+      }
+    },
     "模型没有返回可用的上下文摘要。" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -10293,6 +10735,24 @@
         }
       }
     },
+    "正在准备聊天…" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing chat…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在准备聊天…"
+          }
+        }
+      }
+    },
     "正在准备预览" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -10379,6 +10839,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在启动交互式 shell…"
+          }
+        }
+      }
+    },
+    "正在回复" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replying"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在回复"
           }
         }
       }
@@ -10473,6 +10951,23 @@
         }
       }
     },
+    "正在录制快捷键" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording Shortcut"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在录制快捷键"
+          }
+        }
+      }
+    },
     "正在打开工具…" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -10505,6 +11000,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在打开终端…"
+          }
+        }
+      }
+    },
+    "正在整理共享记忆…" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updating shared memory…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在整理共享记忆…"
           }
         }
       }
@@ -10865,6 +11378,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此平台不支持%@权限。"
+          }
+        }
+      }
+    },
+    "此快捷键已用于「%@」。请先清除原绑定，或使用其他组合。" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This shortcut is already assigned to “%@”. Clear that binding first, or use another combination."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此快捷键已用于「%@」。请先清除原绑定，或使用其他组合。"
           }
         }
       }
@@ -11445,6 +11975,58 @@
         }
       }
     },
+    "清空%@的快捷键%@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear the shortcut %2$@ for %1$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空%@的快捷键%@"
+          }
+        }
+      }
+    },
+    "清空快捷键" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Shortcut"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空快捷键"
+          }
+        }
+      }
+    },
+    "清空输入框并退出编辑状态" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear the message field and exit editing"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空输入框并退出编辑状态"
+          }
+        }
+      }
+    },
     "清除搜索" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -11477,6 +12059,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "点击右上角加号启动新的终端会话。"
+          }
+        }
+      }
+    },
+    "点击铅笔后按下组合键。Esc 取消，Delete 清空；留空即停用。快捷键仅在软件内生效。" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click the pencil, then press a key combination. Esc cancels; Delete clears. Leave a shortcut empty to disable it. Shortcuts work only inside the app."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点击铅笔后按下组合键。Esc 取消，Delete 清空；留空即停用。快捷键仅在软件内生效。"
           }
         }
       }
@@ -11621,6 +12220,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "用 AI 制作"
+          }
+        }
+      }
+    },
+    "用于任务执行，定义 Agent 的身份、语气、原则与边界。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Define the agent’s identity, tone, principles, and boundaries for tasks."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用于任务执行，定义 Agent 的身份、语气、原则与边界。"
           }
         }
       }
@@ -11999,6 +12616,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "等待中"
+          }
+        }
+      }
+    },
+    "等待你开始聊天" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready to chat"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待你开始聊天"
           }
         }
       }
@@ -12471,6 +13106,24 @@
         }
       }
     },
+    "缓存读取 %lld token，命中率 %lld%%，缓存写入 %lld token" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache reads: %1$lld tokens, hit rate: %2$lld%%, cache writes: %3$lld tokens"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缓存读取 %1$lld token，命中率 %2$lld%%，缓存写入 %3$lld token"
+          }
+        }
+      },
+      "extractionState" : "manual",
+      "generatesSymbol" : false
+    },
     "编辑" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -12633,6 +13286,60 @@
         }
       }
     },
+    "聊天已完成，但共享记忆未更新：%@" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat completed, but shared memory was not updated: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "聊天已完成，但共享记忆未更新：%@"
+          }
+        }
+      }
+    },
+    "聊天模式" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat mode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "聊天模式"
+          }
+        }
+      }
+    },
+    "聊天模式系统提示" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat mode system prompt"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "聊天模式系统提示"
+          }
+        }
+      }
+    },
     "聊天背景" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -12665,6 +13372,59 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "聊天背景与显示效果"
+          }
+        }
+      }
+    },
+    "聊想法、找灵感，或者轻松聊聊。" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Explore ideas, find inspiration, or just have a conversation."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "聊想法、找灵感，或者轻松聊聊。"
+          }
+        }
+      }
+    },
+    "聊聊今天" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talk about today"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "聊聊今天"
+          }
+        }
+      }
+    },
+    "聚焦输入框" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus Message Input"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "聚焦输入框"
           }
         }
       }
@@ -13461,6 +14221,23 @@
         }
       }
     },
+    "请包含 Command 或 Control 键，避免影响正常输入。" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include Command or Control to avoid interfering with normal typing."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请包含 Command 或 Control 键，避免影响正常输入。"
+          }
+        }
+      }
+    },
     "请在本地 Alpine 中执行以下任务：" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -13493,6 +14270,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "请在系统设置中允许 Via Vera 使用相机，或返回后从图片、TXT 文件导入。"
+          }
+        }
+      }
+    },
+    "请按下快捷键…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press a shortcut…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请按下快捷键…"
           }
         }
       }
@@ -14001,6 +14795,42 @@
         }
       }
     },
+    "输入想聊的内容，使用右侧发送按钮发送" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type your message and use the send button on the right"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入想聊的内容，使用右侧发送按钮发送"
+          }
+        }
+      }
+    },
+    "输入想聊的内容，按 Enter 发送，按 Shift-Enter 换行" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type your message. Press Enter to send or Shift-Enter for a new line"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入想聊的内容，按 Enter 发送，按 Shift-Enter 换行"
+          }
+        }
+      }
+    },
     "输入模态" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -14253,6 +15083,23 @@
         }
       }
     },
+    "返回上一个浏览的页面" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Return to the previous page"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返回上一个浏览的页面"
+          }
+        }
+      }
+    },
     "还没有会话" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -14357,6 +15204,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "这个月"
+          }
+        }
+      }
+    },
+    "这个组合用于系统或文本编辑，请使用其他快捷键。" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This combination is used by the system or for text editing. Please choose another shortcut."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个组合用于系统或文本编辑，请使用其他快捷键。"
           }
         }
       }

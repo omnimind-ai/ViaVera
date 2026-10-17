@@ -16,8 +16,17 @@ struct MenuBarChatHeader<Actions: View>: View {
 
         HStack(spacing: AppDesign.compactSpacing) {
             Menu {
+                Picker("会话模式", selection: modeSelection) {
+                    ForEach(ConversationMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.inline)
+
+                Divider()
+
                 Picker("会话", selection: $appModel.destination) {
-                    ForEach(appModel.conversations.conversations) { conversation in
+                    ForEach(appModel.modeConversations) { conversation in
                         Text(conversation.title)
                             .tag(AppDestination.conversation(conversation.id))
                     }
@@ -66,6 +75,13 @@ struct MenuBarChatHeader<Actions: View>: View {
         .buttonStyle(.borderless)
         .padding(.horizontal, AppDesign.contentPadding)
         .padding(.vertical, AppDesign.compactSpacing)
+    }
+
+    private var modeSelection: Binding<ConversationMode> {
+        Binding(
+            get: { appModel.conversationMode },
+            set: appModel.selectConversationMode
+        )
     }
 }
 #endif

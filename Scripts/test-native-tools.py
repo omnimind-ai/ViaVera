@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCES = [
     "AgentCore/Models/AgentValue.swift",
     "AgentCore/Models/AgentToolCall.swift",
+    "AgentCore/Persistence/ConversationMode.swift",
     "AgentCore/Resources/AgentArtifact.swift",
     "AgentCore/Resources/AgentArtifactAction.swift",
     "AgentCore/Resources/AgentResourceProtocol.swift",

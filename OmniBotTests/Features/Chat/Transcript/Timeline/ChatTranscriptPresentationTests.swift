@@ -64,17 +64,17 @@ struct ChatTranscriptPresentationTests {
         #expect(presentation.latestTurnTools == [tool])
         #expect(
             presentation.messages.first(where: { $0.id == callingAssistant.id })?
-                .turnUsage == nil
+                .completion == nil
         )
 
         let usage = try #require(
             presentation.messages.first(where: { $0.id == finalAssistant.id })?
-                .turnUsage
+                .completion?.usage
         )
-        #expect(usage.contextTokens == 290)
-        #expect(usage.inputTokens == 240)
-        #expect(usage.outputTokens == 30)
-        #expect(usage.cachedTokens == 50)
+        #expect(usage.contextTokens == 410)
+        #expect(usage.inputTokens == 340)
+        #expect(usage.outputTokens == 42)
+        #expect(usage.cachedTokens == 70)
         #expect(usage.cacheCreationTokens == 25)
         #expect(usage.cacheHitPercentage == 17)
     }
@@ -147,7 +147,7 @@ struct ChatTranscriptPresentationTests {
         #expect(stoppedTool.status == .interrupted)
         #expect(!stoppedTool.wasStarted)
         #expect(presentation.messages.first(where: { $0.id == assistant.id })?
-            .turnUsage?.contextTokens == .max)
+            .completion?.usage.contextTokens == .max)
     }
 
     @Test("A user-stopped tool result is presented as interrupted")

@@ -82,6 +82,7 @@ struct ContentView: View {
         case let .conversation(identifier):
             AgentChatView(conversationID: identifier, composerDraft: appModel.chatDraft(for: identifier))
                 .id(identifier)
+                .transition(.opacity)
         case .providers:
             ProviderSettingsView()
         case .soul:

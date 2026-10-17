@@ -17,7 +17,7 @@ nonisolated enum CloudSyncScope {
         case "provider": return parts.count == 2 && parts[1].utf8.count <= 128
         case "preference": return key == "preference/model"
         case "control":
-            if key == "control/agent/SOUL.md" { return true }
+            if key == "control/agent/SOUL.md" || key == "control/agent/CHAT_SOUL.md" { return true }
             if parts[1] == "appearance" {
                 return key == "control/appearance/appearance.json" || key == "control/appearance/chat-background.data"
             }

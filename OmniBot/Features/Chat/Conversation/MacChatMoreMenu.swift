@@ -3,6 +3,7 @@ import SwiftUI
 
 struct MacChatMoreMenu: View {
     let conversationID: UUID
+    let mode: ConversationMode
     @Binding var isPresentingBrowser: Bool
     let openBrowser: () -> Void
     let openWorkspace: () -> Void
@@ -11,6 +12,7 @@ struct MacChatMoreMenu: View {
 
     var body: some View {
         ChatMoreMenu(
+            mode: mode,
             openBrowser: openBrowser,
             openWorkspace: openWorkspace,
             openSettings: openSettings

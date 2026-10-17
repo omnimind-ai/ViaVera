@@ -14,7 +14,7 @@ struct AgentTurnProcessMessagesView: View {
                         reasoningContent: message.reasoningContent,
                         isReasoningStreaming: message.isReasoningStreaming,
                         toolCalls: startedTools,
-                        turnUsage: nil,
+                        completion: nil,
                         showsStatus: message.showsStatus
                     )
                 }

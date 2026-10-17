@@ -3,8 +3,6 @@ import SwiftUI
 struct SoulSettingsView: View {
     @Environment(AppModel.self) private var appModel
 
-    @State private var lastPersistedContent: String?
-
     var body: some View {
         @Bindable var settings = appModel.soulSettings
 
@@ -13,13 +11,28 @@ struct SoulSettingsView: View {
                 SettingsTextEditor(
                     prompt: String(localized: "描述 Agent 的身份、语气、原则与边界"),
                     text: $settings.content,
-                    lineLimit: 12...20,
-                    minimumHeight: 320
+                    lineLimit: 8...16,
+                    minimumHeight: 220
                 )
+                .accessibilityLabel("任务模式系统提示")
             } header: {
-                Text("系统提示")
+                Text("任务模式")
             } footer: {
-                Text("这里的内容会加入每次 Agent 运行的系统提示。")
+                Text("用于任务执行，定义 Agent 的身份、语气、原则与边界。")
+            }
+
+            Section {
+                SettingsTextEditor(
+                    prompt: String(localized: "描述聊天伙伴的身份、语气与交流方式"),
+                    text: $settings.chatContent,
+                    lineLimit: 8...16,
+                    minimumHeight: 220
+                )
+                .accessibilityLabel("聊天模式系统提示")
+            } header: {
+                Text("聊天模式")
+            } footer: {
+                Text("仅用于聊天，与任务模式独立。聊天共享记忆，但不会调用工具或访问工作空间。")
             }
 
             if let errorMessage = settings.errorMessage {
@@ -30,17 +43,18 @@ struct SoulSettingsView: View {
                 }
             }
         }
-        .task {
-            lastPersistedContent = settings.content
+        .task(id: [settings.content, settings.persistedContent]) {
+            await autoSave(settings.content, mode: .task)
         }
-        .task(id: settings.content) {
-            await autoSave(settings.content)
+        .task(id: [settings.chatContent, settings.persistedChatContent]) {
+            await autoSave(settings.chatContent, mode: .chat)
         }
         .onDisappear(perform: savePendingChanges)
     }
 
-    private func autoSave(_ content: String) async {
-        guard let persistedContent = lastPersistedContent,
+    private func autoSave(_ content: String, mode: ConversationMode) async {
+        let baseline = persistedContent(for: mode)
+        guard let persistedContent = baseline,
               content != persistedContent else {
             return
         }
@@ -52,24 +66,40 @@ struct SoulSettingsView: View {
         }
 
         guard !Task.isCancelled,
-              appModel.soulSettings.content == content else {
+              currentContent(for: mode) == content else {
             return
         }
 
-        await appModel.soulSettings.save(content)
-        guard !Task.isCancelled,
-              appModel.soulSettings.errorMessage == nil else {
-            return
-        }
-        lastPersistedContent = appModel.soulSettings.content
+        await save(content, mode: mode)
     }
 
     private func savePendingChanges() {
-        guard let persistedContent = lastPersistedContent else { return }
-        let content = appModel.soulSettings.content
-        guard content != persistedContent else { return }
+        let content = currentContent(for: .task)
+        let chatContent = currentContent(for: .chat)
+        let saveTask = persistedContent(for: .task).map { content != $0 } ?? !content.isEmpty
+        let saveChat = persistedContent(for: .chat).map { chatContent != $0 } ?? !chatContent.isEmpty
+        guard saveTask || saveChat else { return }
 
+        // Capture both snapshots before the view disappears. An in-flight
+        // autosave must not replace the text being flushed for either mode.
         Task {
+            if saveTask { await appModel.soulSettings.save(content) }
+            if saveChat { await appModel.soulSettings.saveChat(chatContent) }
+        }
+    }
+
+    private func currentContent(for mode: ConversationMode) -> String {
+        mode == .chat ? appModel.soulSettings.chatContent : appModel.soulSettings.content
+    }
+
+    private func persistedContent(for mode: ConversationMode) -> String? {
+        mode == .chat ? appModel.soulSettings.persistedChatContent : appModel.soulSettings.persistedContent
+    }
+
+    private func save(_ content: String, mode: ConversationMode) async {
+        if mode == .chat {
+            await appModel.soulSettings.saveChat(content)
+        } else {
             await appModel.soulSettings.save(content)
         }
     }

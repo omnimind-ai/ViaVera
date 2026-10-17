@@ -10,6 +10,7 @@ nonisolated struct ModelUsageEntry: Sendable {
     var outputTokens: Int = 0
     var cachedTokens: Int = 0
     var cacheCreationTokens: Int = 0
+    var memoryUsage: AgentUsage = .zero
 
     var isModelResponse: Bool {
         role == "assistant" && (

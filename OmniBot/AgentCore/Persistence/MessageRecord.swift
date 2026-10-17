@@ -18,12 +18,17 @@ public final class MessageRecord {
     public var cachedTokens: Int = 0
     public var cacheCreationTokens: Int = 0
     public var reportsCacheUsage: Bool = false
+    /// Background memory extraction is billed usage, but is not conversation
+    /// context usage. Optional storage preserves existing SwiftData records.
+    public var memoryUsageData: Data?
     /// Capture attribution when the message is created; conversation selection can change later.
     /// Nil on older records means the original model was not recorded.
     public var modelID: String?
     public var providerID: String?
     public var createdAt: Date
     public var updatedAt: Date
+    /// Reply completion is stable when later bookkeeping updates the record.
+    public var responseCompletedAt: Date?
     public var conversation: ConversationRecord?
 
     public init(
@@ -51,10 +56,13 @@ public final class MessageRecord {
         self.cachedTokens = usage.cachedTokens
         self.cacheCreationTokens = usage.cacheCreationTokens
         self.reportsCacheUsage = usage.reportsCacheUsage
+        self.memoryUsageData = nil
         self.modelID = conversation?.modelID
         self.providerID = conversation?.providerID
         self.createdAt = createdAt
         self.updatedAt = updatedAt ?? createdAt
+        self.responseCompletedAt = message.role == .assistant
+            && status != .pending && status != .streaming ? (updatedAt ?? createdAt) : nil
         self.conversation = conversation
     }
 
@@ -65,6 +73,16 @@ public final class MessageRecord {
     public var status: MessageStatus {
         get { MessageStatus(rawValue: statusRawValue) ?? .completed }
         set { statusRawValue = newValue.rawValue }
+    }
+
+    public var memoryUsage: AgentUsage {
+        get {
+            guard let memoryUsageData else { return .zero }
+            return (try? JSONDecoder().decode(AgentUsage.self, from: memoryUsageData)) ?? .zero
+        }
+        set {
+            memoryUsageData = newValue == .zero ? nil : try? JSONEncoder().encode(newValue)
+        }
     }
 
     public func decodeMessage(using decoder: JSONDecoder = JSONDecoder()) throws -> AgentMessage {
@@ -86,6 +104,9 @@ public final class MessageRecord {
         toolName = message.name
         payloadData = try encoder.encode(message)
         if let status { statusRawValue = status.rawValue }
+        if message.role == .assistant, let status {
+            responseCompletedAt = status == .pending || status == .streaming ? nil : updatedAt
+        }
         if let usage {
             promptTokens = usage.promptTokens
             completionTokens = usage.completionTokens

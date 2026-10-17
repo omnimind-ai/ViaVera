@@ -39,7 +39,25 @@ struct ChatTranscriptPresentation {
 
         var rows: [ChatMessagePresentation] = []
         var latestTools: [ToolCallPresentation] = []
+        var responseStartedAt: Date?
+        var responseUsage = AgentUsage.zero
         for (index, message) in orderedMessages.enumerated() where message.role != .tool {
+            if message.role == .user {
+                responseStartedAt = nil
+                responseUsage = .zero
+            }
+            if message.role == .assistant {
+                responseStartedAt = responseStartedAt ?? message.createdAt
+                responseUsage = responseUsage + AgentUsage(
+                    promptTokens: message.promptTokens,
+                    completionTokens: message.completionTokens,
+                    totalTokens: 0,
+                    cachedTokens: message.cachedTokens,
+                    cacheCreationTokens: message.cacheCreationTokens,
+                    reportsCacheUsage: message.reportsCacheUsage
+                        || message.cachedTokens > 0 || message.cacheCreationTokens > 0
+                )
+            }
             let decodedAssistant = message.role == .assistant
                 ? try? message.decodeMessage()
                 : nil
@@ -72,31 +90,13 @@ struct ChatTranscriptPresentation {
                 calls = []
             }
 
-            let usage: TurnUsagePresentation?
-            if usageMessageIDs.contains(message.id) {
-                let candidate = TurnUsagePresentation(
-                    usage: AgentUsage(
-                        promptTokens: message.promptTokens,
-                        completionTokens: message.completionTokens,
-                        totalTokens: AgentUsage.saturatingSum(
-                            AgentUsage.saturatingSum(
-                                message.promptTokens,
-                                message.cachedTokens
-                            ),
-                            message.completionTokens
-                        ),
-                        cachedTokens: message.cachedTokens,
-                        cacheCreationTokens: message.cacheCreationTokens,
-                        reportsCacheUsage: message.reportsCacheUsage
-                            || message.cachedTokens > 0
-                            || message.cacheCreationTokens > 0
-                    )
-                )
-                usage = candidate.isEmpty ? nil : candidate
-            } else {
-                usage = nil
-            }
-
+            let belongsToActiveTurn = runIsActive && (
+                index > (lastUserIndex ?? -1)
+                    || liveToolActivity?.assistantMessageIDs.contains(message.id) == true
+            )
+            let isFinishedResponse = usageMessageIDs.contains(message.id)
+                && !belongsToActiveTurn
+                && message.status != .streaming && message.status != .pending
             rows.append(
                 ChatMessagePresentation(
                     message: message,
@@ -106,8 +106,12 @@ struct ChatTranscriptPresentation {
                         && message.status == .streaming
                         && !Self.hasVisibleText(message.content),
                     toolCalls: calls,
-                    turnUsage: usage,
-                    showsStatus: true
+                    showsStatus: true,
+                    completion: isFinishedResponse ? ResponseCompletionPresentation(
+                        usage: TurnUsagePresentation(usage: responseUsage),
+                        startedAt: responseStartedAt ?? message.createdAt,
+                        completedAt: message.responseCompletedAt ?? message.updatedAt
+                    ) : nil
                 )
             )
 
@@ -186,8 +190,8 @@ struct ChatTranscriptPresentation {
                             reasoningContent: terminalMessage.reasoningContent,
                             isReasoningStreaming: terminalMessage.isReasoningStreaming,
                             toolCalls: [],
-                            turnUsage: terminalMessage.turnUsage,
-                            showsStatus: false
+                            showsStatus: false,
+                            completion: terminalMessage.completion
                         )
                     )
                 }
@@ -209,8 +213,8 @@ struct ChatTranscriptPresentation {
                             reasoningContent: nil,
                             isReasoningStreaming: false,
                             toolCalls: [],
-                            turnUsage: terminalMessage.turnUsage,
-                            showsStatus: true
+                            showsStatus: true,
+                            completion: terminalMessage.completion
                         )
                     ]
                 } else {

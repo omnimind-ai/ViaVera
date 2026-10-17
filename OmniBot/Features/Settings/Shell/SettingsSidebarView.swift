@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SettingsSidebarView: View {
+    @Environment(AppModel.self) private var appModel
     @Binding var selection: SettingsCardDestination?
 
     var body: some View {
@@ -17,28 +18,39 @@ struct SettingsSidebarView: View {
                     .tag(SettingsCardDestination.soul)
                 SettingsCardRow(destination: .memory)
                     .tag(SettingsCardDestination.memory)
-                SettingsCardRow(destination: .skills)
-                    .tag(SettingsCardDestination.skills)
+                if appModel.conversationMode == .task {
+                    SettingsCardRow(destination: .skills)
+                        .tag(SettingsCardDestination.skills)
+                }
             }
 
             Section("系统") {
                 SettingsCardRow(destination: .sync)
                     .tag(SettingsCardDestination.sync)
-                SettingsCardRow(destination: .permissions)
-                    .tag(SettingsCardDestination.permissions)
+                if appModel.conversationMode == .task {
+                    SettingsCardRow(destination: .permissions)
+                        .tag(SettingsCardDestination.permissions)
+                }
                 SettingsCardRow(destination: .appearance)
                     .tag(SettingsCardDestination.appearance)
 #if os(macOS)
                 SettingsCardRow(destination: .keyboardShortcuts)
                     .tag(SettingsCardDestination.keyboardShortcuts)
 #endif
-                SettingsCardRow(destination: .workspace)
-                    .tag(SettingsCardDestination.workspace)
-                SettingsCardRow(destination: .runtime)
-                    .tag(SettingsCardDestination.runtime)
+                if appModel.conversationMode == .task {
+                    SettingsCardRow(destination: .workspace)
+                        .tag(SettingsCardDestination.workspace)
+                    SettingsCardRow(destination: .runtime)
+                        .tag(SettingsCardDestination.runtime)
+                }
             }
         }
         .listStyle(.sidebar)
+        .onChange(of: appModel.conversationMode, initial: true) { _, mode in
+            if mode == .chat, selection?.isTaskOnly == true {
+                selection = .soul
+            }
+        }
 #if os(macOS)
         .scrollContentBackground(.hidden)
         .background(.background)

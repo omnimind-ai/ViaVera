@@ -22,6 +22,7 @@ actor ModelUsageReader {
         descriptor.propertiesToFetch = [
             \.createdAt, \.roleRawValue, \.statusRawValue, \.modelID,
             \.promptTokens, \.completionTokens, \.cachedTokens, \.cacheCreationTokens,
+            \.memoryUsageData,
         ]
         descriptor.fetchLimit = 500
         var entries: [ModelUsageEntry] = []
@@ -33,7 +34,8 @@ actor ModelUsageReader {
                     date: $0.createdAt, role: $0.roleRawValue, status: $0.statusRawValue,
                     modelID: $0.modelID, inputTokens: $0.promptTokens,
                     outputTokens: $0.completionTokens, cachedTokens: $0.cachedTokens,
-                    cacheCreationTokens: $0.cacheCreationTokens
+                    cacheCreationTokens: $0.cacheCreationTokens,
+                    memoryUsage: $0.memoryUsage
                 )
             })
             guard records.count == 500 else { break }

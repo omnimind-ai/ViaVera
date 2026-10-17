@@ -6,6 +6,88 @@ import Testing
 @Suite("App model selection")
 @MainActor
 struct AppModelSelectionTests {
+    @Test("Modes keep history and drafts separate and persist the selected mode")
+    func separateConversationModes() async throws {
+        let suiteName = "ConversationModeTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        let directory = FileManager.default.temporaryDirectory.appending(path: suiteName)
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+            try? FileManager.default.removeItem(at: directory)
+        }
+        let (model, container) = try await makeModel(directory: directory, defaults: defaults)
+        defer { withExtendedLifetime(container) {} }
+        model.newConversation()
+        let task = try #require(model.selectedConversation)
+        model.chatDraft(for: task.id).text = "Task draft"
+        model.selectConversationMode(.chat)
+        model.newConversation()
+        let chat = try #require(model.selectedConversation)
+        #expect(chat.mode == .chat)
+        #expect(chat.id != task.id)
+        #expect(model.modeConversations.map(\.id) == [chat.id])
+        model.chatDraft(for: chat.id).text = "Chat draft"
+        model.selectConversationMode(.task)
+        model.newConversation()
+        #expect(model.selectedConversation?.id == task.id)
+        #expect(model.chatDraft(for: task.id).text == "Task draft")
+        model.selectConversationMode(.chat)
+        model.newConversation()
+        #expect(model.selectedConversation?.id == chat.id)
+        #expect(model.chatDraft(for: chat.id).text == "Chat draft")
+        #expect(defaults.string(forKey: "conversationMode") == "chat")
+        // Direct navigation (including history) restores the conversation's mode.
+        model.destination = .conversation(task.id)
+        #expect(model.conversationMode == .task)
+        model.destination = .conversation(chat.id)
+        #expect(model.conversationMode == .chat)
+        await model.deleteConversation(chat)
+        #expect(model.conversationMode == .chat)
+        #expect(model.modeConversations.allSatisfy { $0.mode == .chat })
+        #expect(model.conversations.conversation(id: task.id) != nil)
+    }
+
+    @Test("Chat system prompt is independent and does not require a task workspace")
+    func independentChatPrompt() async throws {
+        let suiteName = "ChatPromptTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        let directory = FileManager.default.temporaryDirectory.appending(path: suiteName)
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+            try? FileManager.default.removeItem(at: directory)
+        }
+        let (model, container) = try await makeModel(directory: directory, defaults: defaults)
+        defer { withExtendedLifetime(container) {} }
+        await model.soulSettings.save("TASK ONLY")
+        await model.soulSettings.saveChat("Talk with me in a warm, concise voice.")
+        let memoryStore = MarkdownMemoryStore(paths: model.workspacePaths)
+        _ = try await memoryStore.upsertLongTermMemory("The user prefers concise Chinese answers.")
+        let task = ConversationRecord(modelID: "model", mode: .task)
+        let taskMessages = try await model.chatCoordinator.prepareSystemMessages(
+            for: task, model: ModelOption(id: "model"), query: "answer preferences"
+        )
+        #expect(taskMessages.contains { $0.content?.contains("concise Chinese answers") == true })
+        // A file in place of the workspace makes task preparation fail. Chat
+        // can still read its host-only Soul and build a normal text request.
+        try FileManager.default.removeItem(at: model.workspacePaths.root)
+        try Data("unavailable workspace".utf8).write(to: model.workspacePaths.root)
+        let chat = ConversationRecord(modelID: "model", mode: .chat)
+        let messages = try await model.chatCoordinator.prepareSystemMessages(
+            for: chat, model: ModelOption(id: "model", supportsTools: true)
+        )
+        #expect(messages.map(\.role) == [.system, .system])
+        #expect(messages.first?.content == "Talk with me in a warm, concise voice.\n")
+        #expect(messages.last?.content?.contains("concise Chinese answers") == true)
+        #expect(!messages.contains { $0.content?.contains("TASK ONLY") == true })
+        #expect(model.chatCoordinator.sharedMemory.errorMessage == nil)
+        await model.soulSettings.saveChat("")
+        let withoutSoul = try await model.chatCoordinator.prepareSystemMessages(
+            for: chat, model: ModelOption(id: "model")
+        )
+        #expect(withoutSoul.count == 1)
+        #expect(withoutSoul.first?.content?.contains("concise Chinese answers") == true)
+    }
+
     @Test("Tool creation opens an empty referenced chat without requiring a model or sending a message")
     func nativeToolComposerEntry() async throws {
         let suiteName = "NativeToolComposerEntryTests-\(UUID().uuidString)"
@@ -274,7 +356,14 @@ struct AppModelSelectionTests {
                 builtInSkillsURL: withBuiltInSkills ? NativeToolTestFixtures.skillDirectory.deletingLastPathComponent() : nil
             ),
             appearanceStore: AppearanceSettingsStore(directoryURL: directory.appending(path: "appearance")),
-            preferredModelStore: PreferredModelStore(defaults: defaults)
+            preferredModelStore: PreferredModelStore(defaults: defaults),
+            nativeToolStore: NativeToolStore(
+                paths: paths,
+                builtInTools: try BuiltInNativeTools.load(
+                    from: NativeToolTestFixtures.skillDirectory.deletingLastPathComponent()
+                )
+            ),
+            modeDefaults: defaults
         )
         await model.providerSettings.load()
         await model.skillSettings.load()

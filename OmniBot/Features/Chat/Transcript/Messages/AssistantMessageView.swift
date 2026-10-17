@@ -6,7 +6,7 @@ struct AssistantMessageView: View {
     let reasoningContent: String?
     let isReasoningStreaming: Bool
     let toolCalls: [ToolCallPresentation]
-    let turnUsage: TurnUsagePresentation?
+    let completion: ResponseCompletionPresentation?
     let showsStatus: Bool
 
     var body: some View {
@@ -49,18 +49,9 @@ struct AssistantMessageView: View {
                 .foregroundStyle(message.status == .failed ? Color.red : Color.secondary)
             }
 
-            if let turnUsage {
-                MessageUsageCapsule(
-                    contextTokens: turnUsage.contextTokens,
-                    inputTokens: turnUsage.inputTokens,
-                    outputTokens: turnUsage.outputTokens,
-                    cachedTokens: turnUsage.cachedTokens,
-                    cacheCreationTokens: turnUsage.cacheCreationTokens,
-                    cacheHitPercentage: turnUsage.cacheHitPercentage
-                )
-            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .modifier(ResponseDetailsModifier(completion: completion))
     }
 
     private var hasVisibleContent: Bool {

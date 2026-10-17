@@ -11,13 +11,6 @@ struct SidebarMacConversationListView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
-                Text("最近会话")
-                    .font(.caption)
-                    .bold()
-                    .foregroundStyle(.tertiary)
-                    .padding(.vertical, 4)
-                    .accessibilityAddTraits(.isHeader)
-
                 if conversations.isEmpty, isSearching {
                     ContentUnavailableView.search
                         .frame(maxWidth: .infinity)
@@ -25,7 +18,9 @@ struct SidebarMacConversationListView: View {
                     ContentUnavailableView {
                         Label("还没有会话", systemImage: "bubble.left")
                     } description: {
-                        Text("新建会话后即可把任务交给 Agent。")
+                        Text(appModel.conversationMode == .chat
+                             ? String(localized: "新建聊天，聊聊想法、问题或今天的生活。")
+                             : String(localized: "新建会话后即可把任务交给 Agent。"))
                     }
                     .frame(maxWidth: .infinity)
                 } else {
@@ -68,7 +63,7 @@ struct SidebarMacConversationListView: View {
             AppDesign.sidebarHorizontalInset,
             for: .scrollContent
         )
-        .scrollEdgeEffectStyle(.soft, for: .top)
+        .scrollEdgeEffectHidden(true, for: .top)
     }
 
     private func selectConversation(_ conversation: ConversationRecord) {

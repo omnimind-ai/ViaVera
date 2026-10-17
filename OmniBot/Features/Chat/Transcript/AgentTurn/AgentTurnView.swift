@@ -15,7 +15,7 @@ struct AgentTurnView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Button(action: onToggleExpanded) {
                         HStack(spacing: AppDesign.transcriptStatusInlineSpacing) {
-                            Text(summaryTitle)
+                            Text("已处理")
                                 .lineLimit(1)
 
                             Image(systemName: "chevron.right")
@@ -52,26 +52,13 @@ struct AgentTurnView: View {
                     reasoningContent: message.reasoningContent,
                     isReasoningStreaming: message.isReasoningStreaming,
                     toolCalls: message.toolCalls,
-                    turnUsage: nil,
+                    completion: nil,
                     showsStatus: message.showsStatus
                 )
             }
 
-            if let usage = turn.turnUsage {
-                MessageUsageCapsule(
-                    contextTokens: usage.contextTokens,
-                    inputTokens: usage.inputTokens,
-                    outputTokens: usage.outputTokens,
-                    cachedTokens: usage.cachedTokens,
-                    cacheCreationTokens: usage.cacheCreationTokens,
-                    cacheHitPercentage: usage.cacheHitPercentage
-                )
-            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var summaryTitle: String {
-        turn.elapsedLabel.isEmpty ? String(localized: "已处理") : String(localized: "已处理  \(turn.elapsedLabel)")
+        .modifier(ResponseDetailsModifier(completion: turn.completion))
     }
 }

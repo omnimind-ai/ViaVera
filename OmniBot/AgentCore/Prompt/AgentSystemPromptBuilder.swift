@@ -420,8 +420,8 @@ nonisolated public struct AgentSystemPromptBuilder: Sendable {
             : "- Injected and retrieved memory is supporting context. The user's current instruction wins on conflict."]
         if canRead {
             lines.append(isChinese
-                ? "- 记忆正文不会自动注入。需要历史事实时使用 `memory_search` 或 `memory_load`；重复失败或执行环境敏感动作前，先检索 harness failure 经验。"
-                : "- Memory bodies are not injected automatically. Use `memory_search` or `memory_load` for historical facts, and search harness failures before repeating a failed or environment-sensitive action.")
+                ? "- 运行时会提供任务与聊天共享的有限记忆摘要。需要更多历史事实时使用 `memory_search` 或 `memory_load`；重复失败或执行环境敏感动作前，先检索 harness failure 经验。"
+                : "- The runtime supplies bounded memory shared by tasks and chat. Use `memory_search` or `memory_load` for more historical facts, and search harness failures before repeating a failed or environment-sensitive action.")
         }
         if canWriteDaily || canWriteLongTerm {
             var destinations: [String] = []

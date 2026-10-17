@@ -13,6 +13,7 @@ final class ChatCoordinator {
     private(set) var lastCompactionMessage: String?
     private(set) var lastCompactionFailed = false
     var errorMessage: String?
+    let sharedMemory: SharedConversationMemory
 
     private let conversations: ConversationRepository
     private let providerSettings: ProviderSettingsModel
@@ -47,6 +48,7 @@ final class ChatCoordinator {
         self.providerSettings = providerSettings
         self.soulStore = soulStore
         self.memoryStore = memoryStore
+        self.sharedMemory = SharedConversationMemory(store: memoryStore, conversations: conversations)
         self.skillStore = skillStore
         self.toolExecutor = toolExecutor
         self.toolActivity = toolActivity
@@ -286,7 +288,8 @@ final class ChatCoordinator {
             model: configuration.model.id,
             messages: ConversationContextCompaction.requestMessages(
                 existingSummary: conversation.contextSummary,
-                messagesToCompact: candidate.messages
+                messagesToCompact: candidate.messages,
+                mode: conversation.mode
             ),
             maxTokens: min(configuration.model.maxOutputTokens ?? 8_192, 8_192),
             reasoningEffort: conversation.reasoningEffort
@@ -313,6 +316,65 @@ final class ChatCoordinator {
             statusMessage = String(localized: "正在停止当前工具…")
         }
         return didRequestStop
+    }
+
+    /// Both modes read shared memory; chat never consults task skills, tools,
+    /// or workspace descriptors.
+    func prepareSystemMessages(
+        for conversation: ConversationRecord,
+        model: ModelOption,
+        query: String = ""
+    ) async throws -> [AgentMessage] {
+        let contextWindow = model.contextWindow ?? 128_000
+        let memory = await sharedMemory.promptContext(
+            query: query,
+            maximumUTF8Bytes: min(6_000, max(0, contextWindow / 8))
+        )
+        let memoryMessage = SharedMemoryPrompt.message(memory: memory, mode: conversation.mode)
+        if conversation.mode == .chat {
+            let soul = try await soulStore.load(mode: .chat)
+            var messages: [AgentMessage] = soul.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ? [] : [.system(soul)]
+            if let memoryMessage { messages.append(memoryMessage) }
+            return messages
+        }
+        async let soul = soulStore.load()
+        async let installedSkills = skillStore.list()
+        async let availableTools = toolExecutor.availableTools()
+        let (soulValue, installedSkillValues, unsortedToolDefinitions) = try await (
+            soul, installedSkills, availableTools
+        )
+        let toolDefinitions = unsortedToolDefinitions.sorted { $0.name < $1.name }
+        try Task.checkCancellation()
+        let outputReserve = min(
+            model.maxOutputTokens ?? max(512, contextWindow / 4),
+            contextWindow
+        )
+        let inputBudget = max(0, contextWindow - outputReserve)
+        let memoryByteBudget = min(24_000, max(0, inputBudget - 2_048)) * 2
+        let soulByteBudget = min(4_096, max(256, inputBudget - 1_024)) * 2
+        let timeContext = timeContextCache.value()
+        let prompt = promptBuilder.build(
+            AgentSystemPromptContext(
+                soul: soulValue,
+                memory: MemoryPromptContext(longTermMemory: "", todayMemory: ""),
+                relevantMemories: [],
+                workspacePath: "/workspace",
+                workspace: AgentWorkspaceDescriptor(id: conversation.id.uuidString),
+                installedSkills: installedSkillValues.sorted { $0.id < $1.id },
+                resolvedSkills: [],
+                availableToolNames: model.supportsTools
+                    ? toolDefinitions.map(\.name)
+                    : [],
+                now: timeContext
+            ),
+            maximumMemoryUTF8Bytes: memoryByteBudget,
+            maximumSoulUTF8Bytes: soulByteBudget,
+            maximumSkillsUTF8Bytes: min(24_000, max(4_096, inputBudget * 2 / 5))
+        )
+        var messages = [AgentMessage.system(prompt)]
+        if let memoryMessage { messages.append(memoryMessage) }
+        return messages
     }
 
     private func performRun(
@@ -381,41 +443,11 @@ final class ChatCoordinator {
                 throw ChatCoordinatorError.conversationNotFound(conversation.id)
             }
             var history = try conversations.promptHistory(for: promptConversation)
-            async let soul = soulStore.load()
-            async let installedSkills = skillStore.list()
-            async let availableTools = toolExecutor.availableTools()
-            let (soulValue, installedSkillValues, unsortedToolDefinitions) = try await (
-                soul, installedSkills, availableTools
+            let systemMessages = try await prepareSystemMessages(
+                for: promptConversation,
+                model: configuration.model,
+                query: currentUserMessage.content ?? ""
             )
-            let toolDefinitions = unsortedToolDefinitions.sorted { $0.name < $1.name }
-            try Task.checkCancellation()
-            let outputReserve = min(
-                configuration.model.maxOutputTokens ?? max(512, contextWindow / 4),
-                contextWindow
-            )
-            let inputBudget = max(0, contextWindow - outputReserve)
-            let memoryByteBudget = min(24_000, max(0, inputBudget - 2_048)) * 2
-            let soulByteBudget = min(4_096, max(256, inputBudget - 1_024)) * 2
-            let timeContext = timeContextCache.value()
-            let prompt = promptBuilder.build(
-                AgentSystemPromptContext(
-                    soul: soulValue,
-                    memory: MemoryPromptContext(longTermMemory: "", todayMemory: ""),
-                    relevantMemories: [],
-                    workspacePath: "/workspace",
-                    workspace: AgentWorkspaceDescriptor(id: conversation.id.uuidString),
-                    installedSkills: installedSkillValues.sorted { $0.id < $1.id },
-                    resolvedSkills: [],
-                    availableToolNames: configuration.model.supportsTools
-                        ? toolDefinitions.map(\.name)
-                        : [],
-                    now: timeContext
-                ),
-                maximumMemoryUTF8Bytes: memoryByteBudget,
-                maximumSoulUTF8Bytes: soulByteBudget,
-                maximumSkillsUTF8Bytes: min(24_000, max(4_096, inputBudget * 2 / 5))
-            )
-            let systemMessages = [AgentMessage.system(prompt)]
 
             let conversationID = conversation.id
             var didRecoverFromOverflow = false
@@ -437,13 +469,13 @@ final class ChatCoordinator {
                     systemMessages: systemMessages,
                     history: history,
                     currentUserMessage: currentUserMessage,
-                    workspaceURL: workspacePaths.root,
+                    workspaceURL: conversation.mode == .task ? workspacePaths.root : nil,
                     continueMode: continueMode || didRecoverFromOverflow,
                     temperature: nil,
                     maxTokens: configuration.model.maxOutputTokens,
                     contextWindow: contextWindow,
                     reasoningEffort: conversation.reasoningEffort,
-                    allowsToolCalls: configuration.model.supportsTools
+                    allowsToolCalls: conversation.mode.supportsTools && configuration.model.supportsTools
                 )
 
                 do {
@@ -452,6 +484,16 @@ final class ChatCoordinator {
                         try await self.handle(event, conversationID: conversationID)
                     }
                     latestUsage = result.usage
+                    if conversation.mode == .chat {
+                        sharedMemory.enqueue(
+                            userMessage: currentUserMessage,
+                            responseMessageID: result.finalMessage.id,
+                            conversationID: conversationID,
+                            model: configuration.model,
+                            apiKey: configuration.apiKey,
+                            client: ProviderChatClientFactory.make(profile: configuration.profile)
+                        )
+                    }
                     break
                 } catch {
                     guard !didRecoverFromOverflow,

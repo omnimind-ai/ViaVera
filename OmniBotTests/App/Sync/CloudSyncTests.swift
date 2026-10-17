@@ -7,6 +7,96 @@ import Testing
 @Suite("iCloud sync", .serialized)
 @MainActor
 struct CloudSyncTests {
+    @Test("Legacy conversation snapshots restore as tasks without changing their document digest")
+    func legacyConversationMode() throws {
+        let fixture = try SyncFixture(cloud: TestCloudTransport())
+        defer { fixture.cleanUp() }
+        let record = ConversationRecord(modelID: "model")
+        try record.append(.user("Existing task"))
+        let encoded = try CloudSyncCoding.encode(CloudConversationSnapshot(record))
+        var legacyJSON = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        legacyJSON.removeValue(forKey: "modeRawValue")
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyJSON, options: [.sortedKeys])
+        let key = "conversation/\(record.id.uuidString)"
+
+        #expect(try fixture.repository.applySyncDocument(key: key, data: legacyData, expectedDigest: nil))
+        let restored = try #require(fixture.repository.conversation(id: record.id))
+        #expect(restored.mode == .task)
+        #expect(restored.modeRawValue == nil)
+        #expect(restored.messages.first?.memoryUsage == .zero)
+        #expect(restored.messages.first?.memoryUsageData == nil)
+        let canonicalLegacy = try CloudSyncCoding.encode(
+            JSONDecoder().decode(CloudConversationSnapshot.self, from: legacyData)
+        )
+        #expect(try fixture.repository.syncDocuments()[key] == canonicalLegacy)
+    }
+
+    @Test("Background memory usage synchronizes without altering main context counters or conversation ordering")
+    func memoryUsageSync() async throws {
+        let cloud = TestCloudTransport()
+        let a = try SyncFixture(cloud: cloud)
+        let b = try SyncFixture(cloud: cloud)
+        defer { a.cleanUp(); b.cleanUp() }
+        let conversation = try a.repository.createConversation(providerID: "provider", modelID: "model", mode: .chat)
+        try a.repository.append(.user("I prefer short answers."), to: conversation)
+        let response = try a.repository.append(
+            .assistant("Understood."), to: conversation,
+            usage: AgentUsage(promptTokens: 40, completionTokens: 10, totalTokens: 50),
+            contextWindow: 8_192
+        )
+        let date = conversation.updatedAt
+        let completionDate = response.responseCompletedAt
+        let first = AgentUsage(promptTokens: 12, completionTokens: 4, totalTokens: 16)
+        try a.repository.appendMemoryUsage(first, toMessageID: response.id, in: conversation.id)
+        #expect(conversation.updatedAt == date)
+        await a.sync.synchronize()
+        await b.sync.synchronize()
+        let restored = try #require(b.repository.conversation(id: conversation.id)?.messages.first { $0.id == response.id })
+        #expect(restored.memoryUsage == first)
+        #expect(restored.responseCompletedAt == completionDate)
+        #expect(restored.promptTokens == 40)
+        #expect(restored.contextWindow == 8_192)
+        #expect(restored.modelID == "model")
+
+        let second = AgentUsage(promptTokens: 6, completionTokens: 2, totalTokens: 8)
+        try a.repository.appendMemoryUsage(second, toMessageID: response.id, in: conversation.id)
+        await a.sync.synchronize()
+        await b.sync.synchronize()
+        #expect(a.sync.errorMessage == nil)
+        #expect(b.sync.errorMessage == nil)
+        let updated = try #require(b.repository.conversation(id: conversation.id)?.messages.first { $0.id == response.id })
+        #expect(updated.memoryUsage == first + second)
+        #expect(updated.responseCompletedAt == completionDate)
+        #expect(updated.promptTokens == 40)
+        #expect(updated.completionTokens == 10)
+        #expect(b.repository.conversation(id: conversation.id)?.updatedAt == date)
+    }
+
+    @Test("Chat mode survives cross-device synchronization and backup restoration")
+    func chatModeSyncAndRestore() async throws {
+        let cloud = TestCloudTransport()
+        let a = try SyncFixture(cloud: cloud)
+        let b = try SyncFixture(cloud: cloud)
+        defer { a.cleanUp(); b.cleanUp() }
+        let conversation = try a.repository.createConversation(providerID: nil, modelID: "model", mode: .chat)
+        let user = AgentMessage.user("Earlier chat")
+        try a.repository.append(user, to: conversation)
+        await a.sync.synchronize()
+        let backup = try #require(a.sync.backups.first)
+        await b.sync.synchronize()
+        #expect(a.sync.errorMessage == nil)
+        #expect(b.sync.errorMessage == nil)
+        #expect(b.repository.conversation(id: conversation.id)?.mode == .chat)
+
+        _ = try a.repository.replaceLatestUserTurn(messageID: user.id, with: "Later chat", in: conversation)
+        await a.sync.synchronize()
+        await a.sync.restore(backup)
+        #expect(a.sync.errorMessage == nil)
+        let restored = try #require(a.repository.conversation(id: conversation.id))
+        #expect(restored.mode == .chat)
+        #expect(restored.messages.first?.content == "Earlier chat")
+    }
+
     @Test("SHA256 is canonical and does not collide on short hex bytes")
     func canonicalDigest() {
         #expect(CloudSyncRevision.hash(Data("abc".utf8)) == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
@@ -52,7 +142,7 @@ struct CloudSyncTests {
                     "control/appearance/../../api-key", "preference/permissions"] {
             #expect(!CloudSyncScope.accepts(key))
         }
-        for key in ["control/agent/SOUL.md", "control/skills/test/SKILL.md", "attachment/images/a.png",
+        for key in ["control/agent/SOUL.md", "control/agent/CHAT_SOUL.md", "control/skills/test/SKILL.md", "attachment/images/a.png",
                     "control/memory/short-memories/2026-09-29.md", "preference/model"] {
             #expect(CloudSyncScope.accepts(key))
         }
@@ -222,9 +312,11 @@ struct CloudSyncTests {
         let b = try SyncFixture(cloud: cloud)
         defer { a.cleanUp(); b.cleanUp() }
         try Data("Custom identity".utf8).write(to: a.paths.soulFile)
+        try Data("Custom chat identity".utf8).write(to: a.paths.chatSoulFile)
         try Data("User memories".utf8).write(to: a.paths.longTermMemoryFile)
         await a.sync.synchronize()
         try Data(SoulStore.defaultSoul.utf8).write(to: b.paths.soulFile)
+        try Data(SoulStore.defaultChatSoul.utf8).write(to: b.paths.chatSoulFile)
         try Data("# Long-term memory\n\n".utf8).write(to: b.paths.longTermMemoryFile)
         var fresh = CloudSyncIndex()
         fresh.deviceID = "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"
@@ -232,8 +324,16 @@ struct CloudSyncTests {
         await b.sync.synchronize()
         #expect(b.sync.errorMessage == nil)
         #expect(try Data(contentsOf: b.paths.soulFile) == Data("Custom identity".utf8))
+        #expect(try Data(contentsOf: b.paths.chatSoulFile) == Data("Custom chat identity".utf8))
         #expect(try Data(contentsOf: b.paths.longTermMemoryFile) == Data("User memories".utf8))
         await a.sync.synchronize()
+        #expect(try Data(contentsOf: a.paths.soulFile) == Data("Custom identity".utf8))
+        #expect(try Data(contentsOf: a.paths.chatSoulFile) == Data("Custom chat identity".utf8))
+        try Data("".utf8).write(to: b.paths.chatSoulFile)
+        await b.sync.synchronize()
+        await a.sync.synchronize()
+        #expect(a.sync.errorMessage == nil)
+        #expect(try Data(contentsOf: a.paths.chatSoulFile).isEmpty)
         #expect(try Data(contentsOf: a.paths.soulFile) == Data("Custom identity".utf8))
     }
 

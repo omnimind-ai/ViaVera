@@ -4,6 +4,19 @@ import Testing
 
 @Suite("Agent harness policies")
 struct AgentHarnessPolicyTests {
+    @Test("Chat compaction preserves conversation context without task instructions")
+    func chatCompactionProfile() {
+        let user = AgentMessage.user("I want to talk about my plans.")
+        let messages = ConversationContextCompaction.requestMessages(
+            existingSummary: "The user enjoys painting.", messagesToCompact: [user], mode: .chat
+        )
+        #expect(messages.first?.role == .system)
+        #expect(messages.first?.content?.contains("chat companion") == true)
+        #expect(messages.first?.content?.contains("Commands executed") == false)
+        #expect(messages.contains(user))
+        #expect(messages.contains { $0.content?.contains("enjoys painting") == true })
+    }
+
     @Test("Adaptive compaction reserve scales across model context sizes")
     func adaptiveCompactionTrigger() {
         #expect(AgentAutoCompactionPolicy.trigger(contextCapacity: 128_000) == 112_000)

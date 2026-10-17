@@ -5,6 +5,37 @@ import Testing
 
 @Suite("Conversation persistence")
 struct ConversationRecordTests {
+    @Test("Conversation mode persists, and legacy or unknown values remain tasks")
+    @MainActor
+    func conversationModeRoundTrip() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: ConversationRecord.self,
+            MessageRecord.self,
+            configurations: configuration
+        )
+        let context = ModelContext(container)
+        let legacy = ConversationRecord(modelID: "model")
+        legacy.modeRawValue = nil
+        let unknown = ConversationRecord(modelID: "model")
+        unknown.modeRawValue = "future-mode"
+        context.insert(legacy)
+        context.insert(unknown)
+        let repository = ConversationRepository(modelContext: context)
+        let task = try repository.createConversation(providerID: nil, modelID: "model")
+        let chat = try repository.createConversation(providerID: nil, modelID: "model", mode: .chat)
+
+        let reloaded = ConversationRepository(modelContext: ModelContext(container))
+        try reloaded.reload()
+        #expect(reloaded.conversation(id: legacy.id)?.mode == .task)
+        #expect(reloaded.conversation(id: legacy.id)?.modeRawValue == nil)
+        #expect(reloaded.conversation(id: unknown.id)?.mode == .task)
+        #expect(reloaded.conversation(id: task.id)?.mode == .task)
+        #expect(reloaded.conversation(id: chat.id)?.mode == .chat)
+        #expect(reloaded.conversation(id: chat.id)?.title == String(localized: "新聊天"))
+        #expect(reloaded.conversation(id: task.id)?.title == String(localized: "新任务"))
+    }
+
     @Test("Empty drafts stay out of history until their first message")
     @MainActor
     func emptyDraftHistoryVisibility() throws {

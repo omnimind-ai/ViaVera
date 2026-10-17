@@ -330,6 +330,7 @@ final class CloudSyncModel {
     private func isInitialDefault(key: String, digest: String) -> Bool {
         switch key {
         case "control/agent/SOUL.md": digest == CloudSyncRevision.hash(Data(SoulStore.defaultSoul.utf8))
+        case "control/agent/CHAT_SOUL.md": digest == CloudSyncRevision.hash(Data(SoulStore.defaultChatSoul.utf8))
         case "control/memory/MEMORY.md": digest == CloudSyncRevision.hash(Data("# Long-term memory\n\n".utf8))
         case "control/memory/HARNESS_ERRORS.md": digest == CloudSyncRevision.hash(Data("# Harness failures\n\n".utf8))
         default: false

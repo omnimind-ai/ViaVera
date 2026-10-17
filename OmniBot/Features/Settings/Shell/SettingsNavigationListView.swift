@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct SettingsNavigationListView: View {
+    @Environment(AppModel.self) private var appModel
+
     var body: some View {
         List {
             Section("模型") {
@@ -19,8 +21,10 @@ struct SettingsNavigationListView: View {
                 NavigationLink(value: SettingsCardDestination.memory) {
                     SettingsCardRow(destination: .memory)
                 }
-                NavigationLink(value: SettingsCardDestination.skills) {
-                    SettingsCardRow(destination: .skills)
+                if appModel.conversationMode == .task {
+                    NavigationLink(value: SettingsCardDestination.skills) {
+                        SettingsCardRow(destination: .skills)
+                    }
                 }
             }
 
@@ -28,17 +32,21 @@ struct SettingsNavigationListView: View {
                 NavigationLink(value: SettingsCardDestination.sync) {
                     SettingsCardRow(destination: .sync)
                 }
-                NavigationLink(value: SettingsCardDestination.permissions) {
-                    SettingsCardRow(destination: .permissions)
+                if appModel.conversationMode == .task {
+                    NavigationLink(value: SettingsCardDestination.permissions) {
+                        SettingsCardRow(destination: .permissions)
+                    }
                 }
                 NavigationLink(value: SettingsCardDestination.appearance) {
                     SettingsCardRow(destination: .appearance)
                 }
-                NavigationLink(value: SettingsCardDestination.workspace) {
-                    SettingsCardRow(destination: .workspace)
-                }
-                NavigationLink(value: SettingsCardDestination.runtime) {
-                    SettingsCardRow(destination: .runtime)
+                if appModel.conversationMode == .task {
+                    NavigationLink(value: SettingsCardDestination.workspace) {
+                        SettingsCardRow(destination: .workspace)
+                    }
+                    NavigationLink(value: SettingsCardDestination.runtime) {
+                        SettingsCardRow(destination: .runtime)
+                    }
                 }
             }
         }

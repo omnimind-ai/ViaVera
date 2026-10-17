@@ -113,7 +113,9 @@ struct SidebarConversationRow: View {
             guard message.role != .tool, let content = message.content else { return false }
             return !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         })?.content else {
-            return String(localized: "等待你描述任务")
+            return conversation.mode == .chat
+                ? String(localized: "等待你开始聊天")
+                : String(localized: "等待你描述任务")
         }
 
         return content.replacing("\n", with: " ")
@@ -124,7 +126,9 @@ struct SidebarConversationRow: View {
         case .idle:
             String(localized: "待处理")
         case .running:
-            String(localized: "运行中")
+            conversation.mode == .chat
+                ? String(localized: "正在回复")
+                : String(localized: "运行中")
         case .completed:
             String(localized: "已完成")
         case .failed:

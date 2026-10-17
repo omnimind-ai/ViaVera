@@ -50,6 +50,22 @@ nonisolated struct ModelUsageSummary: Sendable {
                 model.totalTokens = AgentUsage.saturatingSum(model.totalTokens, contribution.totalTokens)
                 modelTotals[model.id] = model
             }
+            let memory = entry.memoryUsage
+            if memory.promptTokens > 0 || memory.completionTokens > 0 || memory.cachedTokens > 0 {
+                var contribution = ModelUsageDay(date: date)
+                contribution.inputTokens = max(0, memory.promptTokens)
+                contribution.outputTokens = max(0, memory.completionTokens)
+                contribution.cachedTokens = max(0, memory.cachedTokens)
+                contribution.cacheCreationTokens = min(
+                    contribution.inputTokens, max(0, memory.cacheCreationTokens)
+                )
+                day.add(contribution)
+                let normalized = entry.modelID?.trimmingCharacters(in: .whitespacesAndNewlines)
+                var model = ModelUsageModel(modelID: normalized?.isEmpty == false ? normalized : nil)
+                model = modelTotals[model.id] ?? model
+                model.totalTokens = AgentUsage.saturatingSum(model.totalTokens, contribution.totalTokens)
+                modelTotals[model.id] = model
+            }
             daily[date] = day
         }
 

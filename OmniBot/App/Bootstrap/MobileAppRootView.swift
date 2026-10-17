@@ -7,7 +7,11 @@ struct MobileAppRootView: View {
     var body: some View {
         @Bindable var appModel = appModel
         TabView(selection: $appModel.selectedTab) {
-            Tab(String(localized: "聊天"), systemImage: "bubble.left.and.bubble.right", value: .conversations) {
+            Tab(
+                appModel.conversationMode.title,
+                systemImage: appModel.conversationMode == .chat ? "bubble.left.and.bubble.right" : "checklist",
+                value: .conversations
+            ) {
                 NavigationStack(path: $appModel.conversationPath) {
                     SidebarView()
                         .navigationDestination(for: UUID.self) { id in
@@ -17,8 +21,10 @@ struct MobileAppRootView: View {
                         }
                 }
             }
-            Tab(String(localized: "工具"), systemImage: "square.grid.2x2", value: .tools) {
-                NativeToolsRootView()
+            if appModel.conversationMode == .task {
+                Tab(String(localized: "工具"), systemImage: "square.grid.2x2", value: .tools) {
+                    NativeToolsRootView()
+                }
             }
         }
     }

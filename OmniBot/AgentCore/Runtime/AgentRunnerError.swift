@@ -15,6 +15,8 @@ nonisolated public enum AgentRunnerError: Error, LocalizedError, Sendable, Equat
     case emptyAssistantResponse
     case outputTruncated
     case contentFiltered
+    case toolCallsDisabled
+    case missingWorkspace
 
     public var errorDescription: String? {
         switch self {
@@ -46,6 +48,10 @@ nonisolated public enum AgentRunnerError: Error, LocalizedError, Sendable, Equat
             "The model stopped because it reached the output token limit."
         case .contentFiltered:
             "The model response was blocked by the provider's content filter."
+        case .toolCallsDisabled:
+            String(localized: "当前会话未启用工具调用，请重试以获取文本回复。")
+        case .missingWorkspace:
+            "Tool execution requires a task workspace."
         }
     }
 }
