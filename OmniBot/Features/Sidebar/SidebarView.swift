@@ -41,33 +41,10 @@ struct SidebarView: View {
 #endif
         }
 #if os(macOS)
-        .navigationTitle("OmniBot")
-        .background(.bar)
-        .toolbar(removing: isSettingsPresented ? .sidebarToggle : nil)
-        .toolbar {
-            if isSettingsPresented {
-                // Recreate the group because updating its visibility in place leaves
-                // the old glass container behind on macOS.
-                ToolbarItemGroup(placement: .primaryAction) {
-                    settingsToolbarActions
-                }
-                .sharedBackgroundVisibility(.hidden)
-
-                // Navigation is blocked by the modal. Keep only the subdued symbol;
-                // the real system sidebar toggle returns when settings closes.
-                ToolbarItem(placement: .primaryAction) {
-                    Image(systemName: "sidebar.left")
-                        .imageScale(.large)
-                        .foregroundStyle(.quaternary)
-                        .accessibilityHidden(true)
-                }
-                .sharedBackgroundVisibility(.hidden)
-            } else {
-                ToolbarItemGroup(placement: .primaryAction) {
-                    settingsToolbarActions
-                }
-            }
-        }
+        // No navigation title here: the sidebar shares the window toolbar with the
+        // detail, whose title belongs after the leading controls. The material also
+        // stays below that toolbar, so showing or hiding the sidebar leaves it unchanged.
+        .background(.bar, ignoresSafeAreaEdges: [])
 #else
         .navigationTitle("Via Vera")
         .navigationBarTitleDisplayMode(.inline)
@@ -95,38 +72,11 @@ struct SidebarView: View {
 #endif
     }
 
-#if os(macOS)
-    private var isSettingsPresented: Bool {
-        appModel.presentedSettingsDestination != nil
-    }
-
-    @ViewBuilder
-    private var settingsToolbarActions: some View {
-        Button("设置", systemImage: "gearshape", action: showSettings)
-            .help("设置")
-            .disabled(appModel.presentedSettingsDestination != nil)
-
-        Button("后退", systemImage: "chevron.left", action: appModel.goBack)
-            .help("后退")
-            .disabled(!appModel.canGoBack)
-
-        Button("前进", systemImage: "chevron.right", action: appModel.goForward)
-            .help("前进")
-            .disabled(!appModel.canGoForward)
-
-        Button("新建会话", systemImage: "square.and.pencil", action: appModel.newConversation)
-            .help("新建会话")
-            .disabled(appModel.presentedSettingsDestination != nil)
-    }
-#endif
-
+#if !os(macOS)
     private func showSettings() {
-#if os(macOS)
-        appModel.presentSettings()
-#else
         isShowingSettings = true
-#endif
     }
+#endif
 
     private var filteredConversations: [ConversationRecord] {
         let historyConversations = appModel.modeConversations.filter { !$0.messages.isEmpty }

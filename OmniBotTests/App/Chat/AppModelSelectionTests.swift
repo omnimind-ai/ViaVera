@@ -218,6 +218,60 @@ struct AppModelSelectionTests {
     }
 
 #if os(macOS)
+    @Test("Switching modes focuses the selected conversation once and preserves drafts")
+    func modeSwitchComposerFocus() async throws {
+        let suiteName = "ModeSwitchFocusTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        let directory = FileManager.default.temporaryDirectory.appending(path: suiteName)
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+            try? FileManager.default.removeItem(at: directory)
+        }
+        let (model, container) = try await makeModel(directory: directory, defaults: defaults)
+        defer { withExtendedLifetime(container) {} }
+        model.newConversation()
+        let firstTask = try #require(model.selectedConversation)
+        try model.conversations.append(.user("Earlier task"), to: firstTask)
+        model.newConversation()
+        let activeTask = try #require(model.selectedConversation)
+        model.chatDraft(for: activeTask.id).text = "Keep task draft"
+        #expect(model.modeSwitchFocusConversationID == nil)
+
+        // An empty mode creates a conversation and targets its new composer.
+        model.selectConversationMode(.chat)
+        let chat = try #require(model.selectedConversation)
+        #expect(chat.mode == .chat)
+        #expect(model.modeSwitchFocusConversationID == chat.id)
+        #expect(!model.consumeModeSwitchComposerFocus(for: activeTask.id))
+        #expect(model.consumeModeSwitchComposerFocus(for: chat.id))
+        #expect(!model.consumeModeSwitchComposerFocus(for: chat.id))
+        model.chatDraft(for: chat.id).text = "Keep chat draft"
+
+        // Return to the remembered task rather than another task in history.
+        model.selectConversationMode(.task)
+        #expect(model.destination == .conversation(activeTask.id))
+        #expect(!model.consumeModeSwitchComposerFocus(for: firstTask.id))
+        #expect(model.consumeModeSwitchComposerFocus(for: activeTask.id))
+        #expect(model.chatDraft(for: activeTask.id).text == "Keep task draft")
+        model.selectConversationMode(.task)
+        #expect(model.modeSwitchFocusConversationID == nil)
+
+        // Rapid switching replaces the pending target with the latest one.
+        model.selectConversationMode(.chat)
+        model.selectConversationMode(.task)
+        #expect(!model.consumeModeSwitchComposerFocus(for: chat.id))
+        #expect(model.consumeModeSwitchComposerFocus(for: activeTask.id))
+        model.selectConversationMode(.chat)
+        #expect(model.consumeModeSwitchComposerFocus(for: chat.id))
+        #expect(model.chatDraft(for: chat.id).text == "Keep chat draft")
+
+        // Navigating elsewhere cancels focus that has not been claimed yet.
+        model.selectConversationMode(.task)
+        model.openNativeToolLibrary()
+        #expect(model.modeSwitchFocusConversationID == nil)
+        #expect(!model.consumeModeSwitchComposerFocus(for: activeTask.id))
+    }
+
     @Test("Window history restores tool screens and drafts while excluding the settings card")
     func windowNavigationHistory() async throws {
         let suiteName = "WindowNavigationTests-\(UUID().uuidString)"

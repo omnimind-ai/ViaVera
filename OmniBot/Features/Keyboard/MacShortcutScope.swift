@@ -53,6 +53,9 @@ struct MacShortcutScope: ViewModifier {
         switch action {
         case .newConversation: appModel.newConversation()
         case .quickChat: openWindow(id: AppSceneID.detachedChat)
+        case .toggleConversationMode:
+            appModel.selectConversationMode(appModel.conversationMode == .task ? .chat : .task)
+            showMainWindowIfNeeded()
         case .searchConversations:
             appModel.sidebarSearchRequestID &+= 1
             showMainWindowIfNeeded()

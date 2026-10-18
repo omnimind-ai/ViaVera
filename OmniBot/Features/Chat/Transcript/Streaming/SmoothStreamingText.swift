@@ -17,7 +17,9 @@ struct SmoothStreamingText: View {
     }
 
     var body: some View {
-        MarkdownContentView(blocks: blocks)
+        // A completed history row must never enter LazyVStack with an empty
+        // body and grow a frame later when its appearance task finishes.
+        MarkdownContentView(blocks: isStreaming ? blocks : MarkdownRenderCache.shared.blocks(for: text))
             .onChange(of: text) { _, newValue in
                 targetText = newValue
                 targetRevision &+= 1
@@ -25,8 +27,6 @@ struct SmoothStreamingText: View {
             .task(id: isStreaming) {
                 if isStreaming {
                     await renderStreamingText()
-                } else {
-                    await renderFinalText(text)
                 }
             }
     }
@@ -37,7 +37,9 @@ struct SmoothStreamingText: View {
             if renderedRevision != targetRevision {
                 let snapshot = targetText
                 let revision = targetRevision
-                blocks = await renderPipeline.render(snapshot)
+                let rendered = await renderPipeline.render(snapshot)
+                guard !Task.isCancelled else { return }
+                blocks = rendered
                 renderedRevision = revision
             }
 
@@ -47,12 +49,6 @@ struct SmoothStreamingText: View {
                 return
             }
         }
-    }
-
-    @MainActor
-    private func renderFinalText(_ source: String) async {
-        blocks = await renderPipeline.render(source)
-        renderedRevision = targetRevision
     }
 
     private var streamingRenderInterval: Duration {

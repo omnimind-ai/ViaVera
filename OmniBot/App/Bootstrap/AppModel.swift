@@ -42,6 +42,7 @@ final class AppModel {
             }
             if destination == .tools { conversationMode = .task }
 #if os(macOS)
+            if destination != oldValue { modeSwitchFocusConversationID = nil }
             recordNavigationVisit()
 #endif
         }
@@ -49,6 +50,10 @@ final class AppModel {
 #if os(macOS)
     let keyboardShortcuts = KeyboardShortcutSettingsModel()
     var sidebarSearchRequestID = 0
+    var sidebarWidth = AppDesign.sidebarIdealWidth {
+        didSet { modeDefaults.set(sidebarWidth, forKey: "sidebarWidth") }
+    }
+    private(set) var modeSwitchFocusConversationID: UUID?
     var nativeToolScreenID: String? {
         didSet { recordNavigationVisit() }
     }
@@ -125,6 +130,9 @@ final class AppModel {
         self.modeDefaults = modeDefaults
         self.conversationMode = modeDefaults.string(forKey: "conversationMode")
             .flatMap(ConversationMode.init(rawValue:)) ?? .task
+#if os(macOS)
+        self.sidebarWidth = modeDefaults.object(forKey: "sidebarWidth") as? Double ?? AppDesign.sidebarIdealWidth
+#endif
         self.bootstrapNotice = bootstrapNotice
         self.preferredModelStore = preferredModelStore
         self.workspacePaths = workspacePaths
@@ -283,8 +291,21 @@ final class AppModel {
         } else {
             newConversation()
         }
+        if case let .conversation(id) = destination,
+           conversations.conversation(id: id)?.mode == mode {
+            modeSwitchFocusConversationID = id
+        }
 #endif
     }
+
+#if os(macOS)
+    func consumeModeSwitchComposerFocus(for conversationID: UUID) -> Bool {
+        guard modeSwitchFocusConversationID == conversationID,
+              destination == .conversation(conversationID) else { return false }
+        modeSwitchFocusConversationID = nil
+        return true
+    }
+#endif
 
     func openNativeTool(_ id: UUID) {
         conversationMode = .task

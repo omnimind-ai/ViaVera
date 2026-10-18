@@ -68,7 +68,7 @@ struct ReasoningDisclosureView: View {
             )
             .accessibilityHint("双击切换思考内容")
 
-            AgentTurnRevealLayout(progress: isExpanded ? 1 : 0) {
+            TranscriptDisclosureView(isExpanded: isExpanded, duration: 0.22) {
                 PacedReasoningText(text: text, isStreaming: isStreaming)
                     .padding(.leading, AppDesign.standardSpacing)
                     .overlay(alignment: .leading) {
@@ -84,10 +84,7 @@ struct ReasoningDisclosureView: View {
                     .padding(.top, AppDesign.transcriptReasoningHeaderSpacing)
                     .padding(.bottom, AppDesign.transcriptReasoningLineOverhang)
             }
-            .clipped()
             .opacity(isExpanded ? 1 : 0)
-            .allowsHitTesting(isExpanded)
-            .accessibilityHidden(!isExpanded)
             .animation(collapseAnimation, value: isExpanded)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

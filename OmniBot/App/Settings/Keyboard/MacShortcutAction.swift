@@ -4,6 +4,7 @@ import Foundation
 enum MacShortcutAction: String, CaseIterable, Identifiable {
     case newConversation, quickChat, searchConversations, openTools
     case goBack, goForward, focusComposer, terminal, commands, settings
+    case toggleConversationMode
 
     var id: Self { self }
 
@@ -19,6 +20,7 @@ enum MacShortcutAction: String, CaseIterable, Identifiable {
         case .terminal: String(localized: "本地终端")
         case .commands: String(localized: "会话命令")
         case .settings: String(localized: "设置")
+        case .toggleConversationMode: String(localized: "切换任务/聊天模式")
         }
     }
 
@@ -34,6 +36,7 @@ enum MacShortcutAction: String, CaseIterable, Identifiable {
         case .terminal: String(localized: "展开或收起当前会话的终端")
         case .commands: String(localized: "展开或收起会话命令栏")
         case .settings: String(localized: "打开软件设置")
+        case .toggleConversationMode: String(localized: "切换任务和聊天，分别保留各自的会话")
         }
     }
 
@@ -49,6 +52,7 @@ enum MacShortcutAction: String, CaseIterable, Identifiable {
         case .terminal: .init(key: "j", modifiers: .command)
         case .commands: nil
         case .settings: .init(key: ",", modifiers: .command)
+        case .toggleConversationMode: .init(key: "y", modifiers: [.shift, .command])
         }
     }
 }

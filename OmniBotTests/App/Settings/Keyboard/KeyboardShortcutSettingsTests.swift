@@ -23,7 +23,51 @@ struct KeyboardShortcutSettingsTests {
             #expect(settings.action(for: .init(key: "[", modifiers: .command)) == .goBack)
             #expect(settings.action(for: .init(key: "]", modifiers: .command)) == .goForward)
             #expect(settings.action(for: .init(key: "j", modifiers: .command)) == .terminal)
+            #expect(settings.action(for: .init(key: "y", modifiers: [.shift, .command])) == .toggleConversationMode)
             #expect(settings.shortcut(for: .commands) == nil)
+        }
+    }
+
+    @Test("Mode switching can be reassigned and disabled across reloads")
+    func modeSwitchBindingPersists() throws {
+        try withSettings { settings, defaults in
+            let original = try #require(settings.shortcut(for: .toggleConversationMode))
+            let replacement = AppKeyboardShortcut(key: "t", modifiers: [.control, .shift])
+            #expect(settings.assign(replacement, to: .toggleConversationMode))
+            #expect(settings.action(for: original) == nil)
+            let reloaded = KeyboardShortcutSettingsModel(defaults: defaults)
+            #expect(reloaded.action(for: replacement) == .toggleConversationMode)
+            reloaded.clear(.toggleConversationMode)
+            let disabled = KeyboardShortcutSettingsModel(defaults: defaults)
+            #expect(disabled.shortcut(for: .toggleConversationMode) == nil)
+            #expect(disabled.action(for: original) == nil)
+            #expect(disabled.action(for: replacement) == nil)
+        }
+    }
+
+    @Test("Mode switching rejects shortcuts already assigned to another action")
+    func modeSwitchRejectsConflict() throws {
+        try withSettings { settings, defaults in
+            let search = try #require(settings.shortcut(for: .searchConversations))
+            #expect(!settings.assign(search, to: .toggleConversationMode))
+            #expect(settings.errorMessage != nil)
+            let reloaded = KeyboardShortcutSettingsModel(defaults: defaults)
+            #expect(reloaded.action(for: search) == .searchConversations)
+            #expect(reloaded.shortcut(for: .toggleConversationMode) == MacShortcutAction.toggleConversationMode.defaultShortcut)
+        }
+    }
+
+    @Test("The new mode switch default preserves an existing custom assignment")
+    func modeSwitchDefaultPreservesExistingBinding() throws {
+        try withSettings { _, defaults in
+            let shortcut = try #require(MacShortcutAction.toggleConversationMode.defaultShortcut)
+            let stored: [String: KeyboardShortcutBinding] = [
+                "commands": .init(shortcut: shortcut)
+            ]
+            defaults.set(try JSONEncoder().encode(stored), forKey: KeyboardShortcutSettingsModel.storageKey)
+            let reloaded = KeyboardShortcutSettingsModel(defaults: defaults)
+            #expect(reloaded.action(for: shortcut) == .commands)
+            #expect(reloaded.shortcut(for: .toggleConversationMode) == nil)
         }
     }
 

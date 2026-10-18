@@ -12,6 +12,7 @@ struct AgentResourceImageView: View {
     @Environment(AppModel.self) private var appModel
     @Environment(\.openURL) private var openURL
     @State private var image: Image?
+    @State private var loadedResourceURL: URL?
     @State private var didFail = false
 
     let title: String
@@ -50,6 +51,9 @@ struct AgentResourceImageView: View {
 
     @MainActor
     private func loadImage() async {
+        // Lazy rows can appear repeatedly while browsing history. Keep a
+        // loaded image's height instead of briefly returning to a placeholder.
+        if loadedResourceURL == resourceURL, image != nil { return }
         image = nil
         didFail = false
         do {
@@ -61,6 +65,7 @@ struct AgentResourceImageView: View {
                     maximumBytes: maximumImageBytes
                 )
             }.value
+            guard !Task.isCancelled else { return }
 
             #if os(macOS)
             guard let platformImage = NSImage(data: data) else {
@@ -73,7 +78,9 @@ struct AgentResourceImageView: View {
             }
             image = Image(uiImage: platformImage)
             #endif
+            loadedResourceURL = resourceURL
         } catch {
+            guard !Task.isCancelled else { return }
             didFail = true
         }
     }

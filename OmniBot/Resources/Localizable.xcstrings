@@ -3552,6 +3552,24 @@
         }
       }
     },
+    "显示边栏" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Sidebar"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示边栏"
+          }
+        }
+      }
+    },
     "最多安装 200 个工具。" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -3656,6 +3674,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "分析工作区"
+          }
+        }
+      }
+    },
+    "切换任务/聊天模式" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch Task/Chat Mode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换任务/聊天模式"
           }
         }
       }
@@ -14993,6 +15029,24 @@
         }
       }
     },
+    "边栏宽度" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidebar Width"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "边栏宽度"
+          }
+        }
+      }
+    },
     "运算 %@ 参数数量不正确。" : {
       "extractionState" : "manual",
       "generatesSymbol" : false,
@@ -15887,6 +15941,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "隐藏的模型不会出现在模型选择器中。"
+          }
+        }
+      }
+    },
+    "隐藏边栏" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : false,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide Sidebar"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏边栏"
           }
         }
       }

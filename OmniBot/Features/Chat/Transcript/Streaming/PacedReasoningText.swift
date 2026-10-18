@@ -11,6 +11,7 @@ struct PacedReasoningText: View {
     init(text: String, isStreaming: Bool) {
         self.text = text
         self.isStreaming = isStreaming
+        _displayedText = State(initialValue: isStreaming ? "" : text)
         _targetText = State(initialValue: text)
     }
 

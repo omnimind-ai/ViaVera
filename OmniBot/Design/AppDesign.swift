@@ -52,6 +52,7 @@ enum AppDesign {
     static let composerControlFont = Font.callout
     static let composerIconSize: Double = 12
     static let composerTerminalIconSize: Double = 13
+    static let macDetailMinimumWidth: Double = 400
     static let macInlineTerminalHeaderHeight: Double = 38
     static let macInlineTerminalHeight: Double = 260
     // End the fade before the first message's top edge at the start of the transcript.

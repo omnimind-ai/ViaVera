@@ -15,6 +15,7 @@ struct MacAppCommands: Commands {
             shortcutButton(.settings)
         }
         CommandMenu("导航") {
+            shortcutButton(.toggleConversationMode)
             shortcutButton(.searchConversations)
             shortcutButton(.openTools)
             Divider()

@@ -8,6 +8,20 @@ struct ChatTranscriptPresentation {
     let latestTurnTools: [ToolCallPresentation]
     let runIsActive: Bool
 
+    var completedResponseTexts: [String] {
+        timelineEntries.flatMap { entry -> [ChatMessagePresentation] in
+            switch entry {
+            case let .message(message): [message]
+            case let .agentTurn(turn): turn.visibleMessages
+            }
+        }.compactMap { row in
+            guard row.message.role == .assistant,
+                  row.message.status != .streaming, row.message.status != .pending,
+                  let content = row.content, !content.isEmpty else { return nil }
+            return content
+        }
+    }
+
     var activeAgentTurn: AgentTurnPresentation? {
         agentTurns.first(where: \.isActive)
     }

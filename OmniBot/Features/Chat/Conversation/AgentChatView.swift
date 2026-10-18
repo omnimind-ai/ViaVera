@@ -18,17 +18,7 @@ struct AgentChatView: View {
     @State private var turnExpansion = AgentTurnExpansionState()
     @State private var isToolActivityExpanded = false
     @State private var isCommandToolbarPresented = false
-    @State private var autoScrollSuppressedUntil: Date?
-    /// Whether the transcript should follow the latest output. Driven by
-    /// `onScrollGeometry`/`onScrollPhaseChange`: while the user is manually
-    /// scrolled away from the bottom this is `false` and token-driven
-    /// `scrollTo` calls are skipped, so reading earlier output during
-    /// streaming stays put. Re-pinned to `true` when the user scrolls back to
-    /// the bottom, submits a new message, retries, or switches conversation.
-    @State private var isPinnedToBottom = true
-    /// Most recent scroll phase. Used to distinguish user-driven drags from
-    /// the programmatic `.animating` phase our own `scrollTo` produces.
-    @State private var scrollPhase: ScrollPhase = .idle
+    @State private var transcriptScroll = TranscriptScrollState()
     @State private var isUserMessageContextMenuLayoutLocked = false
     @State private var userMessageContextMenuUnlockGeneration = 0
 #if os(macOS)
@@ -191,45 +181,41 @@ struct AgentChatView: View {
                             )
 #endif
                             .scrollDismissesKeyboard(.interactively)
-                            .onScrollPhaseChange { _, phase in
-                                scrollPhase = phase
+                            .onScrollPhaseChange { _, phase, context in
+                                transcriptScroll.updatePhase(
+                                    phase,
+                                    isNearBottom: Self.isNearBottom(context.geometry)
+                                )
                             }
-                            .onScrollGeometryChange(for: CGFloat.self) { geometry in
-                                // Distance from the bottom edge of the content
-                                // to the bottom edge of the viewport.
-                                geometry.contentSize.height
-                                    - geometry.contentOffset.y
-                                    - geometry.containerSize.height
-                            } action: { _, distanceToBottom in
-                                // Skip the programmatic, animated scroll our own
-                                // follow-the-latest logic issues; otherwise its
-                                // offset changes would never un-pin the view.
-                                guard scrollPhase != .animating else { return }
-                                isPinnedToBottom =
-                                    distanceToBottom
-                                    <= Self.bottomPinTolerance
+                            .onScrollGeometryChange(for: Bool.self) { geometry in
+                                Self.isNearBottom(geometry)
+                            } action: { _, isNearBottom in
+                                transcriptScroll.updateNearBottom(isNearBottom)
                             }
                             .onChange(
                                 of: transcript.timelineEntries.map(\.id)
                             ) { _, identifiers in
                                 guard !identifiers.isEmpty else { return }
-                                guard isPinnedToBottom,
-                                    !isAutoScrollSuppressed
-                                else { return }
+                                guard transcriptScroll.canFollow() else { return }
                                 scrollToLatest(using: scrollProxy)
                             }
-                            .onChange(of: messages.last?.updatedAt) { _, _ in
-                                guard isPinnedToBottom,
-                                    !isAutoScrollSuppressed
-                                else { return }
-                                if reduceMotion {
-                                    scrollToLatest(using: scrollProxy)
-                                } else {
-                                    withAnimation(.easeOut(duration: 0.18)) {
-                                        scrollToLatest(using: scrollProxy)
-                                    }
-                                }
+                            .onChange(of: messages.last.map(TranscriptTailUpdate.init)) { _, _ in
+                                guard transcriptScroll.canFollow() else { return }
+                                // Tokens arrive faster than an animated scroll can
+                                // finish. Follow directly instead of restarting an
+                                // easing animation on every provider update.
+                                scrollToLatest(using: scrollProxy)
                             }
+#if os(macOS)
+                            // Showing or hiding the sidebar reflows the transcript;
+                            // keep a reader who follows the latest output at the bottom.
+                            .onGeometryChange(for: Double.self) { geometry in
+                                geometry.size.width
+                            } action: { _, _ in
+                                guard transcriptScroll.canFollow() else { return }
+                                scrollToLatest(using: scrollProxy)
+                            }
+#endif
                         }
                     }
                 }
@@ -400,9 +386,7 @@ struct AgentChatView: View {
                 turnExpansion.reset()
                 isToolActivityExpanded = false
                 isCommandToolbarPresented = false
-                autoScrollSuppressedUntil = nil
-                isPinnedToBottom = true
-                scrollPhase = .idle
+                transcriptScroll.reset()
                 resetUserMessageContextMenuLayoutLock()
                 editingUserMessageID = nil
                 draft = ""
@@ -424,6 +408,7 @@ struct AgentChatView: View {
                     composerDraft.requestsFocus = false
                     composerFocusRequestID &+= 1
                 }
+                await MarkdownRenderCache.shared.prewarm(transcript.completedResponseTexts)
             }
             .environment(\.allowsChatWorkspaceResources, conversation.mode == .task)
             .environment(\.openURL, OpenURLAction { url in
@@ -484,6 +469,9 @@ struct AgentChatView: View {
 #endif
 #if os(macOS)
             .navigationTitle(conversation.title)
+            .onChange(of: appModel.modeSwitchFocusConversationID, initial: true) { _, _ in
+                focusComposerAfterModeSwitch()
+            }
             .focusedSceneValue(\.macChatShortcutActions, chatShortcutActions(isPreparingResend: isPreparingResend))
             .toolbar {
                 if onOpenMainWindow == nil {
@@ -558,6 +546,15 @@ struct AgentChatView: View {
     }
 
 #if os(macOS)
+    private func focusComposerAfterModeSwitch() {
+        // The main window owns mode-switch focus. Quick-chat windows share the
+        // draft, so they must not consume the request before this view mounts.
+        guard onOpenMainWindow == nil,
+              appModel.consumeModeSwitchComposerFocus(for: conversationID) else { return }
+        isComposerFocused = true
+        composerFocusRequestID &+= 1
+    }
+
     private func chatShortcutActions(isPreparingResend: Bool) -> MacChatShortcutActions? {
         guard !isPreparingResend else { return nil }
         let toggleTerminal: (() -> Void)? = isTaskConversation && editingUserMessageID == nil
@@ -611,7 +608,7 @@ struct AgentChatView: View {
             isCommandToolbarPresented = false
             // The user just submitted; follow the new turn as it streams in
             // even if they had been scrolled up reading earlier output.
-            isPinnedToBottom = true
+            transcriptScroll.resumeFollowing()
             appModel.chatCoordinator.send(
                 conversation.mode == .chat ? replacement : message,
                 in: conversation
@@ -743,7 +740,7 @@ struct AgentChatView: View {
         Task {
             // A retry starts a fresh streaming turn; resume auto-follow so the
             // regenerated output is visible without manual scrolling back down.
-            isPinnedToBottom = true
+            transcriptScroll.resumeFollowing()
             try? await resend(
                 message,
                 replacementText: replacementText,
@@ -761,7 +758,7 @@ struct AgentChatView: View {
     }
 
     private func toggleAgentTurn(_ turnID: UUID) {
-        autoScrollSuppressedUntil = Date.now.addingTimeInterval(0.42)
+        transcriptScroll.suppressFollowing(until: Date.now.addingTimeInterval(0.42))
         // Lazy stacks normally compensate their content offset when a row or
         // the bottom safe-area inset changes size. That fights this reveal
         // animation, so keep the absolute offset for this state transaction.
@@ -976,9 +973,10 @@ struct AgentChatView: View {
     }
 #endif
 
-    private var isAutoScrollSuppressed: Bool {
-        guard let autoScrollSuppressedUntil else { return false }
-        return Date.now < autoScrollSuppressedUntil
+    private static func isNearBottom(_ geometry: ScrollGeometry) -> Bool {
+        let distance = geometry.contentSize.height + geometry.contentInsets.bottom
+            - geometry.contentOffset.y - geometry.containerSize.height
+        return distance <= bottomPinTolerance
     }
 
     private var isTaskConversation: Bool {

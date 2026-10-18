@@ -9,7 +9,9 @@ struct AgentTurnRevealLayout: Layout {
         subviews: Subviews,
         cache: inout ()
     ) -> CGSize {
-        guard let subview = subviews.first else { return .zero }
+        guard progress > 0, let subview = subviews.first else {
+            return CGSize(width: proposal.width ?? 0, height: 0)
+        }
         // Never feed the animated container height back into text layout.
         // The content is always measured at its full height for a stable width.
         let contentProposal = ProposedViewSize(
@@ -39,7 +41,7 @@ struct AgentTurnRevealLayout: Layout {
         subviews: Subviews,
         cache: inout ()
     ) {
-        guard let subview = subviews.first else { return }
+        guard progress > 0, let subview = subviews.first else { return }
         let contentProposal = ProposedViewSize(width: bounds.width, height: nil)
         subview.place(
             at: bounds.origin,
