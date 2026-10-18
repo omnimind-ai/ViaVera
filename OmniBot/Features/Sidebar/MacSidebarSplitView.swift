@@ -119,11 +119,11 @@ struct MacSidebarDivider: View {
 
     var body: some View {
         Rectangle()
-            .fill(.separator)
+            .fill(.clear)
             .frame(width: 1)
             .overlay {
-                // Match the native divider's hit area, which is wider than its hairline,
-                // and keep most of it off the sidebar's scroller.
+                // Keep an invisible, native-sized resize target, with most of
+                // its hit area off the sidebar's scroller.
                 Color.clear
                     .frame(width: 9)
                     .contentShape(.rect)
