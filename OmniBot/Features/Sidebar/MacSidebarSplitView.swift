@@ -64,6 +64,14 @@ struct MacSidebarSplitView<Sidebar: View, Detail: View>: View {
                 .zIndex(1)
 
             detail
+                // Reflow the transcript at its final width once. Inheriting the
+                // sidebar animation makes a lazy stack remeasure wrapping rows
+                // and correct its scroll offset at every intermediate width.
+                // Keep the outer frame animated so the pane still slides, and
+                // leave transactions for the detail's own animations untouched.
+                .transaction(value: isSidebarVisible) { transaction in
+                    transaction.animation = nil
+                }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(minWidth: MacSidebarLayout.minimumWidth)

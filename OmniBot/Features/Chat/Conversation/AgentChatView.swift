@@ -206,16 +206,6 @@ struct AgentChatView: View {
                                 // easing animation on every provider update.
                                 scrollToLatest(using: scrollProxy)
                             }
-#if os(macOS)
-                            // Showing or hiding the sidebar reflows the transcript;
-                            // keep a reader who follows the latest output at the bottom.
-                            .onGeometryChange(for: Double.self) { geometry in
-                                geometry.size.width
-                            } action: { _, _ in
-                                guard transcriptScroll.canFollow() else { return }
-                                scrollToLatest(using: scrollProxy)
-                            }
-#endif
                         }
                     }
                 }
